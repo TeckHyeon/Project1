@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kdh.mapper.UserMapper">
+	<select id="selectMemberInfoYn" resultType="int">
+		<![CDATA[ 
+			SELECT 
+				COUNT(*) AS cnt
+			FROM
+				user_list
+			WHERE
+				user_id = #{user_id}
+			AND
+				user_pw = #{user_pw}
+		]]>
+	</select>
+	<select id="loadUser" parameterType="String"
+		resultType="com.kdh.domain.UserVo">
+	<![CDATA[ 
+	SELECT
+		*
+	FROM
+		user_list
+	WHERE
+		user_id = #{user_id}
+	AND
+		deleted_yn = 'N'
+	]]>
+	</select>
+
+	<select id="selectPostSeqNextVal" resultType="long">
+		SELECT post_seq.NEXTVAL FROM dual
+	</select>
+
+	<insert id="insertPost" parameterType="com.kdh.domain.PostVo">
+    <![CDATA[
+        INSERT INTO post
+            (post_idx, post_id, post_name, post_title, post_contents, post_created_date, post_updated_date)
+        VALUES
+            (#{post_idx}, #{post_id}, #{post_name}, #{post_title}, #{post_contents}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'))
+    ]]>
+</insert>
+
+	<insert id="insertFile" parameterType="com.kdh.domain.FileVo">
+		INSERT INTO post_file (original_name, file_path, file_size,
+		created_date, post_idx)
+		VALUES (#{original_Name}, #{file_Path}, #{file_Size}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'),
+		#{post_Idx})
+	</insert>
+
+
+	<select id="viewProfile" parameterType="String"
+		resultType="com.kdh.domain.UserVo">
+	<![CDATA[ 
+	SELECT
+		user_id, user_pw, user_name, user_email, user_phone, user_created_date, user_updated_date
+	FROM
+		user_list
+	WHERE
+		user_Id = #{user_Id}
+	AND
+		deleted_yn = 'N'
+	]]>
+	</select>
+	<insert id="signin" parameterType="com.kdh.domain.UserVo">
+		<![CDATA[
+			INSERT INTO user_list
+				(user_idx, user_id, user_pw, user_name, user_email, user_phone, user_created_date, user_updated_date)
+			VALUES
+				((SELECT NVL(MAX(user_idx),0) + 1 FROM user_list), #{user_id}, #{user_pw}, #{user_name}, #{user_email}, #{user_phone}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'))
+		]]>
+	</insert>
+	<select id="viewPost" parameterType="String"
+		resultType="com.kdh.domain.PostVo">
+		<![CDATA[
+  SELECT DISTINCT
+    post_idx, post_id, post_name, post_title, post_contents, post_likes, post_created_date, post_updated_date, deleted_yn 
+    FROM 
+    post p LEFT JOIN follow f ON p.post_id = f.follower_id
+    WHERE
+    (p.post_id = #{user_id} OR f.follower_id = #{user_id})
+    AND 
+    p.deleted_yn = 'N'
+    ORDER BY post_created_date DESC
+		]]>
+	</select>
+	<select id="viewPostByLikes" parameterType="String"
+		resultType="com.kdh.domain.PostVo">
+		<![CDATA[
+			SELECT DISTINCT
+			post_idx, post_id, post_name, post_title, post_contents, post_likes, post_created_date, post_updated_date, deleted_yn 
+			FROM 
+			post p
+			WHERE
+			deleted_yn = 'N'
+			ORDER BY post_likes, post_created_date desc
+		]]>
+	</select>
+	<update id="updateinfo">
+		<![CDATA[
+			UPDATE
+				user_list
+			SET
+				user_name = #{user_name}, user_email = #{user_email}, user_phone = #{user_phone}
+			WHERE
+				user_id = #{user_id}
+			AND
+				deleted_yn = 'N'
+		]]>
+	</update>
+	<update id="updatepw">
+		<![CDATA[
+			UPDATE
+				user_list
+			SET
+				user_pw = #{user_pw}
+			WHERE
+				user_id = #{user_id}
+			AND
+				deleted_yn = 'N'
+		]]>
+	</update>
+	<select id="viewPostFileList" parameterType="long"
+		resultType="com.kdh.domain.FileVo">
+	<![CDATA[	
+	SELECT
+    f.postfile_idx, f.post_idx, f.original_name, f.file_path,
+    TO_CHAR(ROUND(f.file_size / 1024)) AS file_size
+	FROM 
+	    post_file f
+	JOIN
+	    post p ON f.post_idx = p.post_idx
+	WHERE 
+	    f.post_idx = #{post_idx}
+	AND  
+	    f.deleted_yn = 'N'	
+		]]>
+	</select>
+</mapper>
