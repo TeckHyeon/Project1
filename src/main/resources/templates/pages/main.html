@@ -105,11 +105,12 @@ input {
 
 <body>
 
-	<main>
+	<main class="container-fluid">
 		<div class="row">
-		<div th:insert="layout/nav :: nav"></div>
-			<div class="row justify-content-center col-md-9">
-				<div class="col-9">
+			<nav class="col-2 bg-white sticky-top vh-100">
+				<div th:insert="layout/nav.html :: nav"></div>
+			</nav>
+			<div class="justify-content-center col-10 container">
 					<div class="border mt-5" th:each="item, iterStat : ${posts}">
 						<div class="d-flex flex-column my-4 px-4">
 							<!-- First content block -->
@@ -156,12 +157,11 @@ input {
 							</div>
 						</div>
 					</div>
-				</div>
 			</div>
 		</div>
 	</main>
-<script src="/js/youtubeLink.js"></script>
-<script src="/js/toggleButton.js"></script>
+	<script src="/js/youtubeLink.js"></script>
+	<script src="/js/toggleButton.js"></script>
 
 </body>
 
