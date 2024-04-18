@@ -24,6 +24,16 @@ input {
 	overflow: hidden;
 	transition: max-height 0.3s ease-out;
 } /* 부드러운 전환 효과 */
+.navbar-fixed-left {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 220px;
+	background-color: #333;
+	overflow: auto;
+	padding: 10px;
+}
 </style>
 <script>
 	$(document).ready(
@@ -112,55 +122,58 @@ input {
 				<div th:insert="layout/nav.html :: nav"></div>
 			</nav>
 			<div class="justify-content-center col-9 container">
+				<div
+					class="container-fluid d-flex justify-content-center align-items-center">
+					<div class="row">
+						<div class="col-md-8">
+							<div th:each="item, iterStat : ${posts}" class="border mt-5"
+								style="width: 470px; height: 850px;">
+								<div class="p-4">
+									<!-- 첫 번째 내용 블록 -->
+									<div class="d-flex justify-content-between mb-3">
+										<input type="text" th:value="${item.post_id}" disabled>
+										<input class="text-end" type="text"
+											th:value="${item.post_updated_date}" readonly disabled>
+									</div>
+									<div style="width: 320px; height: 580px;">
+										<div th:each="file : ${item.fileList}">
+											<img th:src="${file.file_Path}" alt="게시글 이미지"
+												class="post-image mb-3">
+										</div>
+										<div th:id="'content' + ${iterStat.index}"
+											th:text="${item.post_contents}" class="mt-3 content px-3"></div>
 
-				<div class="border mt-5" th:each="item, iterStat : ${posts}">
-					<div class="d-flex flex-column my-4 px-4">
-						<!-- First content block -->
-						<div class="d-flex justify-content-between mb-3">
-							<input type="text" th:value="${item.post_id}" disabled> <input
-								class="text-end" type="text"
-								th:value="${item.post_updated_date}" readonly="readonly"
-								disabled>
-						</div>
-						<div>
-							<div th:each="file : ${item.fileList}">
-								<img th:src="${file.file_Path}" alt="게시글 이미지"
-									style="width: auto; max-height: 300px;">
+									</div>
+									<button class="toggleButton btn btn-link text-dark text-decoration0"
+										th:data-target="'content' + ${iterStat.index}"
+										aria-controls="content1" aria-expanded="false">더보기</button>
+									<div class="ms-3 my-1">
+										<span class="fw-bold" th:attr="data-post-idx=${item.post_idx}">
+											<svg class="w-6 h-6 text-gray-800 dark:text-white"
+												aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+												width="24" height="24" fill="none" viewBox="0 0 24 24">
+                      <path stroke="currentColor" stroke-linecap="round"
+													stroke-linejoin="round" stroke-width="2"
+													d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z" />
+                    </svg>
+										</span> <input type="text" class="fw-bold bg-transparent text-muted"
+											id="userName" name="userName" readonly disabled
+											style="border: none;">
+									</div>
+									<div class="container-fluid mt-3">댓글창</div>
+									<div class="mt-3 row">
+										<textarea class="form-control comment-box col"
+											placeholder="댓글 달기..." style="border: none; height: 3rem"></textarea>
+									</div>
+								</div>
 							</div>
-
-							<div class="mt-3 content px-3"
-								th:id="'content' + ${iterStat.index}" style="max-height: 100px;"
-								th:text="${item.post_contents}"></div>
-						</div>
-						<button class="toggleButton btn btn-primary"
-							th:data-target="'content' + ${iterStat.index}"
-							aria-controls="content1" aria-expanded="false">더보기</button>
-
-						<div class="ms-3 my-1">
-							<span class="fw-bold" th:attr="data-post-idx=${item.post_idx}"><svg
-									class="w-6 h-6 text-gray-800 dark:text-white"
-									aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-									width="24" height="24" fill="none" viewBox="0 0 24 24">
- 								 <path stroke="currentColor" stroke-linecap="round"
-										stroke-linejoin="round" stroke-width="2"
-										d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z" />
-								</svg> </span> <input type="text" class="fw-bold bg-transparent text-muted"
-								id="userName" name="userName" readonly disabled
-								style="border: none;"></input>
-						</div>
-						<div class="container-fluid" style="height: 9rem">댓글창</div>
-						<div>
-							<input class="form-control border-bottom border-top" type="text"
-								placeholder="댓글 달기..." style="border: none; height: 3rem">
-							<button type="submit"
-								class="btn float-end bg-transparent text-primary"
-								style="margin-top: -38px; border: none;">게시</button>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 	</main>
+
 	<script src="/js/youtubeLink.js"></script>
 	<script src="/js/toggleButton.js"></script>
 
