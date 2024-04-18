@@ -29,7 +29,8 @@
 	</select>
 
 	<select id="selectPostSeqNextVal" resultType="long">
-		SELECT post_seq.NEXTVAL FROM dual
+		SELECT
+		post_seq.NEXTVAL FROM dual
 	</select>
 
 	<insert id="insertPost" parameterType="com.kdh.domain.PostVo">
@@ -39,12 +40,15 @@
         VALUES
             (#{post_idx}, #{post_id}, #{post_name}, #{post_title}, #{post_contents}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'))
     ]]>
-</insert>
+	</insert>
 
 	<insert id="insertFile" parameterType="com.kdh.domain.FileVo">
-		INSERT INTO post_file (original_name, file_path, file_size,
+		INSERT INTO post_file
+		(original_name, file_path, file_size,
 		created_date, post_idx)
-		VALUES (#{original_Name}, #{file_Path}, #{file_Size}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'),
+		VALUES
+		(#{original_Name}, #{file_Path}, #{file_Size}, TO_CHAR(SYSDATE,
+		'YYYY-MM-DD HH24:MI:SS'),
 		#{post_Idx})
 	</insert>
 
@@ -136,4 +140,24 @@
 	    f.deleted_yn = 'N'	
 		]]>
 	</select>
+	<select id="view" parameterType="long">
+		select * from POST where
+		post_idx = #{post_idx}
+	</select>
+
+	<update id="updatePost" parameterType="com.kdh.domain.PostVo">
+	<![CDATA[	
+		UPDATE
+		POST
+		SET
+		POST_TITLE = #{post_title},
+		POST_CONTENTS = #{post_contents}
+		where post_idx = #{post_idx}
+		AND
+		deleted_yn = 'N'
+				]]>
+	</update>
+	<delete id="deleteFiles">
+		DELETE FROM POST_FILE WHERE post_idx = #{post_idx}
+	</delete>
 </mapper>

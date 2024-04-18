@@ -17,7 +17,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 		registry.addInterceptor(new LoginCheckInterceptor()).addPathPatterns("/**").excludePathPatterns("/loginFail")
 				.excludePathPatterns("/login").excludePathPatterns("/loginCheck").excludePathPatterns("/")
 				.excludePathPatterns("/signin").excludePathPatterns("/login").excludePathPatterns("/main").excludePathPatterns("/post_file/**").excludePathPatterns("/js/**").excludePathPatterns("/nav")
-                .excludePathPatterns("/resources/**"); // 정적 리소스 경로 제외
+                .excludePathPatterns("/resources/templayes/layout/**"); // 정적 리소스 경로 제외
 	}
 	
 	@Bean

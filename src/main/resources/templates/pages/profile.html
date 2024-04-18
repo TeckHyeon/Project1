@@ -2,15 +2,71 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Insert title here</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-		integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-		crossorigin="anonymous"></script>
+<title>프로필</title>
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+	crossorigin="anonymous">
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+	integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+	crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+	$(document).ready(
+			function() {
+				$('.content').each(
+						function() {
+							if (this.scrollHeight > $(this).innerHeight()) {
+								// 내용이 3줄 이상일 경우, 더보기 버튼 추가
+								$(this).after(
+										'<button class="btn btn-primary btn-sm read-more" data-target="#'
+												+ $(this).attr('id')
+												+ '">더보기</button>');
+							}
+						});
+
+				$(document).on(
+						'click',
+						'.read-more',
+						function() {
+							var targetId = $(this).data('target');
+							var $content = $(targetId);
+
+							if ($content.hasClass('expanded')) {
+								// 내용 접기
+								$content.removeClass('expanded').css(
+										'max-height', '4.5em');
+								$(this).text('더보기');
+							} else {
+								// 내용 펼치기
+								$content.addClass('expanded').css('max-height',
+										'');
+								$(this).text('접기');
+							}
+						});
+			});
+</script>
+<style type="text/css">
+.content {
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 3; /* 3줄까지만 보임 */
+	-webkit-box-orient: vertical;
+	height: auto; /* 초기 높이 설정 */
+	max-height: 4.5em;
+	/* (line-height * line-clamp) + padding + border 등을 고려한 최대 높이 */
+}
+
+.card-fixed-size {
+	height: 300px; /* 원하는 높이로 설정 */
+	width: 300px; /* 원하는 너비로 설정 */
+}
+</style>
 </head>
 <body>
-<main class="container my-5">
+	<main class="container my-5">
 		<div class="row">
 			<div class="col-sm-8">
 				<div class="row">
@@ -22,21 +78,15 @@
 					<div class="col-6">
 						<div class="row">
 							<input type="text" th:value="${user.user_name}"
-								class="fs-3 bg-transparent col-5" id="user_name" name="user_name"
-								readonly disabled style="border: none;"></input> <a
-								href="/updateform/" th:attrappend="href=${user.user_id}"
+								class="fs-3 bg-transparent col-5" id="user_name"
+								name="user_name" readonly disabled style="border: none;"></input>
+							<a href="/updateform/" th:attrappend="href=${user.user_id}"
 								class="btn col-3 border"
 								style="width: 7rem; height: 2rem; margin-top: 10px;">프로필 편집</a>
 							<a class="btn col-4 text-start fs-4 ms-3" href="#"
 								style="width: 4rem;"><i class="bi bi-gear-wide"></i></a>
 						</div>
 						<div class="row my-5">
-							<input type="text" th:value="${user.user_name}"
-								class="fw-bold bg-transparent col-4" id="user_name"
-								name="user_name" readonly disabled style="border: none;"></input>
-							<input type="text" th:value="${user.user_name}"
-								class="fw-bold bg-transparent col-4" id="user_name"
-								name="user_name" readonly disabled style="border: none;"></input>
 							<input type="text" th:value="${user.user_name}"
 								class="fw-bold bg-transparent col-4" id="user_name"
 								name="user_name" readonly disabled style="border: none;"></input>
@@ -65,17 +115,60 @@
 				</ul>
 			</div>
 		</div>
-		<div class="row my-3">
-			<div class="col-2"></div>
-			<div class="col-4">
-				<div class="tab-content" id="myTabContent">
-					<div class="tab-pane fade show active" id="posts" role="tabpanel"
-						aria-labelledby="posts-tab">내가 게시한 포스트</div>
-					<div class="tab-pane fade" id="bookmark" role="tabpanel"
-						aria-labelledby="bookmark-tab">즐겨찾기 등록 포스트</div>
-					<div class="tab-pane fade" id="likes" role="tabpanel"
-						aria-labelledby="likes-tab">좋아요 누른 포스트</div>
+
+		<div class="tab-content" id="myTabContent">
+			<div class="tab-pane fade show active" id="posts" role="tabpanel"
+				aria-labelledby="posts-tab">
+				<div class="container mt-3">
+					<div class="row row-cols-1 row-cols-md-3 g-4">
+						<div th:each="item, iterStat : ${posts}">
+							<div class="col">
+								<div class="card card-fixed-size">
+									<div class="card-header d-flex justify-content-between">
+										<h5 th:text="${item.post_title}">post_title</h5>
+										<div class="">
+											<a href="/UpdatePost/" th:attrappend="href=${item.post_idx}"> <svg
+													class="w-6 h-6 text-gray-800 dark:text-white"
+													aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+													width="24" height="24" fill="none" viewBox="0 0 24 24">
+										  <path stroke="currentColor" stroke-linecap="round"
+														stroke-linejoin="round" stroke-width="2"
+														d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z" />
+										</svg>
+											</a> <a href="/DeletePost"> <svg
+													class="w-6 h-6 text-gray-800 dark:text-white"
+													aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+													width="24" height="24" fill="none" viewBox="0 0 24 24">
+ 										 <path stroke="currentColor" stroke-linecap="round"
+														stroke-linejoin="round" stroke-width="2"
+														d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
+										</svg>
+											</a>
+
+										</div>
+									</div>
+									<div th:if="${not #lists.isEmpty(item.fileList)}"
+										class="card-body">
+										<div th:each="file : ${item.fileList}">
+											<img th:src="${file.file_Path}" alt="게시글 이미지"
+												style="width: auto; max-height: 100px;">
+										</div>
+									</div>
+									<!-- 파일 리스트가 비어있는 경우 내용을 보여줍니다. -->
+									<div th:unless="${not #lists.isEmpty(item.fileList)}"
+										class="mt-3 content px-3 card-body"
+										th:id="'content' + ${iterStat.index}"
+										style="max-height: 100px;" th:text="${item.post_contents}">
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
+				<div class="tab-pane fade" id="bookmark" role="tabpanel"
+					aria-labelledby="bookmark-tab">즐겨찾기 등록 포스트</div>
+				<div class="tab-pane fade" id="likes" role="tabpanel"
+					aria-labelledby="likes-tab">좋아요 누른 포스트</div>
 			</div>
 		</div>
 	</main>

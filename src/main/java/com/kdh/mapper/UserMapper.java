@@ -40,4 +40,10 @@ public interface UserMapper {
 
 	void insertFile(FileVo fileVo);
 
+	PostVo view(Long post_idx);
+
+	void updatePost(PostVo postVo);
+
+	void deleteFiles(Long post_idx);
+
 }

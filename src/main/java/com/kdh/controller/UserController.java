@@ -32,28 +32,28 @@ public class UserController {
 	private UserService userService;
 
 	@GetMapping("/")
-    public ModelAndView main(HttpSession session, UserVo userVo) {
-        ModelAndView mv = new ModelAndView("/pages/main");
-        List<PostVo> posts;
-        List<FileVo> allFiles = new ArrayList<>();
-        if (SessionManager.isLoggedIn(session)) {
-            userVo = SessionManager.getUserVo(session);
-            posts = userService.viewPost(userVo.getUser_id());
-            mv.addObject("user", userVo);
-            log.info("posts = {}", posts);
-        } else {
-            posts = userService.viewPostByLikes();
-            log.info("posts = {}", posts);
-        }
-        for (PostVo post : posts) {
-            List<FileVo> filesForPost = userService.viewPostFileList(post.getPost_idx());
-            PostFiles.addFilesToPostAndAllFilesList(filesForPost, post, allFiles);
-        }
-        mv.addObject("posts", posts);
-        mv.addObject("files", allFiles);
-        PostFiles.logPostAndFileInformation(userVo, allFiles, posts, log); 
-        return mv;
-    }
+	public ModelAndView main(HttpSession session, UserVo userVo) {
+		ModelAndView mv = new ModelAndView("/pages/main");
+		List<PostVo> posts;
+		List<FileVo> allFiles = new ArrayList<>();
+		if (SessionManager.isLoggedIn(session)) {
+			userVo = SessionManager.getUserVo(session);
+			posts = userService.viewPost(userVo.getUser_id());
+			mv.addObject("user", userVo);
+			log.info("posts = {}", posts);
+		} else {
+			posts = userService.viewPostByLikes();
+			log.info("posts = {}", posts);
+		}
+		for (PostVo post : posts) {
+			List<FileVo> filesForPost = userService.viewPostFileList(post.getPost_idx());
+			PostFiles.addFilesToPostAndAllFilesList(filesForPost, post, allFiles);
+		}
+		mv.addObject("posts", posts);
+		mv.addObject("files", allFiles);
+		PostFiles.logPostAndFileInformation(userVo, allFiles, posts, log);
+		return mv;
+	}
 
 	@GetMapping("/login")
 	public ModelAndView login() {
@@ -78,7 +78,7 @@ public class UserController {
 			session.setAttribute("user_name", userVo.getUser_name());
 			session.setAttribute("userVo", userVo);
 			log.info("vo = {}", userVo);
-			mv.setViewName("redirect:/main");
+			mv.setViewName("redirect:/");
 			return mv;
 		} else {
 			log.info("vo = {}", userVo);
@@ -93,12 +93,13 @@ public class UserController {
 		mv.setViewName("/pages/loginFail");
 		return mv;
 	}
+
 	@GetMapping("/logout")
 	public ModelAndView logout(HttpServletRequest request) throws Exception {
 		HttpSession session = request.getSession();
 		session.invalidate();
 		ModelAndView mv = new ModelAndView();
-		mv.setViewName("redirect:/main");
+		mv.setViewName("redirect:/");
 		return mv;
 	}
 
@@ -127,7 +128,6 @@ public class UserController {
 		return mv;
 	}
 
-
 	@GetMapping("/write/{user_Id}")
 	public ModelAndView writeform(@PathVariable("user_Id") String user_Id, UserVo userVo) {
 		ModelAndView mv = new ModelAndView();
@@ -141,20 +141,33 @@ public class UserController {
 	public ModelAndView write(PostVo postVo, MultipartHttpServletRequest multiFiles) {
 		ModelAndView mv = new ModelAndView();
 		userService.insertPost(postVo, multiFiles);
-		mv.setViewName("redirect:/main");
+		mv.setViewName("redirect:/");
 		return mv;
 	}
 
 	@GetMapping("/profile/{user_Id}")
-	public ModelAndView profile(@PathVariable("user_Id") String user_Id, HttpSession session) throws Exception {
+	public ModelAndView profile(@PathVariable("user_Id") String user_Id, HttpSession session, UserVo userVo)
+			throws Exception {
 		ModelAndView mv = new ModelAndView();
+		List<PostVo> posts;
+		List<FileVo> allFiles = new ArrayList<>();
 		if (SessionManager.isLoggedIn(session)) {
-			UserVo user = userService.viewProfile(user_Id);
-			mv.addObject("user", user);
-			mv.setViewName("/pages/profile");
+			userVo = SessionManager.getUserVo(session);
+			posts = userService.viewPost(userVo.getUser_id());
+			mv.addObject("user", userVo);
+			log.info("posts = {}", posts);
 		} else {
-			mv.setViewName("redirect:/main");
+			posts = userService.viewPostByLikes();
+			log.info("posts = {}", posts);
 		}
+		for (PostVo post : posts) {
+			List<FileVo> filesForPost = userService.viewPostFileList(post.getPost_idx());
+			PostFiles.addFilesToPostAndAllFilesList(filesForPost, post, allFiles);
+		}
+		mv.addObject("posts", posts);
+		mv.addObject("files", allFiles);
+		PostFiles.logPostAndFileInformation(userVo, allFiles, posts, log);
+		mv.setViewName("/pages/profile");
 
 		return mv;
 	}
@@ -182,6 +195,27 @@ public class UserController {
 		ModelAndView mv = new ModelAndView();
 		userService.updatepw(userVo);
 		mv.setViewName("redirect:/profile/{user_Id}");
+		return mv;
+	}
+
+	@GetMapping("/UpdatePost/{post_idx}")
+	public ModelAndView updatePost(@PathVariable("post_idx") Long post_idx, PostVo postVo) {
+		ModelAndView mv = new ModelAndView();
+		postVo = userService.view(post_idx);
+
+		List<FileVo> filesForPost = userService.viewPostFileList(post_idx);
+		log.info("file = {}", post_idx);
+		mv.addObject("postVo", postVo);
+		mv.addObject("file", filesForPost);
+		mv.setViewName("/pages/updatepost");
+		return mv;
+	}
+	@PutMapping("/UpdatePost/{post_idx}")
+	public ModelAndView PostUpdate(@PathVariable("post_idx") Long post_idx, MultipartHttpServletRequest multiFiles, PostVo postVo) {
+		ModelAndView mv = new ModelAndView();
+		postVo.setPost_idx(post_idx);
+		userService.updatePost(postVo, multiFiles);
+		mv.setViewName("redirect:/");
 		return mv;
 	}
 

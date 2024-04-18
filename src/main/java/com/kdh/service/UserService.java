@@ -88,4 +88,14 @@ public class UserService {
 		return userMapper.viewPostFileList(post_Idx);
 	}
 
+	public PostVo view(Long post_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.view(post_idx);
+	}
+
+	public void updatePost(PostVo postVo, MultipartHttpServletRequest multiFiles) {
+		userMapper.updatePost(postVo);
+
+	}
+
 }
