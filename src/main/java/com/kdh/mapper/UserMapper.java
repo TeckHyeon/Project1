@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.kdh.domain.FileVo;
+import com.kdh.domain.LikesVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.UserVo;
 
@@ -45,5 +46,13 @@ public interface UserMapper {
 	void updatePost(PostVo postVo);
 
 	void deleteFiles(Long post_idx);
+
+	void insertLike(LikesVo like);
+
+	void deleteLike(int post_idx);
+
+	int countLike(int user_idx, int post_idx);
+
+	void updatePostLikes(int post_idx);
 
 }

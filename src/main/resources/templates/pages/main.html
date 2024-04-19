@@ -19,11 +19,6 @@ input {
 	border: none;
 }
 
-.content {
-	max-height: 0;
-	overflow: hidden;
-	transition: max-height 0.3s ease-out;
-} /* 부드러운 전환 효과 */
 .navbar-fixed-left {
 	position: fixed;
 	top: 0;
@@ -34,84 +29,27 @@ input {
 	overflow: auto;
 	padding: 10px;
 }
+
+.content_text {
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+}
 </style>
 <script>
-	$(document).ready(
-			function() {
-				const pid = $('#pid').val(); // 현재 사용자 ID
-
-				function updateScrapButtons() {
-					$('.scrap-button').each(
-							function() {
-								const button = $(this);
-								const post_idx = button.data('post-idx');
-
-								// 스크랩 상태 확인 요청
-								$.ajax({
-									url : `/Person/CheckScrap?post_idx=`
-											+ post_idx + '&pid=${pid}',
-									type : 'GET',
-									dataType : 'json',
-									success : function(isScraped) {
-										button.data('scraped', isScraped);
-										button.toggleClass('btn-primary',
-												isScraped).toggleClass(
-												'btn-outline-secondary',
-												!isScraped).val(
-												isScraped ? '스크랩 해제' : '스크랩');
-									},
-									error : function(error) {
-										console.error('Error:', error);
-									}
-								});
-							});
-				}
-
-				updateScrapButtons(); // 페이지 로드 시 스크랩 버튼 상태 갱신
-
-				$('.scrap-button').click(
-						function() {
-							const button = $(this);
-							const post_idx = button.data('post-idx');
-							const isScraped = button.data('scraped');
-
-							if (isScraped) {
-								// 스크랩 삭제 요청
-								$.ajax({
-									url : `/Person/ScrapDelete?post_idx=`
-											+ post_idx + '&pid=${pid}',
-									type : 'POST',
-									success : function(response) {
-										alert('스크랩이 해제되었습니다.');
-										updateScrapButtons(); // 모든 스크랩 버튼 상태 갱신
-									},
-									error : function(error) {
-										console.error('Error:', error);
-										alert('오류가 발생했습니다. 다시 시도해주세요.');
-									}
-								});
-							} else {
-								// 스크랩 추가 요청
-								$.ajax({
-									url : '/Person/ScrapAdd',
-									type : 'POST',
-									contentType : 'application/json',
-									data : JSON.stringify({
-										post_idx : post_idx,
-										pid : pid
-									}),
-									success : function(response) {
-										alert('스크랩되었습니다.');
-										updateScrapButtons(); // 모든 스크랩 버튼 상태 갱신
-									},
-									error : function(error) {
-										console.error('Error:', error);
-										alert('오류가 발생했습니다. 다시 시도해주세요.');
-									}
-								});
-							}
-						});
-			});
+	function showMoreContent(button) {
+		// 버튼의 data-target 속성으로부터 대상 요소의 ID를 얻습니다.
+		var contentId = button.getAttribute('data-target');
+		// 해당 ID를 사용하여 내용 요소를 찾습니다.
+		var contentElement = document.getElementById(contentId);
+		// 내용 요소의 스타일을 변경하여 -webkit 관련 스타일을 제거합니다.
+		contentElement.style.display = 'block';
+		contentElement.style.webkitLineClamp = 'unset';
+		contentElement.style.webkitBoxOrient = 'unset';
+		// 더보기 버튼을 숨깁니다.
+		button.style.display = 'none';
+	}
 </script>
 </head>
 
@@ -121,13 +59,17 @@ input {
 			<nav class="col-2 bg-white sticky-top vh-100">
 				<div th:insert="layout/nav.html :: nav"></div>
 			</nav>
+
 			<div class="justify-content-center col-9 container">
+				<div th:if="${user != null}">
+					<input type="hidden" th:value="${user.user_idx}" id="user_idx">
+				</div>
 				<div
 					class="container-fluid d-flex justify-content-center align-items-center">
 					<div class="row">
 						<div class="col-md-8">
 							<div th:each="item, iterStat : ${posts}" class="border mt-5"
-								style="width: 470px; height: 850px;">
+								style="width: 470px; height: auto;">
 								<div class="p-4">
 									<!-- 첫 번째 내용 블록 -->
 									<div class="d-flex justify-content-between mb-3">
@@ -135,30 +77,37 @@ input {
 										<input class="text-end" type="text"
 											th:value="${item.post_updated_date}" readonly disabled>
 									</div>
-									<div style="width: 320px; height: 580px;">
-										<div th:each="file : ${item.fileList}">
+									<div class="">
+										<div th:each="file : ${item.fileList}"
+											class="d-flex justify-content-center">
 											<img th:src="${file.file_Path}" alt="게시글 이미지"
-												class="post-image mb-3">
+												class="post-image mb-3" style="width: 280px; height: auto;">
 										</div>
 										<div th:id="'content' + ${iterStat.index}"
-											th:text="${item.post_contents}" class="mt-3 content px-3"></div>
+											class="mt-3 content px-3">
+											<p th:id="'content_text' + ${iterStat.index}"
+												th:text="${item.post_contents}" class="content_text"></p>
+											<button
+												class="toggleButton btn btn-link text-dark text-decoration-none"
+												th:data-target="'content_text' + ${iterStat.index}"
+												onclick="showMoreContent(this)">더보기</button>
+
+										</div>
 
 									</div>
-									<button class="toggleButton btn btn-link text-dark text-decoration0"
-										th:data-target="'content' + ${iterStat.index}"
-										aria-controls="content1" aria-expanded="false">더보기</button>
 									<div class="ms-3 my-1">
-										<span class="fw-bold" th:attr="data-post-idx=${item.post_idx}">
-											<svg class="w-6 h-6 text-gray-800 dark:text-white"
+										<span class="fw-bold like_btn"
+											th:attr="data-post-idx=${item.post_idx}"> <svg
+												class="w-6 h-6 text-gray-800 dark:text-white"
 												aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
 												width="24" height="24" fill="none" viewBox="0 0 24 24">
-                      <path stroke="currentColor" stroke-linecap="round"
-													stroke-linejoin="round" stroke-width="2"
+                      							<path stroke="currentColor"
+													stroke-linecap="round" stroke-linejoin="round"
+													stroke-width="2"
 													d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z" />
-                    </svg>
-										</span> <input type="text" class="fw-bold bg-transparent text-muted"
-											id="userName" name="userName" readonly disabled
-											style="border: none;">
+                    						</svg>
+										</span>
+										<input type="text" th:value="${item.post_likes}" th:id="'post_likes' + ${item.post_idx}">
 									</div>
 									<div class="container-fluid mt-3">댓글창</div>
 									<div class="mt-3 row">
@@ -173,10 +122,113 @@ input {
 			</div>
 		</div>
 	</main>
+	<script>
+	$(document).ready(function() {
+	    const user_idx = $('#user_idx').val(); // 현재 사용자 ID
 
+	    function updateScrapButtons() {
+	        $('.like_btn').each(function() {
+	            const button = $(this);
+	            const post_idx = button.data('post-idx');
+	            const svg = button.find('svg'); // SVG 요소 선택
+
+	            // 스크랩 상태 확인 요청
+	            $.ajax({
+	                url: `/CheckLike?post_idx=` + post_idx + '&user_idx=' + user_idx,
+	                type: 'GET',
+	                dataType: 'json',
+	                success: function(isLiked) {
+	                    button.data('liked', isLiked);
+	                    // isLiked 상태에 따라 SVG fill 속성 변경
+	                    if (isLiked) {
+	                        svg.attr('fill', 'red'); // 스크랩된 상태
+	                    } else {
+	                        svg.attr('fill', 'blue'); // 스크랩되지 않은 상태
+	                    }
+	                    
+	                },
+	                error: function(error) {
+	                    console.error('Error:', error);
+	                }
+	            });
+	        });
+	    }
+
+	    updateScrapButtons(); // 페이지 로드 시 스크랩 버튼 상태 갱신
+
+	    $('.like_btn').click(function() {
+	        const button = $(this);
+	        const post_idx = button.data('post-idx');
+	        const isLiked = button.data('liked');
+
+	        if (isLiked) {
+	            // 스크랩 삭제 요청
+	            $.ajax({
+	                url: `/LikeDelete?post_idx=` + post_idx + '&user_idx=' + user_idx,
+	                type: 'DELETE',
+	                success: function(response) {
+	                    updateScrapButtons(); // 모든 스크랩 버튼 상태 갱신
+	            	    	$.ajax({
+	            	    		url: '/LoadLikes',
+	            	    		type: 'POST',
+	            	    		data:  {"post_idx" : post_idx,
+	            	    				"user_idx" : user_idx},
+	            	    		success: function(loadlikes) {
+	            	    			$('#post_likes'+post_idx).val(loadlikes);
+	            	    			console.log(loadlikes);
+	            	    			console.log($('#post_likes'+post_idx));
+	            	    		},
+	            	    		error: function(){
+	            	    			alert('오류가 발생했습니다. 다시 시도해주세요.');
+	            	    		}
+	            	    	});
+	            
+	                },
+	                error: function(error) {
+	                    console.error('Error:', error);
+	                    alert('오류가 발생했습니다. 다시 시도해주세요.');
+	                }
+	            });
+	        } else {
+	            // 스크랩 추가 요청
+	            $.ajax({
+	                url: '/LikeAdd',
+	                type: 'POST',
+	                contentType: 'application/json',
+	                data: JSON.stringify({
+	                    post_idx: post_idx,
+	                    user_idx: user_idx
+	                }),
+	                success: function(response) {
+	                    updateScrapButtons(); // 모든 스크랩 버튼 상태 갱신
+	                    $.ajax({
+            	    		url: '/LoadLikes',
+            	    		type: 'POST',
+            	    		data:  {"post_idx" : post_idx,
+            	    				"user_idx" : user_idx},
+            	    		success: function(loadlikes) {
+            	    			$('#post_likes'+post_idx).val(loadlikes);
+            	    			console.log(loadlikes);
+            	    		},
+            	    		error: function(){
+            	    			alert('오류가 발생했습니다. 다시 시도해주세요.');
+            	    		}
+            	    	});
+	                },
+	                error: function(error) {
+	                    console.error('Error:', error);
+	                    alert('오류가 발생했습니다. 다시 시도해주세요.');
+	                }
+	            });
+	        }
+
+	    });
+
+	 
+	});
+
+	</script>
 	<script src="/js/youtubeLink.js"></script>
-	<script src="/js/toggleButton.js"></script>
-
 </body>
 
 </html>

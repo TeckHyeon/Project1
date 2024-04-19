@@ -45,7 +45,7 @@
 	<insert id="insertFile" parameterType="com.kdh.domain.FileVo">
 		INSERT INTO post_file
 		(original_name, file_path, file_size,
-		created_date, post_idx)
+		created_date, UPLOAD_DATE)
 		VALUES
 		(#{original_Name}, #{file_Path}, #{file_Size}, TO_CHAR(SYSDATE,
 		'YYYY-MM-DD HH24:MI:SS'),
@@ -160,4 +160,35 @@
 	<delete id="deleteFiles">
 		DELETE FROM POST_FILE WHERE post_idx = #{post_idx}
 	</delete>
+
+	<insert id="insertLike">
+		insert into LIKES (LIKES_IDX, POST_IDX, USER_IDX)
+		values((SELECT NVL(MAX(LIKES_IDX),0) + 1 FROM
+		LIKES), #{post_idx},
+		#{user_idx})
+	</insert>
+
+	<delete id="deleteLike">
+		delete from LIKES where post_idx =
+		#{post_idx}
+	</delete>
+
+	<select id="countLike" resultType="int">
+		select count(*) from
+		LIKES
+		where USER_IDX = #{arg0} and POST_IDX =
+		#{arg1}
+	</select>
+	<update id="updatePostLikes" parameterType="int">
+	<![CDATA[	
+		UPDATE
+		POST
+		SET
+		POST_LIKES = (select count(*) from LIKES where post_idx = #{post_idx})
+		where post_idx = #{post_idx}
+		AND
+		deleted_yn = 'N'
+				]]>
+	</update>
+
 </mapper>

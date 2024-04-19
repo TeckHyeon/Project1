@@ -5,16 +5,22 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.kdh.common.PostFiles;
 import com.kdh.domain.FileVo;
+import com.kdh.domain.LikesVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
@@ -218,5 +224,52 @@ public class UserController {
 		mv.setViewName("redirect:/");
 		return mv;
 	}
+	
+	@PostMapping("/LikeAdd")
+	public ResponseEntity<?> addScrap(@RequestBody LikesVo like) {
+		try {
+			int post_idx = like.getPost_idx();
+			userService.insertLike(like, post_idx);
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("Like 추가에 실패했습니다.");
+		}
+	}
 
+	@DeleteMapping("/LikeDelete")
+	public ResponseEntity<?> deleteScrap(@RequestParam("post_idx") int post_idx) {
+		try {
+			userService.deleteLike(post_idx);
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("Like 삭제에 실패했습니다.");
+		}
+	}
+
+	@GetMapping("/CheckLike")
+	public ResponseEntity<?> checkScrap(@RequestParam("post_idx") int post_idx, @RequestParam("user_idx") int user_idx) {
+		int countLike = userService.countLike(user_idx, post_idx);
+		try {
+			if (countLike != 0) {
+				boolean isLiked = true;
+				return ResponseEntity.ok(isLiked);
+			} else {
+				boolean isLiked = false;
+				return ResponseEntity.ok(isLiked);
+			}
+
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("Like 상태 확인에 실패했습니다.");
+		}
+	}
+
+	@PostMapping("/LoadLikes")
+	@ResponseBody
+	public int loadLikes(@RequestParam("post_idx") int post_idx, @RequestParam("user_idx") int user_idx) {
+	    // postId를 기반으로 좋아요 수를 업데이트하고, 업데이트된 좋아요 수를 반환하는 로직 구현
+	    int loadlikes = userService.countLike(user_idx, post_idx);
+
+	    // 업데이트된 좋아요 수를 int로 직접 반환
+	    return loadlikes;
+	}
 }
