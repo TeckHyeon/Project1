@@ -47,15 +47,16 @@ public class UserController {
 			posts = userService.viewPost(userVo.getUser_id());
 			mv.addObject("user", userVo);
 			log.info("posts = {}", posts);
+			mv.addObject("posts", posts);
 		} else {
 			posts = userService.viewPostByLikes();
+			mv.addObject("posts", posts);
 			log.info("posts = {}", posts);
 		}
 		for (PostVo post : posts) {
 			List<FileVo> filesForPost = userService.viewPostFileList(post.getPost_idx());
 			PostFiles.addFilesToPostAndAllFilesList(filesForPost, post, allFiles);
 		}
-		mv.addObject("posts", posts);
 		mv.addObject("files", allFiles);
 		PostFiles.logPostAndFileInformation(userVo, allFiles, posts, log);
 		return mv;
@@ -159,7 +160,7 @@ public class UserController {
 		List<FileVo> allFiles = new ArrayList<>();
 		if (SessionManager.isLoggedIn(session)) {
 			userVo = SessionManager.getUserVo(session);
-			posts = userService.viewPost(userVo.getUser_id());
+			posts = userService.viewPostById(userVo.getUser_id());
 			mv.addObject("user", userVo);
 			log.info("posts = {}", posts);
 		} else {
@@ -237,9 +238,9 @@ public class UserController {
 	}
 
 	@DeleteMapping("/LikeDelete")
-	public ResponseEntity<?> deleteScrap(@RequestParam("post_idx") int post_idx) {
+	public ResponseEntity<?> deleteScrap(@RequestParam("post_idx") int post_idx, @RequestParam("user_idx") int user_idx) {
 		try {
-			userService.deleteLike(post_idx);
+			userService.deleteLike(post_idx, user_idx);
 			return ResponseEntity.ok().build();
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body("Like 삭제에 실패했습니다.");

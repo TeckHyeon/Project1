@@ -7,7 +7,7 @@
 			SELECT 
 				COUNT(*) AS cnt
 			FROM
-				user_list
+				user_list_TB
 			WHERE
 				user_id = #{user_id}
 			AND
@@ -20,7 +20,7 @@
 	SELECT
 		*
 	FROM
-		user_list
+		user_list_TB
 	WHERE
 		user_id = #{user_id}
 	AND
@@ -35,7 +35,7 @@
 
 	<insert id="insertPost" parameterType="com.kdh.domain.PostVo">
     <![CDATA[
-        INSERT INTO post
+        INSERT INTO post_TB
             (post_idx, post_id, post_name, post_title, post_contents, post_created_date, post_updated_date)
         VALUES
             (#{post_idx}, #{post_id}, #{post_name}, #{post_title}, #{post_contents}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'))
@@ -43,7 +43,7 @@
 	</insert>
 
 	<insert id="insertFile" parameterType="com.kdh.domain.FileVo">
-		INSERT INTO post_file
+		INSERT INTO post_file_TB
 		(original_name, file_path, file_size,
 		created_date, UPLOAD_DATE)
 		VALUES
@@ -59,7 +59,7 @@
 	SELECT
 		user_id, user_pw, user_name, user_email, user_phone, user_created_date, user_updated_date
 	FROM
-		user_list
+		user_list_TB
 	WHERE
 		user_Id = #{user_Id}
 	AND
@@ -68,24 +68,64 @@
 	</select>
 	<insert id="signin" parameterType="com.kdh.domain.UserVo">
 		<![CDATA[
-			INSERT INTO user_list
+			INSERT INTO user_list_TB
 				(user_idx, user_id, user_pw, user_name, user_email, user_phone, user_created_date, user_updated_date)
 			VALUES
-				((SELECT NVL(MAX(user_idx),0) + 1 FROM user_list), #{user_id}, #{user_pw}, #{user_name}, #{user_email}, #{user_phone}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'))
+				((SELECT NVL(MAX(user_idx),0) + 1 FROM user_list_TB), #{user_id}, #{user_pw}, #{user_name}, #{user_email}, #{user_phone}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'))
 		]]>
 	</insert>
+	<select id="viewPostById" parameterType="String">
+		SELECT post_idx, post_id, post_name, post_title,
+		post_contents,
+		post_likes, post_created_date, post_updated_date, deleted_yn
+		FROM POST_TB
+		WHERE POST_ID = #{user_id}
+
+	</select>
 	<select id="viewPost" parameterType="String"
 		resultType="com.kdh.domain.PostVo">
 		<![CDATA[
-  SELECT DISTINCT
-    post_idx, post_id, post_name, post_title, post_contents, post_likes, post_created_date, post_updated_date, deleted_yn 
-    FROM 
-    post p LEFT JOIN follow f ON p.post_id = f.follower_id
-    WHERE
+WITH CombinedPosts AS (
+  SELECT
+    post_idx, post_id, post_name, post_title, post_contents,
+    post_likes, post_created_date, post_updated_date, deleted_yn, 1 AS priority
+  FROM
+    post_TB p LEFT JOIN follow_TB f ON p.post_id = f.follower_id
+  WHERE
     (p.post_id = #{user_id} OR f.follower_id = #{user_id})
-    AND 
-    p.deleted_yn = 'N'
-    ORDER BY post_created_date DESC
+    AND p.deleted_yn = 'N'
+    AND TO_DATE(post_updated_date, 'YYYY-MM-DD HH24:MI:SS') >= (SYSDATE - 7)
+  UNION
+  SELECT
+    post_idx, post_id, post_name, post_title, post_contents,
+    post_likes, post_created_date, post_updated_date, deleted_yn, 2 AS priority
+  FROM
+    post_TB
+  WHERE
+    deleted_yn = 'N'
+    AND TO_DATE(post_updated_date, 'YYYY-MM-DD HH24:MI:SS') >= (SYSDATE - 7)
+),
+NumberedPosts AS (
+  SELECT
+    post_idx, post_id, post_name, post_title, post_contents,
+    post_likes, post_created_date, post_updated_date, deleted_yn, priority,
+    ROW_NUMBER() OVER(PARTITION BY post_idx, post_id, post_name, post_title, post_contents, post_likes, post_created_date, post_updated_date, deleted_yn ORDER BY priority) AS rn
+  FROM
+    CombinedPosts
+)
+SELECT
+  post_idx, post_id, post_name, post_title, post_contents,
+  post_likes, post_created_date, post_updated_date, deleted_yn, priority
+FROM
+  NumberedPosts
+WHERE
+  rn = 1
+ORDER BY
+  priority,
+  CASE WHEN priority = 1 THEN TO_DATE(post_created_date, 'YYYY-MM-DD HH24:MI:SS') END DESC,
+  CASE WHEN priority = 2 THEN post_likes END DESC,
+  TO_DATE(post_updated_date, 'YYYY-MM-DD HH24:MI:SS') DESC
+
 		]]>
 	</select>
 	<select id="viewPostByLikes" parameterType="String"
@@ -94,7 +134,7 @@
 			SELECT DISTINCT
 			post_idx, post_id, post_name, post_title, post_contents, post_likes, post_created_date, post_updated_date, deleted_yn 
 			FROM 
-			post p
+			post_TB p
 			WHERE
 			deleted_yn = 'N'
 			ORDER BY post_likes, post_created_date desc
@@ -103,7 +143,7 @@
 	<update id="updateinfo">
 		<![CDATA[
 			UPDATE
-				user_list
+				user_list_TB
 			SET
 				user_name = #{user_name}, user_email = #{user_email}, user_phone = #{user_phone}
 			WHERE
@@ -115,7 +155,7 @@
 	<update id="updatepw">
 		<![CDATA[
 			UPDATE
-				user_list
+				user_list_TB
 			SET
 				user_pw = #{user_pw}
 			WHERE
@@ -131,9 +171,9 @@
     f.postfile_idx, f.post_idx, f.original_name, f.file_path,
     TO_CHAR(ROUND(f.file_size / 1024)) AS file_size
 	FROM 
-	    post_file f
+	    post_file_TB f
 	JOIN
-	    post p ON f.post_idx = p.post_idx
+	    post_TB p ON f.post_idx = p.post_idx
 	WHERE 
 	    f.post_idx = #{post_idx}
 	AND  
@@ -141,50 +181,51 @@
 		]]>
 	</select>
 	<select id="view" parameterType="long">
-		select * from POST where
+		select * from POST_TB where
 		post_idx = #{post_idx}
 	</select>
 
 	<update id="updatePost" parameterType="com.kdh.domain.PostVo">
 	<![CDATA[	
 		UPDATE
-		POST
+		POST_TB
 		SET
 		POST_TITLE = #{post_title},
-		POST_CONTENTS = #{post_contents}
+		POST_CONTENTS = #{post_contents},
+		post_updated_date = TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS')
 		where post_idx = #{post_idx}
 		AND
 		deleted_yn = 'N'
 				]]>
 	</update>
 	<delete id="deleteFiles">
-		DELETE FROM POST_FILE WHERE post_idx = #{post_idx}
+		DELETE FROM POST_FILE_TB WHERE post_idx = #{post_idx}
 	</delete>
 
 	<insert id="insertLike">
-		insert into LIKES (LIKES_IDX, POST_IDX, USER_IDX)
+		insert into LIKES_TB (LIKES_IDX, POST_IDX, USER_IDX)
 		values((SELECT NVL(MAX(LIKES_IDX),0) + 1 FROM
-		LIKES), #{post_idx},
+		LIKES_TB), #{post_idx},
 		#{user_idx})
 	</insert>
 
 	<delete id="deleteLike">
-		delete from LIKES where post_idx =
-		#{post_idx}
+		delete from LIKES_TB where post_idx =
+		#{post_idx} AND USER_IDX = #{user_idx}
 	</delete>
 
 	<select id="countLike" resultType="int">
 		select count(*) from
-		LIKES
+		LIKES_TB
 		where USER_IDX = #{arg0} and POST_IDX =
 		#{arg1}
 	</select>
 	<update id="updatePostLikes" parameterType="int">
 	<![CDATA[	
 		UPDATE
-		POST
+		POST_TB
 		SET
-		POST_LIKES = (select count(*) from LIKES where post_idx = #{post_idx})
+		POST_LIKES = (select count(*) from LIKES_TB where post_idx = #{post_idx})
 		where post_idx = #{post_idx}
 		AND
 		deleted_yn = 'N'

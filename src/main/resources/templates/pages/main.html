@@ -98,7 +98,7 @@ input {
 									<div class="ms-3 my-1">
 										<span class="fw-bold like_btn"
 											th:attr="data-post-idx=${item.post_idx}"> <svg
-												class="w-6 h-6 text-gray-800 dark:text-white"
+												class="w-6 h-6 text-gray-800 text-danger"
 												aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
 												width="24" height="24" fill="none" viewBox="0 0 24 24">
                       							<path stroke="currentColor"
@@ -143,7 +143,7 @@ input {
 	                    if (isLiked) {
 	                        svg.attr('fill', 'red'); // 스크랩된 상태
 	                    } else {
-	                        svg.attr('fill', 'blue'); // 스크랩되지 않은 상태
+	                        svg.attr('fill', 'none'); // 스크랩되지 않은 상태
 	                    }
 	                    
 	                },
@@ -164,8 +164,9 @@ input {
 	        if (isLiked) {
 	            // 스크랩 삭제 요청
 	            $.ajax({
-	                url: `/LikeDelete?post_idx=` + post_idx + '&user_idx=' + user_idx,
-	                type: 'DELETE',
+	            	 url: `/LikeDelete?post_idx=` + post_idx + '&user_idx=' + user_idx,
+	            	 type: 'DELETE',
+	            	 dataType: 'json',
 	                success: function(response) {
 	                    updateScrapButtons(); // 모든 스크랩 버튼 상태 갱신
 	            	    	$.ajax({
