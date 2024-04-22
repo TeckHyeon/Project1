@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import com.kdh.domain.FileVo;
 import com.kdh.domain.LikesVo;
+import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.UserVo;
 
@@ -59,6 +60,10 @@ public interface UserMapper {
 
 	int countLike(@Param("post_idx") int post_idx);
 
-	PostVo getPost(int post_idx);
+	PostVo getPostByIdx(int post_idx);
+
+	void insertNoti(@Param("post_id") String post_id,@Param("user_id") String user_id);
+
+	List<NotificationVo> getNotis(String user_Id);
 
 }

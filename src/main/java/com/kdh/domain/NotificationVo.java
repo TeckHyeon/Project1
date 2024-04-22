@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class NotificationVo {
 	int notification_idx;
-	int user_idx;
+	String to_id;
 	String check_yn;
-	String message;
+	int message;
 	String created_date;
+	String from_id;
 }

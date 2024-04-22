@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,12 +16,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.kdh.common.PostFiles;
 import com.kdh.domain.FileVo;
 import com.kdh.domain.LikesVo;
+import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
@@ -42,12 +45,16 @@ public class UserController {
 		ModelAndView mv = new ModelAndView("/pages/main");
 		List<PostVo> posts;
 		List<FileVo> allFiles = new ArrayList<>();
+		List<NotificationVo> noti;
 		if (SessionManager.isLoggedIn(session)) {
 			userVo = SessionManager.getUserVo(session);
-			posts = userService.viewPost(userVo.getUser_id());
+			String user_Id = userVo.getUser_id();
+			posts = userService.viewPost(user_Id);
+			noti = userService.getNotis(user_Id);
 			mv.addObject("user", userVo);
 			log.info("posts = {}", posts);
 			mv.addObject("posts", posts);
+			mv.addObject("noti", noti);
 		} else {
 			posts = userService.viewPostByLikes();
 			mv.addObject("posts", posts);
@@ -157,6 +164,7 @@ public class UserController {
 			throws Exception {
 		ModelAndView mv = new ModelAndView();
 		List<PostVo> posts;
+
 		List<FileVo> allFiles = new ArrayList<>();
 		if (SessionManager.isLoggedIn(session)) {
 			userVo = SessionManager.getUserVo(session);
@@ -227,10 +235,9 @@ public class UserController {
 	}
 	
 	@PostMapping("/LikeAdd")
-	public ResponseEntity<?> addScrap(@RequestBody LikesVo like, PostVo post) {
+	public ResponseEntity<?> addLike(@RequestBody LikesVo like) {
 		try {
 			int post_idx = like.getPost_idx();
-			post = userService.getPost(post_idx);
 			userService.insertLike(like, post_idx);
 			log.info("post_idx = {}",post_idx);
 			return ResponseEntity.ok().build();
@@ -238,9 +245,29 @@ public class UserController {
 			return ResponseEntity.badRequest().body("Like 추가에 실패했습니다.");
 		}
 	}
+	@PostMapping("/AddNoti")
+	public ResponseEntity<?> addNoti(@RequestParam("post_id") String post_id, @RequestParam("user_id") String user_id) {
+	    try {
+	        // post_id와 user_id가 같은지 확인합니다. 같다면 본인의 게시물에 알림을 추가하는 것이므로 요청을 거절합니다.
+	        if (post_id.equals(user_id)) {
+	        	return ResponseEntity.ok().body("본인의 게시물은 알림이 등록되지 않습니다.");
+	        } else {
+	            // userService를 통해 알림을 추가하는 로직을 실행합니다.
+	            userService.insertNoti(post_id, user_id);
+	            // 로깅을 통해 post_id 값을 기록합니다.
+	            log.info("post_idx = {}", post_id);
+	            // 성공적으로 처리되면 HTTP 상태 코드 200을 반환합니다.
+	            return ResponseEntity.ok().build();				
+	        }
+	    } catch (Exception e) {
+	        // 오류가 발생하면 HTTP 상태 코드 400과 함께 오류 메시지를 반환합니다.
+	        return ResponseEntity.badRequest().body("알림 추가에 실패했습니다.");
+	    }
+	}
+
 
 	@DeleteMapping("/LikeDelete")
-	public ResponseEntity<?> deleteScrap(@RequestBody LikesVo like) {
+	public ResponseEntity<?> deleteLike(@RequestBody LikesVo like) {
 		try {
 			userService.deleteLike(like);
 			return ResponseEntity.ok().build();
@@ -250,7 +277,7 @@ public class UserController {
 	}
 
 	@GetMapping("/CheckLike")
-	public ResponseEntity<?> checkScrap(@RequestParam("post_idx") int post_idx, @RequestParam("user_idx") int user_idx) {
+	public ResponseEntity<?> checkLike(@RequestParam("post_idx") int post_idx, @RequestParam("user_idx") int user_idx) {
 		int checkLike = userService.checkLike(user_idx, post_idx);
 		try {
 			if (checkLike != 0) {
@@ -271,8 +298,17 @@ public class UserController {
 	public int loadLikes(@RequestParam("post_idx") int post_idx) {
 	    // postId를 기반으로 좋아요 수를 업데이트하고, 업데이트된 좋아요 수를 반환하는 로직 구현
 	    int loadlikes = userService.countLike(post_idx);
-
 	    // 업데이트된 좋아요 수를 int로 직접 반환
 	    return loadlikes;
 	}
+	
+	@GetMapping("/notiRefresh")
+	public String getNotificationFragment(Model model, @SessionAttribute("userVo") UserVo user) {
+	    String user_Id = user.getUser_id();
+		List<NotificationVo> noti = userService.getNotis(user_Id);
+	    model.addAttribute("noti", noti);
+	    return "notifragment.html :: noti";
+	}
+	
+	
 }

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+    <div th:fragment="noti">
+        <div class="dropdown">
+            <a class="nav-link link-body-emphasis mx-0" data-bs-toggle="dropdown"
+                aria-expanded="false">알림 <span class="border notification-count"
+                th:text="${#lists.size(noti)}">0</span></a>
+            <ul class="dropdown-menu">
+                <!-- 알림이 없는 경우 처리 -->
+                <li th:if="${#lists.isEmpty(noti)}"><a class="dropdown-item" href="#">알림이 없습니다</a></li>
+                <!-- 알림이 있는 경우 처리 -->
+                <li th:each="notification : ${noti}" th:switch="${notification.message}">
+                    <a class="dropdown-item" href="#" th:case="1"
+                        th:text="${notification.from_id} + '님이 좋아요를 눌렀습니다.'"></a>
+                    <a class="dropdown-item" href="#" th:case="2"
+                        th:text="${notification.from_id} + '님이 새글을 올렸습니다.'"></a>
+                    <a class="dropdown-item" href="#" th:case="3"
+                        th:text="${notification.from_id} + '님이 댓글을 올렸습니다.'"></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</body>
+
+</html>

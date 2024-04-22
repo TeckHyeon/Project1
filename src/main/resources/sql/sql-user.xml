@@ -240,4 +240,25 @@ ORDER BY
 		LIKES_TB
 		where POST_IDX = #{post_idx}
 	</select>
+	<select id="getPostByIdx" parameterType="int">
+		select POST_IDX,
+		POST_ID, POST_NAME, POST_TITLE, POST_CONTENTS, POST_LIKES,
+		POST_CREATED_DATE, POST_UPDATED_DATE, DELETED_YN
+		POST_TB
+		where POST_IDX
+		= #{post_idx}
+	</select>
+	<insert id="insertNoti" parameterType="String">
+		insert into NOTIFICATION_TB (NOTIFICATION_IDX,
+		TO_ID, MESSAGE, CREATED_DATE, FROM_ID)
+		values((SELECT
+		NVL(MAX(NOTIFICATION_IDX),0) + 1 FROM NOTIFICATION_TB), #{post_id},
+		1, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), #{user_id})
+	</insert>
+	<select id="getNotis" parameterType="String"
+		resultType="com.kdh.domain.NotificationVo">
+		Select NOTIFICATION_IDX, TO_ID, CHECK_YN, MESSAGE, CREATED_DATE, FROM_ID
+		FROM NOTIFICATION_TB
+		WHERE TO_ID = #{user_id}		
+	</select>
 </mapper>
