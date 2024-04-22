@@ -227,10 +227,12 @@ public class UserController {
 	}
 	
 	@PostMapping("/LikeAdd")
-	public ResponseEntity<?> addScrap(@RequestBody LikesVo like) {
+	public ResponseEntity<?> addScrap(@RequestBody LikesVo like, PostVo post) {
 		try {
 			int post_idx = like.getPost_idx();
+			post = userService.getPost(post_idx);
 			userService.insertLike(like, post_idx);
+			log.info("post_idx = {}",post_idx);
 			return ResponseEntity.ok().build();
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body("Like 추가에 실패했습니다.");
@@ -238,9 +240,9 @@ public class UserController {
 	}
 
 	@DeleteMapping("/LikeDelete")
-	public ResponseEntity<?> deleteScrap(@RequestParam("post_idx") int post_idx, @RequestParam("user_idx") int user_idx) {
+	public ResponseEntity<?> deleteScrap(@RequestBody LikesVo like) {
 		try {
-			userService.deleteLike(post_idx, user_idx);
+			userService.deleteLike(like);
 			return ResponseEntity.ok().build();
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body("Like 삭제에 실패했습니다.");
@@ -249,9 +251,9 @@ public class UserController {
 
 	@GetMapping("/CheckLike")
 	public ResponseEntity<?> checkScrap(@RequestParam("post_idx") int post_idx, @RequestParam("user_idx") int user_idx) {
-		int countLike = userService.countLike(user_idx, post_idx);
+		int checkLike = userService.checkLike(user_idx, post_idx);
 		try {
-			if (countLike != 0) {
+			if (checkLike != 0) {
 				boolean isLiked = true;
 				return ResponseEntity.ok(isLiked);
 			} else {
@@ -266,9 +268,9 @@ public class UserController {
 
 	@PostMapping("/LoadLikes")
 	@ResponseBody
-	public int loadLikes(@RequestParam("post_idx") int post_idx, @RequestParam("user_idx") int user_idx) {
+	public int loadLikes(@RequestParam("post_idx") int post_idx) {
 	    // postId를 기반으로 좋아요 수를 업데이트하고, 업데이트된 좋아요 수를 반환하는 로직 구현
-	    int loadlikes = userService.countLike(user_idx, post_idx);
+	    int loadlikes = userService.countLike(post_idx);
 
 	    // 업데이트된 좋아요 수를 int로 직접 반환
 	    return loadlikes;

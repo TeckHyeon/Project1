@@ -106,19 +106,30 @@ public class UserService {
 
 	}
 
-	public void deleteLike(int post_idx, int user_idx) {
-		userMapper.deleteLike(post_idx, user_idx);
+	public void deleteLike(LikesVo like) {
+		int post_idx = like.getPost_idx();
+		userMapper.deleteLike(like);
 		userMapper.updatePostLikes(post_idx);
 	}
 
-	public int countLike(int user_idx, int post_idx) {
-		int countLike = userMapper.countLike(user_idx, post_idx);
-		return countLike;
+	public int checkLike(int user_idx, int post_idx) {
+		int checkLike = userMapper.checkLike(user_idx, post_idx);
+		return checkLike;
 	}
 
 	public List<PostVo> viewPostById(String user_id) {
 		// TODO Auto-generated method stub
 		return userMapper.viewPostById(user_id);
+	}
+
+	public int countLike(int post_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.countLike(post_idx);
+	}
+
+	public PostVo getPost(int post_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.getPost(post_idx);
 	}
 
 }

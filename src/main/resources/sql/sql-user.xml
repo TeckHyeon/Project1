@@ -75,11 +75,14 @@
 		]]>
 	</insert>
 	<select id="viewPostById" parameterType="String">
-		SELECT post_idx, post_id, post_name, post_title,
+		SELECT post_idx,
+		post_id, post_name, post_title,
 		post_contents,
-		post_likes, post_created_date, post_updated_date, deleted_yn
+		post_likes,
+		post_created_date, post_updated_date, deleted_yn
 		FROM POST_TB
-		WHERE POST_ID = #{user_id}
+		WHERE
+		POST_ID = #{user_id}
 
 	</select>
 	<select id="viewPost" parameterType="String"
@@ -211,10 +214,11 @@ ORDER BY
 
 	<delete id="deleteLike">
 		delete from LIKES_TB where post_idx =
-		#{post_idx} AND USER_IDX = #{user_idx}
+		#{post_idx} AND
+		USER_IDX = #{user_idx}
 	</delete>
 
-	<select id="countLike" resultType="int">
+	<select id="checkLike" resultType="int">
 		select count(*) from
 		LIKES_TB
 		where USER_IDX = #{arg0} and POST_IDX =
@@ -231,5 +235,9 @@ ORDER BY
 		deleted_yn = 'N'
 				]]>
 	</update>
-
+	<select id="countLike" resultType="int">
+		select count(*) from
+		LIKES_TB
+		where POST_IDX = #{post_idx}
+	</select>
 </mapper>

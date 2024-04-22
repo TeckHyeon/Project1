@@ -97,7 +97,7 @@ input {
 									</div>
 									<div class="ms-3 my-1">
 										<span class="fw-bold like_btn"
-											th:attr="data-post-idx=${item.post_idx}"> <svg
+											th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}"> <svg
 												class="w-6 h-6 text-gray-800 text-danger"
 												aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
 												width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -121,6 +121,7 @@ input {
 				</div>
 			</div>
 		</div>
+		
 	</main>
 	<script>
 	$(document).ready(function() {
@@ -153,9 +154,8 @@ input {
 	            });
 	        });
 	    }
-
-	    updateScrapButtons(); // 페이지 로드 시 스크랩 버튼 상태 갱신
-
+	    updateScrapButtons();
+	    
 	    $('.like_btn').click(function() {
 	        const button = $(this);
 	        const post_idx = button.data('post-idx');
@@ -163,33 +163,34 @@ input {
 
 	        if (isLiked) {
 	            // 스크랩 삭제 요청
-	            $.ajax({
-	            	 url: `/LikeDelete?post_idx=` + post_idx + '&user_idx=' + user_idx,
-	            	 type: 'DELETE',
-	            	 dataType: 'json',
-	                success: function(response) {
-	                    updateScrapButtons(); // 모든 스크랩 버튼 상태 갱신
-	            	    	$.ajax({
-	            	    		url: '/LoadLikes',
-	            	    		type: 'POST',
-	            	    		data:  {"post_idx" : post_idx,
-	            	    				"user_idx" : user_idx},
-	            	    		success: function(loadlikes) {
-	            	    			$('#post_likes'+post_idx).val(loadlikes);
-	            	    			console.log(loadlikes);
-	            	    			console.log($('#post_likes'+post_idx));
-	            	    		},
-	            	    		error: function(){
-	            	    			alert('오류가 발생했습니다. 다시 시도해주세요.');
-	            	    		}
-	            	    	});
-	            
-	                },
-	                error: function(error) {
-	                    console.error('Error:', error);
-	                    alert('오류가 발생했습니다. 다시 시도해주세요.');
-	                }
-	            });
+	        	$.ajax({
+	        	    url: '/LikeDelete', // URL 수정
+	        	    type: 'DELETE',
+	                contentType: 'application/json',
+	                data: JSON.stringify({
+	                    post_idx: post_idx,
+	                    user_idx: user_idx
+	                }),
+	        	    success: function(response) {
+	        	        updateScrapButtons(); // 모든 스크랩 버튼 상태 갱신
+	        	        $.ajax({
+	        	            url: '/LoadLikes',
+	        	            type: 'POST',
+	        	            data: { "post_idx": post_idx, "user_idx": user_idx },
+	        	            success: function(loadlikes) {
+	        	                $('#post_likes' + post_idx).val(loadlikes);
+	        	            },
+	        	            error: function() {
+	        	                alert('오류가 발생했습니다. 다시 시도해주세요.');
+	        	            }
+	        	        });
+	        	    },
+	        	    error: function(error) {
+	        	        console.error('Error:', error);
+	        	        alert('오류가 발생했습니다. 다시 시도해주세요.');
+	        	    }
+	        	});
+
 	        } else {
 	            // 스크랩 추가 요청
 	            $.ajax({
@@ -202,19 +203,17 @@ input {
 	                }),
 	                success: function(response) {
 	                    updateScrapButtons(); // 모든 스크랩 버튼 상태 갱신
-	                    $.ajax({
-            	    		url: '/LoadLikes',
-            	    		type: 'POST',
-            	    		data:  {"post_idx" : post_idx,
-            	    				"user_idx" : user_idx},
-            	    		success: function(loadlikes) {
-            	    			$('#post_likes'+post_idx).val(loadlikes);
-            	    			console.log(loadlikes);
-            	    		},
-            	    		error: function(){
-            	    			alert('오류가 발생했습니다. 다시 시도해주세요.');
-            	    		}
-            	    	});
+	        	        $.ajax({
+	        	            url: '/LoadLikes',
+	        	            type: 'POST',
+	        	            data: { "post_idx": post_idx, "user_idx": user_idx },
+	        	            success: function(loadlikes) {
+	        	                $('#post_likes' + post_idx).val(loadlikes);
+	        	            },
+	        	            error: function() {
+	        	                alert('오류가 발생했습니다. 다시 시도해주세요.');
+	        	            }
+	        	        });
 	                },
 	                error: function(error) {
 	                    console.error('Error:', error);
@@ -224,10 +223,23 @@ input {
 	        }
 
 	    });
+	    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+	    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+	        return new bootstrap.Popover(popoverTriggerEl, {
+	            trigger: 'focus'
+	        });
+	    });
 
-	 
+	    // 팝 오버 내부 클릭 시 팝 오버가 닫히지 않도록 처리
+	    document.body.addEventListener('click', function (e) {
+	        var target = e.target;
+	        var popover = document.querySelector('.popover');
+	        if (popover && popover.contains(target)) {
+	            e.stopPropagation(); // 팝 오버 내부 클릭 이벤트가 버블링되지 않도록 함
+	        }
+	    }, true); // 캡처 단계에서 이벤트를 처리하여, 이벤트가 버블링 단계로 넘어가기 전에 캡처함
+
 	});
-
 	</script>
 	<script src="/js/youtubeLink.js"></script>
 </body>

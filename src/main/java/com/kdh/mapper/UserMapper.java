@@ -49,12 +49,16 @@ public interface UserMapper {
 
 	void insertLike(LikesVo like);
 
-	void deleteLike(int post_idx, int user_idx);
+	void deleteLike(LikesVo like);
 
-	int countLike(int user_idx, int post_idx);
+	int checkLike(int user_idx, int post_idx);
 
 	void updatePostLikes(int post_idx);
 
 	List<PostVo> viewPostById(String user_id);
+
+	int countLike(@Param("post_idx") int post_idx);
+
+	PostVo getPost(int post_idx);
 
 }
