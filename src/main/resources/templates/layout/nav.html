@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
+
 </head>
 <body>
 	<div th:fragment="nav"
@@ -20,8 +21,10 @@
 				class="nav-link link-body-emphasis" aria-current="page">Home </a></li>
 			<li><a href="#" class="nav-link link-body-emphasis">검색 </a></li>
 			<li><div th:if="${user != null}">
-					<div id="notificationArea"
-						th:replace="layout/notifragment.html :: noti"></div>
+					<div id="notificationArea">
+					<div th:replace="layout/notifragment.html :: noti"></div>
+					
+					</div>
 				</div>
 				<div th:unless="${user != null}">
 					<a class="nav-link link-body-emphasis mx-0" href="/login">알림</a>
@@ -52,6 +55,35 @@
 			</ul>
 		</div>
 		<a class="btn btn-primary" href="/login" th:unless="${user != null}">로그인</a>
+		
+<script>
+	$(document).ready(function() {
+		function fetchNotifications() {
+			$.ajax({
+				url : '/notiRefresh',
+				success : function(data) {
+
+					$('#notificationArea').html(data);
+				}
+			});
+		}
+		setInterval(fetchNotifications, 10000);
+		
+		 $(document).on('hidden.bs.modal', '.modal', function(e) {
+			var notiIdx = $(this).attr('id').replace('postDetail', '');
+			console.log(notiIdx);
+				$.ajax({
+					url : '/CheckNoti',
+					type: 'POST',
+					data: {notification_idx: notiIdx},
+					success : function(response) {
+						fetchNotifications();
+					}
+				});
+		});
+	});
+</script>
+
 	</div>
 </body>
 </html>

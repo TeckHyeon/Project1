@@ -5,26 +5,43 @@
 <title>Insert title here</title>
 </head>
 <body>
-    <div th:fragment="noti">
-        <div class="dropdown">
-            <a class="nav-link link-body-emphasis mx-0" data-bs-toggle="dropdown"
-                aria-expanded="false">알림 <span class="border notification-count"
-                th:text="${#lists.size(noti)}">0</span></a>
-            <ul class="dropdown-menu">
-                <!-- 알림이 없는 경우 처리 -->
-                <li th:if="${#lists.isEmpty(noti)}"><a class="dropdown-item" href="#">알림이 없습니다</a></li>
-                <!-- 알림이 있는 경우 처리 -->
-                <li th:each="notification : ${noti}" th:switch="${notification.message}">
-                    <a class="dropdown-item" href="#" th:case="1"
-                        th:text="${notification.from_id} + '님이 좋아요를 눌렀습니다.'"></a>
-                    <a class="dropdown-item" href="#" th:case="2"
-                        th:text="${notification.from_id} + '님이 새글을 올렸습니다.'"></a>
-                    <a class="dropdown-item" href="#" th:case="3"
-                        th:text="${notification.from_id} + '님이 댓글을 올렸습니다.'"></a>
-                </li>
-            </ul>
-        </div>
-    </div>
+	<div th:fragment="noti">
+		<div class="dropdown">
+			<a class="nav-link link-body-emphasis mx-0" data-bs-toggle="dropdown"
+				aria-expanded="false">알림 <span class="border notification-count"
+				th:text="${#lists.size(noti)}">0</span></a>
+			<ul class="dropdown-menu">
+				<!-- 알림이 없는 경우 처리 -->
+				<li th:if="${#lists.isEmpty(noti)}"><a class="dropdown-item"
+					href="#">알림이 없습니다</a></li>
+				<!-- 알림이 있는 경우 처리 -->
+				<li th:each="notification : ${noti}"><a class="dropdown-item"
+					data-bs-toggle="modal"
+					th:attr="data-noti-idx=${notification.notification_idx}"
+					th:data-bs-target="'#postDetail' + ${notification.notification_idx}"
+					th:switch="${notification.message}"> <span th:case="1"
+						th:text="${notification.from_id} + '님이 좋아요를 눌렀습니다.'"></span> <span
+						th:case="2" th:text="${notification.from_id} + '님이 새글을 올렸습니다.'"></span>
+						<span th:case="3"
+						th:text="${notification.from_id} + '님이 댓글을 올렸습니다.'"></span>
+				</a></li>
+			</ul>
+			<!-- 모달은 반복적인 요소 밖에 위치해야 합니다. -->
+		</div>
+		<div th:replace="~{layout/postdetail.html :: postdetail}"></div>
+		<script>
+			$(document).ready(function() {
+				// 모든 모달에 대해 'show.bs.modal' 이벤트를 바인딩합니다.
+				// 모달이 표시될 때 해당 이벤트가 발생하고, 이벤트 핸들러 함수가 실행됩니다.
+				$('.modal').on('show.bs.modal', function() {
+					var modal = $(this); // 현재 표시되는 모달의 jQuery 객체를 가져옵니다.
+					modal.appendTo('body'); // 해당 모달을 'body' 태그의 끝에 추가합니다.
+				});
+			});
+		</script>
+
+	</div>
+
 </body>
 
 </html>

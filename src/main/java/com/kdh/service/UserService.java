@@ -13,6 +13,7 @@ import com.kdh.domain.FileVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
+import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.UserVo;
 import com.kdh.mapper.UserMapper;
 
@@ -127,14 +128,21 @@ public class UserService {
 		return userMapper.countLike(post_idx);
 	}
 
-	public void insertNoti(String post_id, String user_id) {
-		
-		userMapper.insertNoti(post_id, user_id);
+	public void insertNoti(NotificationVo notiVo, PostnotiVo postnotiVo) {
+		int notiIdx = userMapper.selectMaxNotificationIndex();
+		postnotiVo.setNotification_idx(notiIdx);
+		notiVo.setNotification_idx(notiIdx);
+		userMapper.insertNoti(notiVo);
+		userMapper.insertPostNoti(postnotiVo);
 	}
 
 	public List<NotificationVo> getNotis(String user_Id) {
 		// TODO Auto-generated method stub
 		return userMapper.getNotis(user_Id);
+	}
+
+	public void updateNoti(int notification_idx) {
+		userMapper.updateNoti(notification_idx);
 	}
 
 }

@@ -9,6 +9,7 @@ import com.kdh.domain.FileVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
+import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.UserVo;
 
 @Mapper
@@ -62,8 +63,14 @@ public interface UserMapper {
 
 	PostVo getPostByIdx(int post_idx);
 
-	void insertNoti(@Param("post_id") String post_id,@Param("user_id") String user_id);
+	void insertNoti(NotificationVo notiVo);
 
 	List<NotificationVo> getNotis(String user_Id);
+
+	void updateNoti(@Param("notification_idx") int notification_idx);
+
+	int selectMaxNotificationIndex();
+
+	void insertPostNoti(PostnotiVo postnotiVo);
 
 }

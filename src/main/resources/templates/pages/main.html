@@ -170,30 +170,6 @@ input {
 	        });
 	    }
 	    
-	    function fetchNotifications() {
-	        $.ajax({
-	            url : '/notiRefresh',
-	            success : function(data) {
-	                // 'th:replace'를 사용하여 받아온 프래그먼트로 기존 내용을 교체
-	                $('#notificationArea').replaceWith(data);
-	            }
-	        });
-	    }
-	    
-	    setInterval(fetchNotifications, 5000);
-	    
-	    function updateNotifications(to_id) {
-	    	$.ajax({
-                url: '/CheckNoti?to_id=' + to_id,
-                type: 'GET',
-                success: function(noti) {
-	             console.log("알림 불러옴");
-                },
-                error: function(error) {
-                    console.error('Error:', error);
-                }
-            });
-	    }
 	    updateScrapButtons();
 	    
 	    $('.like_btn').click(function() {
@@ -258,7 +234,7 @@ input {
 	        	        $.ajax({
 	        	            url: '/AddNoti',
 	        	            type: 'POST',
-	        	            data: { "post_id": post_id, "user_id" : user_id},
+	        	            data: { "post_id": post_id, "user_id" : user_id, "post_idx": post_idx},
 	        	            success: function(response) {
 	        	                console.log('Add 성공');
 	        	            },

@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +24,7 @@ import com.kdh.domain.FileVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
+import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
 import com.kdh.util.SessionManager;
@@ -246,14 +246,19 @@ public class UserController {
 		}
 	}
 	@PostMapping("/AddNoti")
-	public ResponseEntity<?> addNoti(@RequestParam("post_id") String post_id, @RequestParam("user_id") String user_id) {
+	public ResponseEntity<?> addNoti(@RequestParam("post_id") String post_id, @RequestParam("user_id") String user_id, @RequestParam("post_idx") int post_idx , NotificationVo notiVo, PostnotiVo postnotiVo ) {
 	    try {
 	        // post_id와 user_id가 같은지 확인합니다. 같다면 본인의 게시물에 알림을 추가하는 것이므로 요청을 거절합니다.
 	        if (post_id.equals(user_id)) {
 	        	return ResponseEntity.ok().body("본인의 게시물은 알림이 등록되지 않습니다.");
 	        } else {
 	            // userService를 통해 알림을 추가하는 로직을 실행합니다.
-	            userService.insertNoti(post_id, user_id);
+	        	notiVo.setFrom_id(user_id);
+	        	notiVo.setTo_id(post_id);
+	        	postnotiVo.setFrom_id(user_id);
+	        	postnotiVo.setTo_id(post_id);
+	        	postnotiVo.setPost_idx(post_idx);
+	            userService.insertNoti(notiVo, postnotiVo);
 	            // 로깅을 통해 post_id 값을 기록합니다.
 	            log.info("post_idx = {}", post_id);
 	            // 성공적으로 처리되면 HTTP 상태 코드 200을 반환합니다.
@@ -303,11 +308,22 @@ public class UserController {
 	}
 	
 	@GetMapping("/notiRefresh")
-	public String getNotificationFragment(Model model, @SessionAttribute("userVo") UserVo user) {
-	    String user_Id = user.getUser_id();
-		List<NotificationVo> noti = userService.getNotis(user_Id);
-	    model.addAttribute("noti", noti);
-	    return "notifragment.html :: noti";
+	public ModelAndView getNotificationFragment(@SessionAttribute("userVo") UserVo user) {
+	    ModelAndView modelAndView = new ModelAndView("layout/notifragment");
+	    String userId = user.getUser_id();
+	    List<NotificationVo> noti = userService.getNotis(userId);
+	    modelAndView.addObject("noti", noti);
+	    modelAndView.setViewName("layout/notifragment :: noti");
+	    return modelAndView;
+	}
+	@PostMapping("/CheckNoti")
+	public ResponseEntity<?> checkNoti(@RequestParam("notification_idx") int notification_idx) {
+		try {
+			userService.updateNoti(notification_idx);
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("알림 확인에 실패했습니다.");
+		}
 	}
 	
 	
