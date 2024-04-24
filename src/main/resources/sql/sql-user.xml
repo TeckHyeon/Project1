@@ -43,14 +43,11 @@
 	</insert>
 
 	<insert id="insertFile" parameterType="com.kdh.domain.FileVo">
-		INSERT INTO post_file_TB
+		INSERT INTO POST_FILE_TB
 		(original_name, file_path, file_size,
-		created_date, UPLOAD_DATE, POST_IDX)
+		UPLOAD_DATE, POST_IDX)
 		VALUES
-		(#{original_Name}, #{file_Path}, #{file_Size}, TO_CHAR(SYSDATE,
-		'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(SYSDATE,
-		'YYYY-MM-DD HH24:MI:SS'),
-		#{post_Idx})
+		(#{original_Name}, #{file_Path}, #{file_Size}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), #{post_Idx})
 	</insert>
 
 
@@ -249,19 +246,23 @@ ORDER BY
 		where POST_IDX
 		= #{post_idx}
 	</select>
-	<insert id="insertNoti" parameterType="com.kdh.domain.NotificationVo">
+	<insert id="insertNoti"
+		parameterType="com.kdh.domain.NotificationVo">
 		insert into NOTIFICATION_TB (NOTIFICATION_IDX,
-		TO_ID, MESSAGE, CREATED_DATE, FROM_ID)
+		TO_ID,
+		MESSAGE, CREATED_DATE, FROM_ID)
 		values(#{notification_idx}, #{to_id},
 		1, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), #{from_id})
 	</insert>
 	<select id="getNotis" parameterType="String"
 		resultType="com.kdh.domain.NotificationVo">
-		Select NOTIFICATION_IDX, TO_ID, CHECK_YN, MESSAGE, CREATED_DATE, FROM_ID
+		Select NOTIFICATION_IDX, TO_ID, CHECK_YN, MESSAGE,
+		CREATED_DATE, FROM_ID
 		FROM NOTIFICATION_TB
-		WHERE TO_ID = #{user_id} AND CHECK_YN = 'N'
+		WHERE TO_ID = #{user_id} AND
+		CHECK_YN = 'N'
 	</select>
-		<update id="updateNoti">
+	<update id="updateNoti">
 		<![CDATA[
 			UPDATE
 				NOTIFICATION_TB
@@ -271,11 +272,26 @@ ORDER BY
 				NOTIFICATION_IDX = #{notification_idx}
 		]]>
 	</update>
-	<select id = "selectMaxNotificationIndex">
-	SELECT NVL(MAX(NOTIFICATION_IDX),0) + 1 FROM NOTIFICATION_TB
+	<select id="selectMaxNotificationIndex">
+		SELECT NVL(MAX(NOTIFICATION_IDX),0) + 1 FROM NOTIFICATION_TB
 	</select>
-		<insert id="insertPostNoti" parameterType="com.kdh.domain.PostnotiVo">
-		insert into POST_NOTI_TB (POSTNOTI_IDX, FROM_ID, TO_ID, POST_IDX, NOTIFICATION_IDX)
-		values((SELECT NVL(MAX(POSTNOTI_IDX),0) + 1 FROM POST_NOTI_TB), #{from_id},#{to_id}, #{post_idx}, #{notification_idx})
+	<insert id="insertPostNoti"
+		parameterType="com.kdh.domain.PostnotiVo">
+		insert into POST_NOTI_TB (POSTNOTI_IDX, FROM_ID, TO_ID,
+		POST_IDX, NOTIFICATION_IDX)
+		values((SELECT NVL(MAX(POSTNOTI_IDX),0) + 1
+		FROM POST_NOTI_TB), #{from_id},#{to_id}, #{post_idx},
+		#{notification_idx})
 	</insert>
+
+	<select id="findPostNotibyIdx">
+		Select *
+		from post_noti_tb
+		where notification_idx = #{notification_idx}
+	</select>
+	<select id="findPostbyIdx">
+		Select *
+		from POST_TB
+		where POST_IDX = #{post_idx}
+	</select>
 </mapper>

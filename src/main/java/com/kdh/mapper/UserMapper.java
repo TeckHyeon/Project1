@@ -73,4 +73,8 @@ public interface UserMapper {
 
 	void insertPostNoti(PostnotiVo postnotiVo);
 
+	PostnotiVo findPostNotibyIdx(@Param("notification_idx") int notification_idx);
+
+	PostVo findPostbyIdx(int post_idx);
+
 }

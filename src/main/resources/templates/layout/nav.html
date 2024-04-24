@@ -71,6 +71,7 @@
 		
 		 $(document).on('hidden.bs.modal', '.modal', function(e) {
 			var notiIdx = $(this).attr('id').replace('postDetail', '');
+			
 			console.log(notiIdx);
 				$.ajax({
 					url : '/CheckNoti',
@@ -83,7 +84,6 @@
 		});
 	});
 </script>
-
 	</div>
 </body>
 </html>

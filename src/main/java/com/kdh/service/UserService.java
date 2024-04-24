@@ -145,4 +145,14 @@ public class UserService {
 		userMapper.updateNoti(notification_idx);
 	}
 
+	public PostnotiVo findPostNotibyIdx(int notification_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.findPostNotibyIdx(notification_idx);
+	}
+
+	public PostVo findPostbyIdx(int post_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.findPostbyIdx(post_idx);
+	}
+
 }

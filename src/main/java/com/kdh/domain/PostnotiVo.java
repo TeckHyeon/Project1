@@ -13,4 +13,5 @@ public class PostnotiVo {
 	String to_id;
 	int post_idx;
 	int notification_idx;
+	
 }

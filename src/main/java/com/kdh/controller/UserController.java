@@ -316,6 +316,24 @@ public class UserController {
 	    modelAndView.setViewName("layout/notifragment :: noti");
 	    return modelAndView;
 	}
+	@PostMapping("/findPostNotibyIdx")
+	public ModelAndView findPostNotibyIdx(@RequestParam("noti") int noti, PostnotiVo vo, PostVo post) {
+		ModelAndView modelAndView = new ModelAndView("layout/postdetail");
+		vo = userService.findPostNotibyIdx(noti);
+		int post_idx = vo.getPost_idx();
+		post = userService.findPostbyIdx(post_idx);
+		
+		List<FileVo> allFiles = new ArrayList<>();
+		List<FileVo> filesForPost = userService.viewPostFileList(post.getPost_idx());
+		PostFiles.addFilesToPostAndAllFilesList(filesForPost, post, allFiles);
+		
+		modelAndView.addObject("post", post);
+		modelAndView.addObject("notification_idx", noti);
+		log.info("post = {}", post);
+		log.info("filesForPost = {}", filesForPost);
+		modelAndView.setViewName("layout/postdetail :: postdetail");
+		return modelAndView;
+	}
 	@PostMapping("/CheckNoti")
 	public ResponseEntity<?> checkNoti(@RequestParam("notification_idx") int notification_idx) {
 		try {

@@ -14,4 +14,6 @@ public class NotificationVo {
 	int message;
 	String created_date;
 	String from_id;
+	int post_idx;
+	PostnotiVo postNotiVo;
 }
