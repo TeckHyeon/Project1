@@ -9,6 +9,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.kdh.common.PostFiles;
+import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
@@ -145,14 +146,23 @@ public class UserService {
 		userMapper.updateNoti(notification_idx);
 	}
 
-	public PostnotiVo findPostNotibyIdx(int notification_idx) {
+	public PostnotiVo findPostNotibyIdx(int noti) {
 		// TODO Auto-generated method stub
-		return userMapper.findPostNotibyIdx(notification_idx);
+		return userMapper.findPostNotibyIdx(noti);
 	}
 
 	public PostVo findPostbyIdx(int post_idx) {
 		// TODO Auto-generated method stub
 		return userMapper.findPostbyIdx(post_idx);
+	}
+
+	public void insertComment(CommentVo vo) {
+		userMapper.insertComment(vo);
+	}
+
+	public List<CommentVo> getCommentList(Long post_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.getCommentList(post_idx);
 	}
 
 }

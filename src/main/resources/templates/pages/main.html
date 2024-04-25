@@ -18,7 +18,8 @@
 input {
 	border: none;
 }
- .navbar-fixed-left {
+
+.navbar-fixed-left {
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -29,27 +30,29 @@ input {
 }
 
 .content_text {
-	overflow: hidden;
 	display: -webkit-box;
 	-webkit-line-clamp: 4;
 	-webkit-box-orient: vertical;
 }
+
 .notification-count {
-  display: inline-block;
-  background-color: red; /* 빨간색 배경 */
-  color: white; /* 흰색 텍스트 */
-  font-weight: bold; /* 굵은 글씨 */
-  border-radius: 0%; /* 모서리가 둥글지 않음 */
-  padding: 0.5em; /* 모든 방향에 대해 동일한 패딩 */
-  font-size: 0.75em; /* 폰트 크기 */
-  vertical-align: top; /* 상단 정렬 */
-  width: 2em; /* 너비 설정 */
-  height: 2em; /* 높이 설정 */
-  line-height: 1em; /* 텍스트 라인 높이를 요소의 높이와 맞춤 */
-  text-align: center; /* 텍스트를 중앙 정렬 */
+	display: inline-block;
+	background-color: red; /* 빨간색 배경 */
+	color: white; /* 흰색 텍스트 */
+	font-weight: bold; /* 굵은 글씨 */
+	border-radius: 0%; /* 모서리가 둥글지 않음 */
+	padding: 0.5em; /* 모든 방향에 대해 동일한 패딩 */
+	font-size: 0.75em; /* 폰트 크기 */
+	vertical-align: top; /* 상단 정렬 */
+	width: 2em; /* 너비 설정 */
+	height: 2em; /* 높이 설정 */
+	line-height: 1em; /* 텍스트 라인 높이를 요소의 높이와 맞춤 */
+	text-align: center; /* 텍스트를 중앙 정렬 */
 }
 
-
+textarea.no-resize {
+	resize: none;
+}
 </style>
 <script>
 	function showMoreContent(button) {
@@ -89,9 +92,9 @@ input {
 								<div class="p-4">
 									<!-- 첫 번째 내용 블록 -->
 									<div class="d-flex justify-content-between mb-3">
-										<input type="text" th:value="${item.post_id}" disabled>
-										<input class="text-end" type="text"
-											th:value="${item.post_updated_date}" readonly disabled>
+										<p th:text="${item.post_name}"
+											th:id="'post_name'+${item.post_idx}">
+										<p class="text-end" th:text="${item.post_updated_date}">
 									</div>
 									<div class="">
 										<div th:each="file : ${item.fileList}"
@@ -99,8 +102,7 @@ input {
 											<img th:src="${file.file_Path}" alt="게시글 이미지"
 												class="post-image mb-3" style="width: 280px; height: auto;">
 										</div>
-										<div th:id="'content' + ${iterStat.index}"
-											class="mt-3 px-3">
+										<div th:id="'content' + ${iterStat.index}" class="mt-3 px-3">
 											<p th:id="'content_text' + ${iterStat.index}"
 												th:text="${item.post_contents}" class="content_text content"></p>
 											<button
@@ -113,8 +115,8 @@ input {
 									</div>
 									<div class="ms-3 my-1">
 										<span class="fw-bold like_btn"
-											th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}"> <svg
-												class="w-6 h-6 text-gray-800 text-danger"
+											th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}">
+											<svg class="w-6 h-6 text-gray-800 text-danger"
 												aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
 												width="24" height="24" fill="none" viewBox="0 0 24 24">
                       							<path stroke="currentColor"
@@ -122,12 +124,22 @@ input {
 													stroke-width="2"
 													d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z" />
                     						</svg>
-										</span>
-										<input type="text" th:value="${item.post_likes}" th:id="'post_likes' + ${item.post_idx}">
+										</span> <input type="text" th:value="${item.post_likes}"
+											th:id="'post_likes' + ${item.post_idx}">
 									</div>
-									<div class="container-fluid mt-3">댓글창</div>
+									<div class="mt-3"
+										th:each="comment : ${item.commentList}"><div class="border px-3 py-2">
+											<div class="d-flex justify-content-between">
+												<p th:text="${comment.from_name}">
+												<p th:text="${comment.commentTimeAgo}">
+											</div>
+											<p th:text="${comment.comment_content}">
+										</div>
+									</div>
 									<div class="mt-3 row">
-										<textarea class="form-control comment-box col"
+										<textarea
+											class="form-control comment-box col border no-resize"
+											th:attr="data-post-idx=${item.post_idx}"
 											placeholder="댓글 달기..." style="border: none; height: 3rem"></textarea>
 									</div>
 								</div>
@@ -139,8 +151,46 @@ input {
 		</div>
 	</main>
 	<script src="/js/likeBtn.js">
+		
 	</script>
 	<script src="/js/youtubeLink.js"></script>
+	<script>
+		$(document).ready(function() {
+			$('.comment-box').keydown(function(e) {
+				const button = $(this);
+				const post_idx = button.data('post-idx');
+				// 엔터키가 눌렸을 때
+				if (e.keyCode == 13) {
+					// Shift키가 함께 눌렸는지 확인
+					if (!e.shiftKey) {
+
+						// Shift키가 눌리지 않았다면 댓글 전송
+						e.preventDefault(); // 기본 동작(줄바꿈) 방지
+						var comment = $(this).val(); // 댓글 내용을 가져옴
+						console.log(comment); // 댓글 내용 확인용(실제로는 댓글을 추가하는 로직을 구현)
+						const commentData = {
+							comment_content : comment,
+							to_post_idx : post_idx
+						}
+						$.ajax({
+							url : '/CommentInsert',
+							type : 'POST',
+							contentType : 'application/json', // 이 줄을 추가해야 합니다.
+							data : JSON.stringify(commentData), // 객체를 JSON 문자열로 변환
+							success : function(data) {
+
+							},
+							error : function(error) {
+								console.error('Error:', error);
+							}
+						});
+						$(this).val(''); // 텍스트 에어리어 초기화
+					}
+					// Shift키와 함께 눌렸다면, 기본 동작인 줄바꿈을 수행
+				}
+			});
+		});
+	</script>
 </body>
 
 </html>

@@ -1,5 +1,7 @@
 package com.kdh.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +22,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.kdh.common.PostFiles;
+import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
@@ -28,6 +31,7 @@ import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
 import com.kdh.util.SessionManager;
+import com.kdh.util.TimeAgo;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -61,14 +65,32 @@ public class UserController {
 			log.info("posts = {}", posts);
 		}
 		for (PostVo post : posts) {
-			List<FileVo> filesForPost = userService.viewPostFileList(post.getPost_idx());
-			PostFiles.addFilesToPostAndAllFilesList(filesForPost, post, allFiles);
+		    List<FileVo> filesForPost = userService.viewPostFileList(post.getPost_idx());
+		    List<CommentVo> comments = userService.getCommentList(post.getPost_idx());
+		    PostFiles.addFilesToPostAndAllFilesList(filesForPost, post, allFiles);
+		    // findCommentListByPost_Idx 함수 호출 부분은 제거하였습니다.
+
+		    for (CommentVo comment : comments) {
+		        String strDate = comment.getCreated_date();
+		        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		        LocalDateTime createdDate = LocalDateTime.parse(strDate, formatter);
+		        String timeAgo = TimeAgo.calculateTimeAgo(createdDate);
+		        comment.setCommentTimeAgo(timeAgo); // 여기를 수정했습니다.
+		    }
+		    post.setCommentList(comments); // 포스트에 댓글 목록을 설정합니다.
 		}
-		mv.addObject("files", allFiles);
 		PostFiles.logPostAndFileInformation(userVo, allFiles, posts, log);
 		return mv;
 	}
 
+	public static void findCommentListByPost_Idx(List<CommentVo> comment, PostVo post, List<CommentVo> commentList) {
+	    if (commentList != null) {
+	    	commentList.addAll(comment);
+	        post.setCommentList(commentList);
+	    }
+	}
+	
+	
 	@GetMapping("/login")
 	public ModelAndView login() {
 		ModelAndView mv = new ModelAndView();
@@ -180,7 +202,6 @@ public class UserController {
 			PostFiles.addFilesToPostAndAllFilesList(filesForPost, post, allFiles);
 		}
 		mv.addObject("posts", posts);
-		mv.addObject("files", allFiles);
 		PostFiles.logPostAndFileInformation(userVo, allFiles, posts, log);
 		mv.setViewName("/pages/profile");
 
@@ -338,6 +359,17 @@ public class UserController {
 	public ResponseEntity<?> checkNoti(@RequestParam("notification_idx") int notification_idx) {
 		try {
 			userService.updateNoti(notification_idx);
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("알림 확인에 실패했습니다.");
+		}
+	}
+	@PostMapping("/CommentInsert")
+	public ResponseEntity<?> insertComment(@RequestBody CommentVo vo, @SessionAttribute("userVo") UserVo user) {
+		try {
+			vo.setFrom_id(user.getUser_id());  
+			vo.setFrom_name(user.getUser_name());  
+			userService.insertComment(vo);
 			return ResponseEntity.ok().build();
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body("알림 확인에 실패했습니다.");

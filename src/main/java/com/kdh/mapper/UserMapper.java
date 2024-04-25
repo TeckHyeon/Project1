@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
@@ -61,7 +62,7 @@ public interface UserMapper {
 
 	int countLike(@Param("post_idx") int post_idx);
 
-	PostVo getPostByIdx(int post_idx);
+	PostVo getPostByIdx(Long post_idx);
 
 	void insertNoti(NotificationVo notiVo);
 
@@ -73,8 +74,12 @@ public interface UserMapper {
 
 	void insertPostNoti(PostnotiVo postnotiVo);
 
-	PostnotiVo findPostNotibyIdx(@Param("notification_idx") int notification_idx);
+	PostnotiVo findPostNotibyIdx(@Param("notification_idx") int noti);
 
 	PostVo findPostbyIdx(int post_idx);
+
+	void insertComment(CommentVo vo);
+
+	List<CommentVo> getCommentList(Long post_idx);
 
 }
