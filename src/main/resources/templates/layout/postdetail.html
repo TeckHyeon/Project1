@@ -43,7 +43,7 @@
 							</div>
 							<div class="ms-3 my-1">
 								<span class="fw-bold dlike_btn"
-									th:attr="data-postdetail-idx=${post.post_idx}, data-postdetail-id=${post.post_id}"> <svg
+									th:attr="data-postdetail-idx=${post.post_idx}, data-postdetail-id=${post.post_id}, data-message-number=1"> <svg
 										class="w-6 h-6 text-gray-800 text-danger" aria-hidden="true"
 										xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
 										viewBox="0 0 24 24">
@@ -73,6 +73,7 @@
 				    const user_idx = $('#user_idx').val(); // 현재 사용자 ID
 				    const user_id = $('#user_id').val(); // 현재 사용자 ID
 				    const to_id = $('#user_id').val(); // 현재 사용자 ID
+				    const message = button.data('message-number');
 			
 				    function updateDetailLike() {
 				        $('.dlike_btn').each(function() {
@@ -165,7 +166,7 @@
 				        	        $.ajax({
 				        	            url: '/AddNoti',
 				        	            type: 'POST',
-				        	            data: { "post_id": post_id, "user_id" : user_id, "post_idx": post_idx},
+				        	            data: { "post_id": post_id, "user_id" : user_id, "post_idx": post_idx, "message" : message } ,
 				        	            success: function(response) {
 				        	                console.log('Add 성공');
 				        	            },

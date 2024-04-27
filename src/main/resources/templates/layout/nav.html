@@ -22,15 +22,24 @@
 			<li><a href="#" class="nav-link link-body-emphasis">검색 </a></li>
 			<li><div th:if="${user != null}">
 					<div id="notificationArea">
-					<div th:replace="layout/notifragment.html :: noti"></div>
-					
+						<div th:replace="layout/notifragment.html :: noti"></div>
+
 					</div>
 				</div>
 				<div th:unless="${user != null}">
 					<a class="nav-link link-body-emphasis mx-0" href="/login">알림</a>
 				</div></li>
 
-			<li><a href="#" class="nav-link link-body-emphasis">프로필 </a></li>
+			<li>
+			<div th:if="${user != null}">
+			<a href="/profile/" th:attrappend="href=${user.user_id}"
+				class="nav-link link-body-emphasis">프로필 </a>			
+			</div>
+			<div th:unless="${user != null}">
+			<a href="/login"
+				class="nav-link link-body-emphasis">프로필 </a>			
+			</div>
+			</li>
 		</ul>
 		<hr>
 		<div class="dropdown" th:if="${user != null}">
@@ -55,16 +64,16 @@
 			</ul>
 		</div>
 		<a class="btn btn-primary" href="/login" th:unless="${user != null}">로그인</a>
-		
-<script>
+
+		<script>
 			$(document).ready(function() {
-				var evtSource = new EventSource("/notifications");
-				evtSource.onmessage = function(event) {
-					var newNoti = JSON.parse(event.data);
-					// 새 알림을 화면에 추가하는 로직
-					fetchNotifications();
-				};
-				// setInterval(fetchNotifications, 10000);
+				/* 	var evtSource = new EventSource("/notifications");
+					evtSource.onmessage = function(event) {
+						var newNoti = JSON.parse(event.data);
+						// 새 알림을 화면에 추가하는 로직
+						fetchNotifications();
+					}; */
+				setInterval(fetchNotifications, 10000);
 				function fetchNotifications() {
 					$.ajax({
 						url : '/notiRefresh',
@@ -86,7 +95,7 @@
 							notification_idx : notiIdx
 						},
 						success : function(response) {
-							//fetchNotifications();
+							fetchNotifications();
 						}
 					});
 				});

@@ -256,8 +256,7 @@ ORDER BY
 		insert into NOTIFICATION_TB (NOTIFICATION_IDX,
 		TO_ID,
 		MESSAGE, CREATED_DATE, FROM_ID)
-		values(#{notification_idx}, #{to_id},
-		1, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), #{from_id})
+		values(#{notification_idx}, #{to_id},#{message}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), #{from_id})
 	</insert>
 	<select id="getNotis" parameterType="String"
 		resultType="com.kdh.domain.NotificationVo">

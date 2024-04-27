@@ -37,7 +37,7 @@ $(document).ready(function() {
 	        const post_idx = button.data('post-idx');
 	        const post_id = button.data('post-id');
 	        const isLiked = button.data('liked');
-
+			const message = button.data('message-number');
 	        if (isLiked) {
 
 	        	$.ajax({
@@ -94,7 +94,7 @@ $(document).ready(function() {
 	        	        $.ajax({
 	        	            url: '/AddNoti',
 	        	            type: 'POST',
-	        	            data: { "post_id": post_id, "user_id" : user_id, "post_idx": post_idx},
+	        	            data: { "post_id": post_id, "user_id" : user_id, "post_idx": post_idx, "message" : message},
 	        	            success: function(response) {
 	        	                console.log('Add 성공');
 	        	            },

@@ -131,10 +131,16 @@ public class UserService {
 
 	public void insertNoti(NotificationVo notiVo, PostnotiVo postnotiVo) {
 		int notiIdx = userMapper.selectMaxNotificationIndex();
-		postnotiVo.setNotification_idx(notiIdx);
 		notiVo.setNotification_idx(notiIdx);
 		userMapper.insertNoti(notiVo);
-		userMapper.insertPostNoti(postnotiVo);
+		
+		if(notiVo.getMessage() != 1) {
+		
+		} else {
+			postnotiVo.setNotification_idx(notiIdx);
+			userMapper.insertPostNoti(postnotiVo);	
+		}
+		
 	}
 
 	public List<NotificationVo> getNotis(String user_Id) {
