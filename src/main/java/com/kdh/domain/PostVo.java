@@ -20,6 +20,8 @@ public class PostVo {
     private String post_created_date;
     private String post_updated_date;
     private String deleted_yn;
+    private String timeago;
+    private ProfileVo profile = new ProfileVo();
     private List<FileVo> fileList = new ArrayList<>();
     private List<CommentVo> commentList = new ArrayList<>();
 

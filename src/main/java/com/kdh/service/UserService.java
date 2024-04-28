@@ -6,15 +6,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.kdh.common.PostFiles;
+import com.kdh.common.ProfileFiles;
 import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
+import com.kdh.domain.ProfileVo;
 import com.kdh.domain.UserVo;
 import com.kdh.mapper.UserMapper;
 
@@ -26,6 +29,9 @@ public class UserService {
 
 	@Autowired
 	private PostFiles postFiles;
+	
+	@Autowired
+	private ProfileFiles profileFiles;
 
 	public List<PostVo> viewPost(String user_id) {
 		// TODO Auto-generated method stub
@@ -169,6 +175,33 @@ public class UserService {
 	public List<CommentVo> getCommentList(Long post_idx) {
 		// TODO Auto-generated method stub
 		return userMapper.getCommentList(post_idx);
+	}
+
+	public void saveProfile(MultipartFile file, UserVo user) {
+		int userIdx = user.getUser_idx(); // 시퀀스 값 조회 메소드 호출
+
+		try {
+			// 파일 정보 파싱 및 삽입
+			List<ProfileVo> list = profileFiles.parseProfileInfo(userIdx, file);
+			if (!CollectionUtils.isEmpty(list)) {
+				for (ProfileVo profileVo : list) {
+					userMapper.insertProfile(profileVo);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+	public ProfileVo findProfileByUserIdx(int user_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.findProfileByUserIdx(user_idx);
+	}
+
+	public int countPosts(String user_id) {
+		// TODO Auto-generated method stub
+		return userMapper.countPosts(user_id);
 	}
 
 }

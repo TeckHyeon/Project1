@@ -303,6 +303,25 @@ ORDER BY
 		insert into COMMENT_TB (COMMENT_IDX, COMMENT_CONTENT, FROM_ID, FROM_NAME, TO_POST_IDX, CREATED_DATE, UPDATED_DATE)
 		values((SELECT NVL(MAX(COMMENT_IDX),0) + 1 FROM COMMENT_TB), #{comment_content},#{from_id}, #{from_name}, #{to_post_idx}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') )
 	</insert>
-	
-	
+		<insert id="insertProfile" parameterType="com.kdh.domain.ProfileVo">
+		INSERT INTO USER_FILE_TB
+		(FILE_IDX, ORIGINAL_NAME, FILE_PATH, FILE_SIZE, UPLOAD_DATE, USER_IDX)
+		VALUES
+		((SELECT NVL(MAX(FILE_IDX),0) + 1 FROM USER_FILE_TB), #{original_name}, #{file_path}, #{file_size}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), #{user_idx})
+	</insert>
+	<select id="findProfileByUserIdx">
+		SELECT *
+		FROM USER_FILE_TB
+		WHERE USER_IDX = #{user_idx}
+	</select>
+		<select id="countPosts" resultType="int">
+		<![CDATA[ 
+			SELECT 
+				COUNT(*) AS cnt
+			FROM
+				POST_TB
+			WHERE
+				POST_ID = #{user_id}
+		]]>
+	</select>
 </mapper>

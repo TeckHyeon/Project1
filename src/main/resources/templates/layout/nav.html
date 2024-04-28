@@ -45,7 +45,7 @@
 		<div class="dropdown" th:if="${user != null}">
 			<a href="#"
 				class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle"
-				data-bs-toggle="dropdown" aria-expanded="false"> <img
+				data-bs-toggle="dropdown" aria-expanded="false"> <img th:src="${profile.file_path}"
 				src="https://github.com/mdo.png" alt="" width="32" height="32"
 				class="rounded-circle me-2"> <strong
 				th:text="${user.user_name}"></strong>

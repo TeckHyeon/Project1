@@ -11,6 +11,7 @@ import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
+import com.kdh.domain.ProfileVo;
 import com.kdh.domain.UserVo;
 
 @Mapper
@@ -81,5 +82,11 @@ public interface UserMapper {
 	void insertComment(CommentVo vo);
 
 	List<CommentVo> getCommentList(Long post_idx);
+
+	void insertProfile(ProfileVo profileVo);
+
+	ProfileVo findProfileByUserIdx(int user_idx);
+
+	int countPosts(String user_id);
 
 }
