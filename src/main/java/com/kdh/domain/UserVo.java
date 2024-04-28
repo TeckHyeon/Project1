@@ -17,4 +17,5 @@ public class UserVo {
 	private String user_created_date;
 	private String user_updated_date;
 	private String deleted_yn;
+	private String user_comments;
 }

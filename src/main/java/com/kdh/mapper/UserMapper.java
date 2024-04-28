@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
+import com.kdh.domain.FollowVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
@@ -87,6 +88,12 @@ public interface UserMapper {
 
 	ProfileVo findProfileByUserIdx(int user_idx);
 
-	int countPosts(String user_id);
+	void deleteFile(Long post_idx);
+
+	void updateProfile(ProfileVo profileVo);
+
+	List<FollowVo> findFollowingByUserId(String user_id);
+
+	List<FollowVo> findFollowerByUserId(String user_id);
 
 }

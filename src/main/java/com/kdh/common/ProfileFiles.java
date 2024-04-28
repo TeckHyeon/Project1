@@ -20,11 +20,9 @@ public class ProfileFiles {
     @Value("${file.upload-dir}")
     private String uploadDir; // application.properties에서 설정한 업로드 경로
 
-    public List<ProfileVo> parseProfileInfo(int user_idx, MultipartFile file) throws Exception {
-        List<ProfileVo> fileList = new ArrayList<>();
-
+    public ProfileVo parseProfileInfo(int user_idx, MultipartFile file) throws Exception {
         if (file.isEmpty() || ObjectUtils.isEmpty(file.getContentType())) {
-            return fileList;
+            return new ProfileVo(); // 빈 프로필 객체 반환
         }
 
         DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyyMMdd");
@@ -54,14 +52,16 @@ public class ProfileFiles {
             profileFile.setFile_size(Long.toString(file.getSize()));
             profileFile.setOriginal_name(file.getOriginalFilename());
             profileFile.setFile_path(path + "/" + newFileName);
-            fileList.add(profileFile);
 
             File newFile = new File(absolutePath + "/" + newFileName);
             file.transferTo(newFile);
+
+            return profileFile; // 수정된 부분: profileFile 객체를 직접 반환
         }
 
-        return fileList;
+        return new ProfileVo(); // 파일 확장자가 지원되지 않는 경우 빈 객체 반환
     }
+
 
 	public static void addProfileFilesToPost(PostVo post, ProfileVo profile) {
 		 if (profile != null) {

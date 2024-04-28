@@ -13,6 +13,7 @@ import com.kdh.common.PostFiles;
 import com.kdh.common.ProfileFiles;
 import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
+import com.kdh.domain.FollowVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
@@ -106,7 +107,18 @@ public class UserService {
 
 	public void updatePost(PostVo postVo, MultipartHttpServletRequest multiFiles) {
 		userMapper.updatePost(postVo);
-
+		userMapper.deleteFile(postVo.getPost_idx());
+		try {
+			// 파일 정보 파싱 및 삽입
+			List<FileVo> list = postFiles.parseFileInfo(postVo.getPost_idx(), multiFiles);
+			if (!CollectionUtils.isEmpty(list)) {
+				for (FileVo fileVo : list) {
+					userMapper.insertFile(fileVo);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void insertLike(LikesVo like, int post_idx) {
@@ -178,30 +190,45 @@ public class UserService {
 	}
 
 	public void saveProfile(MultipartFile file, UserVo user) {
-		int userIdx = user.getUser_idx(); // 시퀀스 값 조회 메소드 호출
-
-		try {
-			// 파일 정보 파싱 및 삽입
-			List<ProfileVo> list = profileFiles.parseProfileInfo(userIdx, file);
-			if (!CollectionUtils.isEmpty(list)) {
-				for (ProfileVo profileVo : list) {
-					userMapper.insertProfile(profileVo);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
+	    int userIdx = user.getUser_idx(); // 시퀀스 값 조회 메소드 호출
+	    
+	    try {
+	        // 파일 정보 파싱
+	        ProfileVo profileVo = profileFiles.parseProfileInfo(userIdx, file);
+	        if (profileVo != null) {
+	            // 기존 프로필 사진이 있는지 확인
+	            ProfileVo existingProfile = userMapper.findProfileByUserIdx(userIdx);
+	            
+	            if (existingProfile != null) {
+	                // 기존 프로필 사진이 있으면 업데이트 또는 삭제 후 삽입
+	            	Long file_idx = existingProfile.getFile_idx();
+	            	profileVo.setFile_idx(file_idx);
+	                userMapper.updateProfile(profileVo); // 프로필 사진 정보 업데이트 메소드
+	                // 필요에 따라 기존 파일을 서버에서 삭제하는 로직도 추가할 수 있습니다.
+	            } else {
+	                // 기존 프로필 사진이 없으면 새로 삽입
+	                userMapper.insertProfile(profileVo);
+	            }
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
 	}
+
 
 	public ProfileVo findProfileByUserIdx(int user_idx) {
 		// TODO Auto-generated method stub
 		return userMapper.findProfileByUserIdx(user_idx);
 	}
 
-	public int countPosts(String user_id) {
+	public List<FollowVo> findFollowingByUserId(String user_id) {
 		// TODO Auto-generated method stub
-		return userMapper.countPosts(user_id);
+		return userMapper.findFollowingByUserId(user_id);
+	}
+
+	public List<FollowVo> findFollowerByUserId(String user_id) {
+		// TODO Auto-generated method stub
+		return userMapper.findFollowerByUserId(user_id);
 	}
 
 }

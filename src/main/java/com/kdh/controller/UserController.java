@@ -23,6 +23,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.kdh.common.PostFiles;
 import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
+import com.kdh.domain.FollowVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
@@ -171,36 +172,52 @@ public class UserController {
 	    UserVo userVo;
 	    ProfileVo profile;
 	    List<PostVo> posts;
-
+	    List<NotificationVo> noti;
 	    if (SessionManager.isLoggedIn(session)) {
 	        userVo = SessionManager.getUserVo(session);
+	        int user_idx = userVo.getUser_idx();
+	        String id = userVo.getUser_id();
+	        posts = userService.viewPost(id);
+	        noti = userService.getNotis(id);
+	        mv.addObject("user", userVo);
+	        log.info("posts = {}", posts);
+	        mv.addObject("posts", posts);
+	        mv.addObject("noti", noti);
+	        profile = userService.findProfileByUserIdx(user_idx);
+	        mv.addObject("profile", profile);
 	    } else {
 	        userVo = userService.loadUser(user_Id);
 	    }
 	    
 	    int user_idx = userVo.getUser_idx();
+	    String user_id = userVo.getUser_id();
 	    profile = userService.findProfileByUserIdx(user_idx);
 	    posts = userService.viewPostById(userVo.getUser_id());
-	    List<FileVo> allFiles = addPostsAndFilesToModel(posts, userVo);
-
+	    List<FileVo> allFiles = new ArrayList<>();
+	    PostProcessor processor = new PostProcessor(userService);
+	    for (PostVo post : posts) {
+	        processor.processPost(post, allFiles);
+	    }
+	    List<FollowVo> followingList = userService.findFollowingByUserId(user_id);
+	    for(FollowVo following : followingList) {
+	    	UserVo followingUser = userService.loadUser(following.getFollowing_id());
+	    	if(followingUser!=null) {
+	    		following.setUser(followingUser);
+	    		int followingUser_idx = followingUser.getUser_idx();
+	    		 ProfileVo followingUserprofile = userService.findProfileByUserIdx(followingUser_idx);
+	    		 following.setProfile(followingUserprofile);
+	    	}
+	    }
+	    List<FollowVo> followerList = userService.findFollowerByUserId(user_id);
+	    
+	    
+	    mv.addObject("following", followingList);
+	    mv.addObject("follower", followerList);
 	    mv.addObject("user", userVo);
 	    mv.addObject("profile", profile);
 	    mv.addObject("posts", posts);
-	    mv.addObject("countPosts", userService.countPosts(userVo.getUser_id()));
-	    
 	    return mv;
 	}
-
-	private List<FileVo> addPostsAndFilesToModel(List<PostVo> posts, UserVo userVo) {
-	    List<FileVo> allFiles = new ArrayList<>();
-	    for (PostVo post : posts) {
-	        List<FileVo> filesForPost = userService.viewPostFileList(post.getPost_idx());
-	        PostFiles.addFilesToPostAndAllFilesList(filesForPost, post, allFiles);
-	    }
-	    PostFiles.logPostAndFileInformation(userVo, allFiles, posts, log);
-	    return allFiles;
-	}
-
 
 	@GetMapping("/updateform/{user_Id}")
 	public ModelAndView updateForm(@PathVariable("user_Id") String user_Id, UserVo userVo) {
