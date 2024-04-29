@@ -96,4 +96,6 @@ public interface UserMapper {
 
 	List<FollowVo> findFollowerByUserId(String user_id);
 
+	List<CommentVo> findCommentsByPostIdx(int post_idx);
+
 }

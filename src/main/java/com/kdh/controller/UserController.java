@@ -1,6 +1,9 @@
 package com.kdh.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +30,13 @@ import com.kdh.domain.FollowVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
+import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.ProfileVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
 import com.kdh.util.PostProcessor;
 import com.kdh.util.SessionManager;
+import com.kdh.util.TimeAgo;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -45,37 +50,46 @@ public class UserController {
 	private UserService userService;
 
 	@GetMapping("/")
-	public ModelAndView main(HttpSession session, UserVo userVo, ProfileVo profile) {
-	    ModelAndView mv = new ModelAndView("/pages/main");
-	    List<PostVo> posts;
-	    List<FileVo> allFiles = new ArrayList<>();
-	    List<NotificationVo> noti;
-	    if (SessionManager.isLoggedIn(session)) {
-	        userVo = SessionManager.getUserVo(session);
-	        int user_idx = userVo.getUser_idx();
-	        String user_Id = userVo.getUser_id();
-	        posts = userService.viewPost(user_Id);
-	        noti = userService.getNotis(user_Id);
-	        mv.addObject("user", userVo);
-	        log.info("posts = {}", posts);
-	        mv.addObject("posts", posts);
-	        mv.addObject("noti", noti);
-	        profile = userService.findProfileByUserIdx(user_idx);
-	        mv.addObject("profile", profile);
-	    } else {
-	        posts = userService.viewPostByLikes();
-	        mv.addObject("posts", posts);
-	        log.info("posts = {}", posts);
-	    }
+	public ModelAndView main(HttpSession session, ProfileVo profile) {
+		ModelAndView mv = new ModelAndView("/pages/main");
+		List<PostVo> posts;
+		List<FileVo> allFiles = new ArrayList<>();
+		List<NotificationVo> noti;
+		UserVo loggedInUserVo = null;
+		if (SessionManager.isLoggedIn(session)) {
+			loggedInUserVo = SessionManager.getUserVo(session);
+			String user_Id = loggedInUserVo.getUser_id();
+			int user_idx = loggedInUserVo.getUser_idx();
+			posts = userService.viewPost(user_Id);
+			noti = userService.getNotis(user_Id);
+			profile = userService.findProfileByUserIdx(user_idx);
+			loggedInUserVo.setProfile(profile);
+			mv.addObject("loggedInUser", loggedInUserVo);
+			log.info("posts = {}", posts);
+			mv.addObject("posts", posts);
+			mv.addObject("noti", noti);
+		} else {
+			posts = userService.viewPostByLikes();
+			mv.addObject("posts", posts);
+			log.info("posts = {}", posts);
+		}
 
-	    PostProcessor processor = new PostProcessor(userService);
-	    for (PostVo post : posts) {
-	        processor.processPost(post, allFiles);
-	    }
-
-	    return mv;
+		PostProcessor processor = new PostProcessor(userService);
+		for (PostVo post : posts) {
+			processor.processPost(post, allFiles);
+			String post_id = post.getPost_id();
+			UserVo postUserVo = userService.loadUser(post_id);
+			int user_idx = postUserVo.getUser_idx();
+			profile = userService.findProfileByUserIdx(user_idx);
+			log.info("profile = {}", profile);
+			post.setProfile(profile);
+		}
+		Boolean isLoggedIn = (session.getAttribute("userVo") != null);
+		mv.addObject("loggedIn", isLoggedIn);
+		log.info("loggedIn = {}", isLoggedIn);
+		return mv;
 	}
-    
+
 	@GetMapping("/login")
 	public ModelAndView login() {
 		ModelAndView mv = new ModelAndView();
@@ -168,55 +182,57 @@ public class UserController {
 
 	@GetMapping("/profile/{user_Id}")
 	public ModelAndView profile(@PathVariable("user_Id") String user_Id, HttpSession session) throws Exception {
-	    ModelAndView mv = new ModelAndView("/pages/profile");
-	    UserVo userVo;
-	    ProfileVo profile;
-	    List<PostVo> posts;
-	    List<NotificationVo> noti;
-	    if (SessionManager.isLoggedIn(session)) {
-	        userVo = SessionManager.getUserVo(session);
-	        int user_idx = userVo.getUser_idx();
-	        String id = userVo.getUser_id();
-	        posts = userService.viewPost(id);
-	        noti = userService.getNotis(id);
-	        mv.addObject("user", userVo);
-	        log.info("posts = {}", posts);
-	        mv.addObject("posts", posts);
-	        mv.addObject("noti", noti);
-	        profile = userService.findProfileByUserIdx(user_idx);
-	        mv.addObject("profile", profile);
-	    } else {
-	        userVo = userService.loadUser(user_Id);
-	    }
-	    
-	    int user_idx = userVo.getUser_idx();
-	    String user_id = userVo.getUser_id();
-	    profile = userService.findProfileByUserIdx(user_idx);
-	    posts = userService.viewPostById(userVo.getUser_id());
-	    List<FileVo> allFiles = new ArrayList<>();
-	    PostProcessor processor = new PostProcessor(userService);
-	    for (PostVo post : posts) {
-	        processor.processPost(post, allFiles);
-	    }
-	    List<FollowVo> followingList = userService.findFollowingByUserId(user_id);
-	    for(FollowVo following : followingList) {
-	    	UserVo followingUser = userService.loadUser(following.getFollowing_id());
-	    	if(followingUser!=null) {
-	    		following.setUser(followingUser);
-	    		int followingUser_idx = followingUser.getUser_idx();
-	    		 ProfileVo followingUserprofile = userService.findProfileByUserIdx(followingUser_idx);
-	    		 following.setProfile(followingUserprofile);
-	    	}
-	    }
-	    List<FollowVo> followerList = userService.findFollowerByUserId(user_id);
-	    
-	    
-	    mv.addObject("following", followingList);
-	    mv.addObject("follower", followerList);
-	    mv.addObject("user", userVo);
-	    mv.addObject("profile", profile);
-	    mv.addObject("posts", posts);
-	    return mv;
+		ModelAndView mv = new ModelAndView();
+		UserVo loggedInUserVo = null; // 로그인한 사용자 정보
+
+		// 세션에서 로그인한 사용자 정보 가져오기
+		if (SessionManager.isLoggedIn(session)) {
+			loggedInUserVo = SessionManager.getUserVo(session);
+			mv.addObject("loggedInUser", loggedInUserVo);
+		}
+
+		// 프로필 페이지 주인의 사용자 정보
+		UserVo profileUserVo = userService.loadUser(user_Id);
+		mv.addObject("profileUser", profileUserVo);
+
+		// 프로필 페이지 주인의 게시글 목록 가져오기
+		List<PostVo> posts = userService.viewPostById(user_Id);
+		mv.addObject("posts", posts);
+
+		// 로그인한 사용자가 프로필 페이지의 주인인 경우 알림 목록 추가
+		if (loggedInUserVo != null && loggedInUserVo.getUser_id().equals(user_Id)) {
+			List<NotificationVo> noti = userService.getNotis(user_Id);
+			mv.addObject("noti", noti);
+		}
+
+		// 프로필 페이지 주인의 프로필 정보 가져오기
+		ProfileVo profile = userService.findProfileByUserIdx(profileUserVo.getUser_idx());
+		mv.addObject("profile", profile);
+
+		// 게시글과 관련된 파일 처리
+		List<FileVo> allFiles = new ArrayList<>();
+		PostProcessor processor = new PostProcessor(userService);
+		posts.forEach(post -> processor.processPost(post, allFiles));
+
+		// 팔로잉 목록 가져오기 및 추가 정보 처리
+		List<FollowVo> followingList = userService.findFollowingByUserId(user_Id);
+		followingList.forEach(following -> {
+			UserVo followingUser = userService.loadUser(following.getFollowing_id());
+			if (followingUser != null) {
+				following.setUser(followingUser);
+				ProfileVo followingUserprofile = userService.findProfileByUserIdx(followingUser.getUser_idx());
+				following.setProfile(followingUserprofile);
+			}
+		});
+		mv.addObject("following", followingList);
+
+		// 로그인 여부 세팅
+		Boolean isLoggedIn = (loggedInUserVo != null);
+		mv.addObject("loggedIn", isLoggedIn);
+
+		// 뷰 이름 설정
+		mv.setViewName("pages/profile");
+		return mv;
 	}
 
 	@GetMapping("/updateform/{user_Id}")
@@ -339,4 +355,19 @@ public class UserController {
 		}
 	}
 
+	@GetMapping("/LoadComments")
+	@ResponseBody
+	public List<CommentVo> loadComments(@RequestParam("post_idx") int post_idx) {
+	    // 특정 게시물에 대한 댓글 조회
+	    List<CommentVo> comments = userService.findCommentsByPostIdx(post_idx);
+	    comments.forEach(comment -> {
+	    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	        comment.setCommentTimeAgo(calculateTimeAgo(comment.getUpdated_date(), formatter));
+	    });
+	    return comments;
+	}
+    private String calculateTimeAgo(String dateStr, DateTimeFormatter formatter) {
+        LocalDateTime dateTime = LocalDateTime.parse(dateStr, formatter);
+        return TimeAgo.calculateTimeAgo(dateTime);
+    }
 }

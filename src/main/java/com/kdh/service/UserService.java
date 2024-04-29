@@ -152,11 +152,11 @@ public class UserService {
 		notiVo.setNotification_idx(notiIdx);
 		userMapper.insertNoti(notiVo);
 		
-		if(notiVo.getMessage() != 1) {
-		
-		} else {
+		if(notiVo.getMessage() != 4) {
 			postnotiVo.setNotification_idx(notiIdx);
 			userMapper.insertPostNoti(postnotiVo);	
+		} else {
+			
 		}
 		
 	}
@@ -229,6 +229,11 @@ public class UserService {
 	public List<FollowVo> findFollowerByUserId(String user_id) {
 		// TODO Auto-generated method stub
 		return userMapper.findFollowerByUserId(user_id);
+	}
+
+	public List<CommentVo> findCommentsByPostIdx(int post_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.findCommentsByPostIdx(post_idx);
 	}
 
 }

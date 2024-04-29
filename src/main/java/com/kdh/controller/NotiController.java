@@ -1,5 +1,7 @@
 package com.kdh.controller;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,12 +15,14 @@ import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.kdh.common.PostFiles;
+import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
+import com.kdh.util.TimeAgo;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,14 +47,13 @@ public class NotiController {
 				notiVo.setTo_id(post_id);
 				notiVo.setMessage(message);
 
-				if (message != 1) {
-					userService.insertNoti(notiVo, postnotiVo);
-				} else {
+				if (message != 4) {
 					postnotiVo.setFrom_id(user_id);
 					postnotiVo.setTo_id(post_id);
 					postnotiVo.setPost_idx(post_idx);
 					userService.insertNoti(notiVo, postnotiVo);
-					
+				} else {
+					userService.insertNoti(notiVo, postnotiVo);
 				}
 				return ResponseEntity.ok().build();
 			}
@@ -70,15 +73,29 @@ public class NotiController {
 		List<FileVo> allFiles = new ArrayList<>();
 		List<FileVo> filesForPost = userService.viewPostFileList(post.getPost_idx());
 		PostFiles.addFilesToPostAndAllFilesList(filesForPost, post, allFiles);
-
+		
+		 List<CommentVo> comments = userService.findCommentsByPostIdx(post_idx);
+		    comments.forEach(comment -> {
+		    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		        comment.setCommentTimeAgo(calculateTimeAgo(comment.getUpdated_date(), formatter));
+		    });
+		
+		
+		
+		modelAndView.addObject("comments", comments);
 		modelAndView.addObject("post", post);
-		modelAndView.addObject("notification_idx", noti);
+		modelAndView.addObject("noti_idx", noti);
+		log.info("comments = {}", comments);
+		log.info("noti = {}", noti);
 		log.info("post = {}", post);
 		log.info("filesForPost = {}", filesForPost);
 		modelAndView.setViewName("layout/postdetail :: postdetail");
 		return modelAndView;
 	}
-
+    private String calculateTimeAgo(String dateStr, DateTimeFormatter formatter) {
+        LocalDateTime dateTime = LocalDateTime.parse(dateStr, formatter);
+        return TimeAgo.calculateTimeAgo(dateTime);
+    }
 	@PostMapping("/CheckNoti")
 	public ResponseEntity<?> checkNoti(@RequestParam("notification_idx") int notification_idx) {
 		try {

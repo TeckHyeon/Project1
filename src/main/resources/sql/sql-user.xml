@@ -264,11 +264,11 @@
 	</insert>
 	<select id="getNotis" parameterType="String"
 		resultType="com.kdh.domain.NotificationVo">
-		Select NOTIFICATION_IDX, TO_ID, CHECK_YN, MESSAGE,
-		CREATED_DATE, FROM_ID
-		FROM NOTIFICATION_TB
-		WHERE TO_ID = #{user_id} AND
-		CHECK_YN = 'N'
+		Select N.NOTIFICATION_IDX, N.TO_ID, N.CHECK_YN, N.MESSAGE,
+		N.CREATED_DATE, N.FROM_ID, P.post_idx
+		FROM NOTIFICATION_TB N
+        Join post_noti_tb P ON n.notification_idx = p.notification_idx
+		WHERE N.TO_ID = #{user_id} AND N.CHECK_YN = 'N'
 	</select>
 	<update id="updateNoti">
 		<![CDATA[
@@ -353,5 +353,9 @@
 		where
 		POST_IDX = #{post_idx}
 	</delete>
-
+	<select id="findCommentsByPostIdx">
+		SELECT *
+		FROM COMMENT_TB
+		WHERE TO_POST_IDX = #{post_idx}
+	</select>
 </mapper>

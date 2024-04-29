@@ -18,4 +18,5 @@ public class UserVo {
 	private String user_updated_date;
 	private String deleted_yn;
 	private String user_comments;
+	private ProfileVo profile = new ProfileVo();
 }
