@@ -47,7 +47,8 @@
 		(original_name, file_path, file_size,
 		UPLOAD_DATE, POST_IDX)
 		VALUES
-		(#{original_Name}, #{file_Path}, #{file_Size}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), #{post_Idx})
+		(#{original_Name}, #{file_Path}, #{file_Size}, TO_CHAR(SYSDATE,
+		'YYYY-MM-DD HH24:MI:SS'), #{post_Idx})
 	</insert>
 
 
@@ -86,47 +87,46 @@
 	<select id="viewPost" parameterType="String"
 		resultType="com.kdh.domain.PostVo">
 		<![CDATA[
-WITH CombinedPosts AS (
-  SELECT
-    post_idx, post_id, post_name, post_title, post_contents,
-    post_likes, post_created_date, post_updated_date, deleted_yn, 1 AS priority
-  FROM
-    post_TB p LEFT JOIN follow_TB f ON p.post_id = f.follower_id
-  WHERE
-    (p.post_id = #{user_id} OR f.follower_id = #{user_id})
-    AND p.deleted_yn = 'N'
-    AND TO_DATE(post_updated_date, 'YYYY-MM-DD HH24:MI:SS') >= (SYSDATE - 7)
-  UNION
-  SELECT
-    post_idx, post_id, post_name, post_title, post_contents,
-    post_likes, post_created_date, post_updated_date, deleted_yn, 2 AS priority
-  FROM
-    post_TB
-  WHERE
-    deleted_yn = 'N'
-    AND TO_DATE(post_updated_date, 'YYYY-MM-DD HH24:MI:SS') >= (SYSDATE - 7)
-),
-NumberedPosts AS (
-  SELECT
-    post_idx, post_id, post_name, post_title, post_contents,
-    post_likes, post_created_date, post_updated_date, deleted_yn, priority,
-    ROW_NUMBER() OVER(PARTITION BY post_idx, post_id, post_name, post_title, post_contents, post_likes, post_created_date, post_updated_date, deleted_yn ORDER BY priority) AS rn
-  FROM
-    CombinedPosts
-)
-SELECT
-  post_idx, post_id, post_name, post_title, post_contents,
-  post_likes, post_created_date, post_updated_date, deleted_yn, priority
-FROM
-  NumberedPosts
-WHERE
-  rn = 1
-ORDER BY
-  priority,
-  CASE WHEN priority = 1 THEN TO_DATE(post_created_date, 'YYYY-MM-DD HH24:MI:SS') END DESC,
-  CASE WHEN priority = 2 THEN post_likes END DESC,
-  TO_DATE(post_updated_date, 'YYYY-MM-DD HH24:MI:SS') DESC
-
+			WITH CombinedPosts AS (
+			  SELECT
+			    post_idx, post_id, post_name, post_title, post_contents,
+			    post_likes, post_created_date, post_updated_date, deleted_yn, 1 AS priority
+			  FROM
+			    post_TB p LEFT JOIN follow_TB f ON p.post_id = f.following_id
+			  WHERE
+			    f.follower_id = #{user_id}
+			    AND p.deleted_yn = 'N'
+			    AND TO_DATE(post_updated_date, 'YYYY-MM-DD HH24:MI:SS') >= (SYSDATE - 7)
+			  UNION
+			  SELECT
+			    post_idx, post_id, post_name, post_title, post_contents,
+			    post_likes, post_created_date, post_updated_date, deleted_yn, 2 AS priority
+			  FROM
+			    post_TB
+			  WHERE
+			    deleted_yn = 'N'
+			    AND TO_DATE(post_updated_date, 'YYYY-MM-DD HH24:MI:SS') >= (SYSDATE - 7)
+			),
+			NumberedPosts AS (
+			  SELECT
+			    post_idx, post_id, post_name, post_title, post_contents,
+			    post_likes, post_created_date, post_updated_date, deleted_yn, priority,
+			    ROW_NUMBER() OVER(PARTITION BY post_idx, post_id, post_name, post_title, post_contents, post_likes, post_created_date, post_updated_date, deleted_yn ORDER BY priority) AS rn
+			  FROM
+			    CombinedPosts
+			)
+			SELECT
+			  post_idx, post_id, post_name, post_title, post_contents,
+			  post_likes, post_created_date, post_updated_date, deleted_yn, priority
+			FROM
+			  NumberedPosts
+			WHERE
+			  rn = 1
+			ORDER BY
+			  priority,
+			  CASE WHEN priority = 1 THEN TO_DATE(post_created_date, 'YYYY-MM-DD HH24:MI:SS') END DESC,
+			  CASE WHEN priority = 2 THEN post_likes END DESC,
+			  TO_DATE(post_updated_date, 'YYYY-MM-DD HH24:MI:SS') DESC
 		]]>
 	</select>
 	<select id="viewPostByLikes" parameterType="String"
@@ -247,7 +247,9 @@ ORDER BY
 		= #{post_idx}
 	</select>
 	<select id="getCommentList" parameterType="Long">
-		select COMMENT_IDX, COMMENT_CONTENT, FROM_ID, FROM_NAME, TO_POST_IDX, CREATED_DATE, UPDATED_DATE
+		select COMMENT_IDX,
+		COMMENT_CONTENT, FROM_ID, FROM_NAME, TO_POST_IDX, CREATED_DATE,
+		UPDATED_DATE
 		FROM COMMENT_TB
 		where TO_POST_IDX = #{post_idx}
 	</select>
@@ -256,8 +258,9 @@ ORDER BY
 		insert into NOTIFICATION_TB (NOTIFICATION_IDX,
 		TO_ID,
 		MESSAGE, CREATED_DATE, FROM_ID)
-		values(#{notification_idx}, #{to_id},
-		1, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), #{from_id})
+		values(#{notification_idx},
+		#{to_id},#{message}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'),
+		#{from_id})
 	</insert>
 	<select id="getNotis" parameterType="String"
 		resultType="com.kdh.domain.NotificationVo">
@@ -278,7 +281,8 @@ ORDER BY
 		]]>
 	</update>
 	<select id="selectMaxNotificationIndex">
-		SELECT NVL(MAX(NOTIFICATION_IDX),0) + 1 FROM NOTIFICATION_TB
+		SELECT NVL(MAX(NOTIFICATION_IDX),0) + 1 FROM
+		NOTIFICATION_TB
 	</select>
 	<insert id="insertPostNoti"
 		parameterType="com.kdh.domain.PostnotiVo">
@@ -292,18 +296,62 @@ ORDER BY
 	<select id="findPostNotibyIdx">
 		Select *
 		from post_noti_tb
-		where notification_idx = #{notification_idx}
+		where notification_idx =
+		#{notification_idx}
 	</select>
 	<select id="findPostbyIdx">
 		Select *
 		from POST_TB
 		where POST_IDX = #{post_idx}
 	</select>
-		<insert id="insertComment"
+	<insert id="insertComment"
 		parameterType="com.kdh.domain.CommentVo">
-		insert into COMMENT_TB (COMMENT_IDX, COMMENT_CONTENT, FROM_ID, FROM_NAME, TO_POST_IDX, CREATED_DATE, UPDATED_DATE)
-		values((SELECT NVL(MAX(COMMENT_IDX),0) + 1 FROM COMMENT_TB), #{comment_content},#{from_id}, #{from_name}, #{to_post_idx}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') )
+		insert into COMMENT_TB (COMMENT_IDX, COMMENT_CONTENT,
+		FROM_ID, FROM_NAME, TO_POST_IDX, CREATED_DATE, UPDATED_DATE)
+		values((SELECT NVL(MAX(COMMENT_IDX),0) + 1 FROM COMMENT_TB),
+		#{comment_content},#{from_id}, #{from_name}, #{to_post_idx},
+		TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(SYSDATE,
+		'YYYY-MM-DD HH24:MI:SS') )
 	</insert>
-	
-	
+	<insert id="insertProfile"
+		parameterType="com.kdh.domain.ProfileVo">
+		INSERT INTO USER_FILE_TB
+		(FILE_IDX, ORIGINAL_NAME,
+		FILE_PATH, FILE_SIZE, UPLOAD_DATE, USER_IDX)
+		VALUES
+		((SELECT
+		NVL(MAX(FILE_IDX),0) + 1 FROM USER_FILE_TB), #{original_name},
+		#{file_path}, #{file_size}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'),
+		#{user_idx})
+	</insert>
+	<update id="updateProfile"
+		parameterType="com.kdh.domain.ProfileVo">
+		UPDATE USER_FILE_TB SET ORIGINAL_NAME =
+		#{original_name}, FILE_PATH = #{file_path}, FILE_SIZE = #{file_size},
+		UPLOAD_DATE = TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS')
+		WHERE FILE_IDX = #{file_idx}
+	</update>
+
+	<select id="findProfileByUserIdx">
+		SELECT *
+		FROM USER_FILE_TB
+		WHERE USER_IDX = #{user_idx}
+	</select>
+	<select id="findFollowingByUserId">
+		SELECT *
+		FROM FOLLOW_TB
+		WHERE FOLLOWER_ID = #{user_id}
+	</select>
+	<select id="findFollowerByUserId">
+		SELECT *
+		FROM FOLLOW_TB
+		WHERE FOLLOWING_ID = #{user_id}
+	</select>
+
+	<delete id="deleteFile">
+		delete from POST_FILE_TB
+		where
+		POST_IDX = #{post_idx}
+	</delete>
+
 </mapper>

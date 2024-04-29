@@ -7,10 +7,12 @@ import org.apache.ibatis.annotations.Param;
 
 import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
+import com.kdh.domain.FollowVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
+import com.kdh.domain.ProfileVo;
 import com.kdh.domain.UserVo;
 
 @Mapper
@@ -81,5 +83,17 @@ public interface UserMapper {
 	void insertComment(CommentVo vo);
 
 	List<CommentVo> getCommentList(Long post_idx);
+
+	void insertProfile(ProfileVo profileVo);
+
+	ProfileVo findProfileByUserIdx(int user_idx);
+
+	void deleteFile(Long post_idx);
+
+	void updateProfile(ProfileVo profileVo);
+
+	List<FollowVo> findFollowingByUserId(String user_id);
+
+	List<FollowVo> findFollowerByUserId(String user_id);
 
 }

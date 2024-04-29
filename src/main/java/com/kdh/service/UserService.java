@@ -6,15 +6,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.kdh.common.PostFiles;
+import com.kdh.common.ProfileFiles;
 import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
+import com.kdh.domain.FollowVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
+import com.kdh.domain.ProfileVo;
 import com.kdh.domain.UserVo;
 import com.kdh.mapper.UserMapper;
 
@@ -26,6 +30,9 @@ public class UserService {
 
 	@Autowired
 	private PostFiles postFiles;
+	
+	@Autowired
+	private ProfileFiles profileFiles;
 
 	public List<PostVo> viewPost(String user_id) {
 		// TODO Auto-generated method stub
@@ -100,7 +107,18 @@ public class UserService {
 
 	public void updatePost(PostVo postVo, MultipartHttpServletRequest multiFiles) {
 		userMapper.updatePost(postVo);
-
+		userMapper.deleteFile(postVo.getPost_idx());
+		try {
+			// 파일 정보 파싱 및 삽입
+			List<FileVo> list = postFiles.parseFileInfo(postVo.getPost_idx(), multiFiles);
+			if (!CollectionUtils.isEmpty(list)) {
+				for (FileVo fileVo : list) {
+					userMapper.insertFile(fileVo);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void insertLike(LikesVo like, int post_idx) {
@@ -131,10 +149,16 @@ public class UserService {
 
 	public void insertNoti(NotificationVo notiVo, PostnotiVo postnotiVo) {
 		int notiIdx = userMapper.selectMaxNotificationIndex();
-		postnotiVo.setNotification_idx(notiIdx);
 		notiVo.setNotification_idx(notiIdx);
 		userMapper.insertNoti(notiVo);
-		userMapper.insertPostNoti(postnotiVo);
+		
+		if(notiVo.getMessage() != 1) {
+		
+		} else {
+			postnotiVo.setNotification_idx(notiIdx);
+			userMapper.insertPostNoti(postnotiVo);	
+		}
+		
 	}
 
 	public List<NotificationVo> getNotis(String user_Id) {
@@ -163,6 +187,48 @@ public class UserService {
 	public List<CommentVo> getCommentList(Long post_idx) {
 		// TODO Auto-generated method stub
 		return userMapper.getCommentList(post_idx);
+	}
+
+	public void saveProfile(MultipartFile file, UserVo user) {
+	    int userIdx = user.getUser_idx(); // 시퀀스 값 조회 메소드 호출
+	    
+	    try {
+	        // 파일 정보 파싱
+	        ProfileVo profileVo = profileFiles.parseProfileInfo(userIdx, file);
+	        if (profileVo != null) {
+	            // 기존 프로필 사진이 있는지 확인
+	            ProfileVo existingProfile = userMapper.findProfileByUserIdx(userIdx);
+	            
+	            if (existingProfile != null) {
+	                // 기존 프로필 사진이 있으면 업데이트 또는 삭제 후 삽입
+	            	Long file_idx = existingProfile.getFile_idx();
+	            	profileVo.setFile_idx(file_idx);
+	                userMapper.updateProfile(profileVo); // 프로필 사진 정보 업데이트 메소드
+	                // 필요에 따라 기존 파일을 서버에서 삭제하는 로직도 추가할 수 있습니다.
+	            } else {
+	                // 기존 프로필 사진이 없으면 새로 삽입
+	                userMapper.insertProfile(profileVo);
+	            }
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+
+
+	public ProfileVo findProfileByUserIdx(int user_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.findProfileByUserIdx(user_idx);
+	}
+
+	public List<FollowVo> findFollowingByUserId(String user_id) {
+		// TODO Auto-generated method stub
+		return userMapper.findFollowingByUserId(user_id);
+	}
+
+	public List<FollowVo> findFollowerByUserId(String user_id) {
+		// TODO Auto-generated method stub
+		return userMapper.findFollowerByUserId(user_id);
 	}
 
 }

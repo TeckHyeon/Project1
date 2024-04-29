@@ -13,44 +13,9 @@
 	integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
 	crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-	$(document).ready(
-			function() {
-				$('.content').each(
-						function() {
-							if (this.scrollHeight > $(this).innerHeight()) {
-								// 내용이 3줄 이상일 경우, 더보기 버튼 추가
-								$(this).after(
-										'<button class="btn btn-primary btn-sm read-more" data-target="#'
-												+ $(this).attr('id')
-												+ '">더보기</button>');
-							}
-						});
 
-				$(document).on(
-						'click',
-						'.read-more',
-						function() {
-							var targetId = $(this).data('target');
-							var $content = $(targetId);
-
-							if ($content.hasClass('expanded')) {
-								// 내용 접기
-								$content.removeClass('expanded').css(
-										'max-height', '4.5em');
-								$(this).text('더보기');
-							} else {
-								// 내용 펼치기
-								$content.addClass('expanded').css('max-height',
-										'');
-								$(this).text('접기');
-							}
-						});
-			});
-</script>
 <style type="text/css">
 .content {
-	overflow: hidden;
 	display: -webkit-box;
 	-webkit-line-clamp: 3; /* 3줄까지만 보임 */
 	-webkit-box-orient: vertical;
@@ -59,118 +24,242 @@
 	/* (line-height * line-clamp) + padding + border 등을 고려한 최대 높이 */
 }
 
+.navbar-fixed-left {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 220px;
+	background-color: #333;
+	padding: 10px;
+}
+
+.card-body {
+	overflow: auto;
+	height: 320px; /* 예시로 300px을 설정했습니다. 필요에 따라 조절하세요. */
+	/* 또는 */
+	min-height: 320px; /* 최소 높이를 설정 */
+}
+.notification-count {
+	display: inline-block;
+	background-color: red; /* 빨간색 배경 */
+	color: white; /* 흰색 텍스트 */
+	font-weight: bold; /* 굵은 글씨 */
+	border-radius: 0%; /* 모서리가 둥글지 않음 */
+	padding: 0.5em; /* 모든 방향에 대해 동일한 패딩 */
+	font-size: 0.75em; /* 폰트 크기 */
+	vertical-align: top; /* 상단 정렬 */
+	width: 2em; /* 너비 설정 */
+	height: 2em; /* 높이 설정 */
+	line-height: 1em; /* 텍스트 라인 높이를 요소의 높이와 맞춤 */
+	text-align: center; /* 텍스트를 중앙 정렬 */
+}
 .card-fixed-size {
-	height: 300px; /* 원하는 높이로 설정 */
-	width: 300px; /* 원하는 너비로 설정 */
+	height: 400px; /* 원하는 높이로 설정 */
+	width: 400px; /* 원하는 너비로 설정 */
 }
 </style>
 </head>
 <body>
-	<main class="container my-5">
+	<main class="container-fluid my-5">
 		<div class="row">
-			<div class="col-sm-8">
-				<div class="row">
-					<div class="col-2"></div>
-					<div class="col-4">
-						<img src="/user_profile/profile.jpg" class="rounded-circle"
-							style="width: 150px">
+			<nav class="col-2 bg-white sticky-top vh-100">
+				<div th:insert="layout/nav.html :: nav"></div>
+			</nav>
+			<div class="col-sm-9">
+				<div class="d-flex justify-content-center">
+					<div class="me-5">
+						<img src="/user_profile/default.jpg"
+							th:src="${profile != null} ? ${profile.file_path} : '/user_profile/default.jpg'"
+							class="rounded-circle profile-img"
+							style="width: 150px; cursor: pointer;">
+						<div
+							th:if="${session.userVo != null and user.user_id == session.userVo.user_id}">
+							<input type="file" id="profileInput" style="display: none;"
+								accept="image/*">
+						</div>
 					</div>
-					<div class="col-6">
+					<div class="ms-5">
 						<div class="row">
-							<input type="text" th:value="${user.user_name}"
+							<input type="text" th:value="${user.user_id}"
 								class="fs-3 bg-transparent col-5" id="user_name"
 								name="user_name" readonly disabled style="border: none;"></input>
 							<a href="/updateform/" th:attrappend="href=${user.user_id}"
+								th:if="${session.userVo != null and user.user_id == session.userVo.user_id}"
 								class="btn col-3 border"
 								style="width: 7rem; height: 2rem; margin-top: 10px;">프로필 편집</a>
 							<a class="btn col-4 text-start fs-4 ms-3" href="#"
 								style="width: 4rem;"><i class="bi bi-gear-wide"></i></a>
 						</div>
 						<div class="row my-5">
+							<div class="col-4" th:text="'게시물 ' + ${posts.size()}"></div>
+							<div class="col-4">
+								<a href="#" role="button"
+									class="text-reset text-decoration-none" data-bs-toggle="modal"
+									data-bs-target="#followerModal"
+									th:text="'팔로워 ' + ${following.size()}"></a>
+							</div>
+							<div class="col-4" th:text="'팔로우 ' + ${follower.size()}"></div>
 							<input type="text" th:value="${user.user_name}"
-								class="fw-bold bg-transparent col-4" id="user_name"
+								class="fw-bold bg-transparent col-12 my-2" id="user_name"
 								name="user_name" readonly disabled style="border: none;"></input>
+							<div class="col-12" th:text="${user.user_comments}"></div>
 						</div>
+						<!-- 팔로워 리스트 모달 -->
+						<div class="modal fade" id="followerModal" tabindex="-1"
+							aria-labelledby="followerModalLabel" aria-hidden="true">
+							<div class="modal-dialog modal-dialog-centered">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title" id="followerModalLabel">팔로워 리스트</h5>
+										<button type="button" class="btn-close"
+											data-bs-dismiss="modal" aria-label="Close"></button>
+									</div>
+									<div class="modal-body">
+										<div th:each="following : ${following}"
+											class="d-flex justify-content-between align-items-center mb-3">
+											<!-- 프로필 이미지와 사용자 정보를 담은 컨테이너 -->
+											<div class="d-flex align-items-center">
+												<img src="/user_profile/default.jpg"
+													th:src="${following.profile != null} ? ${following.profile.file_path} : '/user_profile/default.jpg'"
+													class="rounded-circle ms-1 me-3"
+													style="width: 40px; cursor: pointer;">
+												<div th:each="user : ${following.user}">
+													<a href="#" role="button"
+														class="text-reset text-decoration-none"
+														th:text="${user.user_name}"></a>
+													<div>
+														<span th:text="${user.user_comments}"></span>
+													</div>
+												</div>
+											</div>
+											<!-- 팔로우 버튼 -->
+											<input class="btn btn-primary" type="button" value="팔로우">
+										</div>
+									</div>
+
+								</div>
+							</div>
+						</div>
+
+
 					</div>
 					<hr style="margin-top: 1em; margin-left: 10em">
 				</div>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-5"></div>
-			<div class="col-4">
-				<!-- 탭 메뉴 -->
-				<ul class="nav nav-tabs" id="myTab" role="tablist"
-					style="border: none;">
-					<li class="nav-item mx-2" role="presentation"><a
-						class="nav-link active text-secondary" id="posts-tab"
-						data-bs-toggle="tab" data-bs-target="#posts" type="button"
-						role="tab" aria-controls="posts" aria-selected="true"
-						href="#posts" data-toggle="tab">게시물</a></li>
-					<li class="nav-item mx-2" role="presentation"><a
-						class="nav-link text-secondary" id="likes-tab"
-						data-bs-toggle="tab" data-bs-target="#likes" type="button"
-						role="tab" aria-controls="likes" aria-selected="false"
-						href="#likes">좋아요 누른 게시물</a></li>
-				</ul>
-			</div>
-		</div>
-
-		<div class="tab-content" id="myTabContent">
-			<div class="tab-pane fade show active" id="posts" role="tabpanel"
-				aria-labelledby="posts-tab">
-				<div class="container mt-3">
-					<div class="row row-cols-1 row-cols-md-3 g-4">
-						<div th:each="item, iterStat : ${posts}">
-							<div class="col">
-								<div class="card card-fixed-size">
-									<div class="card-header d-flex justify-content-between">
-										<h5 th:text="${item.post_title}">post_title</h5>
-										<div class="">
-											<a href="/UpdatePost/" th:attrappend="href=${item.post_idx}"> <svg
-													class="w-6 h-6 text-gray-800 dark:text-white"
-													aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-													width="24" height="24" fill="none" viewBox="0 0 24 24">
+				<div class="row">
+					<div class="col-5"></div>
+					<div class="col-4">
+						<!-- 탭 메뉴 -->
+						<ul class="nav nav-tabs" id="myTab" role="tablist"
+							style="border: none;">
+							<li class="nav-item mx-2" role="presentation"><a
+								class="nav-link active text-secondary" id="posts-tab"
+								data-bs-toggle="tab" data-bs-target="#posts" type="button"
+								role="tab" aria-controls="posts" aria-selected="true"
+								href="#posts" data-toggle="tab">게시물</a></li>
+							<li class="nav-item mx-2" role="presentation"><a
+								class="nav-link text-secondary" id="likes-tab"
+								data-bs-toggle="tab" data-bs-target="#likes" type="button"
+								role="tab" aria-controls="likes" aria-selected="false"
+								th:if="${session.userVo != null and user.user_id == session.userVo.user_id}"
+								href="#likes">좋아요 누른 게시물</a></li>
+						</ul>
+					</div>
+				</div>
+				<div class="tab-content" id="myTabContent">
+					<div class="tab-pane fade show active" id="posts" role="tabpanel"
+						aria-labelledby="posts-tab">
+						<div class="container mt-3">
+							<div class="row row-cols-1 row-cols-md-3 g-4">
+								<div th:each="item, iterStat : ${posts}">
+									<div class="col">
+										<div class="card card-fixed-size">
+											<div class="card-header d-flex justify-content-between">
+												<h5 th:text="${item.post_title}">post_title</h5>
+												<div class="">
+													<a href="/UpdatePost/"
+														th:attrappend="href=${item.post_idx}"
+														th:if="${session.userVo != null and user.user_id == session.userVo.user_id}">
+														<svg class="w-6 h-6 text-gray-800 dark:text-white"
+															aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+															width="24" height="24" fill="none" viewBox="0 0 24 24">
 										  <path stroke="currentColor" stroke-linecap="round"
-														stroke-linejoin="round" stroke-width="2"
-														d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z" />
+																stroke-linejoin="round" stroke-width="2"
+																d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z" />
 										</svg>
-											</a> <a href="/DeletePost"> <svg
-													class="w-6 h-6 text-gray-800 dark:text-white"
-													aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-													width="24" height="24" fill="none" viewBox="0 0 24 24">
+													</a> <a href="/DeletePost"
+														th:if="${session.userVo != null and user.user_id == session.userVo.user_id}">
+														<svg class="w-6 h-6 text-gray-800 dark:text-white"
+															aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+															width="24" height="24" fill="none" viewBox="0 0 24 24">
  										 <path stroke="currentColor" stroke-linecap="round"
-														stroke-linejoin="round" stroke-width="2"
-														d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
+																stroke-linejoin="round" stroke-width="2"
+																d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
 										</svg>
-											</a>
+													</a>
 
+												</div>
+											</div>
+											<div th:if="${not #lists.isEmpty(item.fileList)}"
+												class="card-body">
+												<div th:each="file : ${item.fileList}">
+													<img th:src="${file.file_Path}" alt="게시글 이미지">
+												</div>
+											</div>
+											<!-- 파일 리스트가 비어있는 경우 내용을 보여줍니다. -->
+											<div th:unless="${not #lists.isEmpty(item.fileList)}"
+												class="mt-3 content px-3 card-body"
+												th:id="'content' + ${iterStat.index}"
+												th:text="${item.post_contents}"></div>
 										</div>
-									</div>
-									<div th:if="${not #lists.isEmpty(item.fileList)}"
-										class="card-body">
-										<div th:each="file : ${item.fileList}">
-											<img th:src="${file.file_Path}" alt="게시글 이미지"
-												style="width: auto; max-height: 100px;">
-										</div>
-									</div>
-									<!-- 파일 리스트가 비어있는 경우 내용을 보여줍니다. -->
-									<div th:unless="${not #lists.isEmpty(item.fileList)}"
-										class="mt-3 content px-3 card-body"
-										th:id="'content' + ${iterStat.index}"
-										style="max-height: 100px;" th:text="${item.post_contents}">
 									</div>
 								</div>
 							</div>
 						</div>
+						<div class="tab-pane fade" id="bookmark" role="tabpanel"
+							aria-labelledby="bookmark-tab">즐겨찾기 등록 포스트</div>
+						<div class="tab-pane fade" id="likes" role="tabpanel"
+							aria-labelledby="likes-tab">좋아요 누른 포스트</div>
 					</div>
 				</div>
-				<div class="tab-pane fade" id="bookmark" role="tabpanel"
-					aria-labelledby="bookmark-tab">즐겨찾기 등록 포스트</div>
-				<div class="tab-pane fade" id="likes" role="tabpanel"
-					aria-labelledby="likes-tab">좋아요 누른 포스트</div>
 			</div>
 		</div>
+
+
+
 	</main>
+	<script src="/js/youtubeLink.js"></script>
+	<script>
+		$(document).ready(function() {
+			$(".profile-img").click(function() {
+				$("#profileInput").click();
+			});
+
+			$("#profileInput").change(function() {
+				if (confirm("프로필 사진을 변경하겠습니까?")) {
+					// FormData 객체를 생성하고 파일을 추가
+					var formData = new FormData();
+					formData.append('file', $('#profileInput')[0].files[0]);
+
+					// AJAX를 통해 서버에 파일 전송
+					$.ajax({
+						url : '/updateProfile', // 프로필 업데이트를 처리하는 서버의 URL
+						type : 'POST',
+						data : formData,
+						processData : false, // jQuery가 데이터를 처리하지 못하도록 설정
+						contentType : false, // jQuery가 contentType을 설정하지 못하도록 설정
+						success : function(data) {
+							alert("프로필 사진이 변경되었습니다.");
+							location.reload(); // 페이지를 새로고침하여 변경된 사진을 보여줌
+						},
+						error : function(e) {
+							alert("오류가 발생했습니다.");
+						}
+					});
+				}
+			});
+		});
+	</script>
+
 </body>
 </html>
