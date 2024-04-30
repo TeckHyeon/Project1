@@ -98,4 +98,12 @@ public interface UserMapper {
 
 	List<CommentVo> findCommentsByPostIdx(int post_idx);
 
+	int countFollow(@Param("follower_id") String follower_id,@Param("following_id")  String following_id);
+
+	void insertFollow(FollowVo follow);
+
+	void deleteFollow(FollowVo follow);
+
+	List<PostVo> viewLikePostsByIdx(int user_idx);
+
 }

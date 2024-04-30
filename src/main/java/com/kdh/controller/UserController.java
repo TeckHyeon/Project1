@@ -198,6 +198,11 @@ public class UserController {
 		// 프로필 페이지 주인의 게시글 목록 가져오기
 		List<PostVo> posts = userService.viewPostById(user_Id);
 		mv.addObject("posts", posts);
+		
+		// 프로필 페이지 주인이 좋아요 누른 게시물 목록 가져오기
+		int user_idx = profileUserVo.getUser_idx();
+		List<PostVo> likePosts = userService.viewLikePostsByIdx(user_idx);
+		mv.addObject("likePosts", likePosts);
 
 		// 로그인한 사용자가 프로필 페이지의 주인인 경우 알림 목록 추가
 		if (loggedInUserVo != null && loggedInUserVo.getUser_id().equals(user_Id)) {
@@ -225,6 +230,17 @@ public class UserController {
 			}
 		});
 		mv.addObject("following", followingList);
+		// 팔로우 목록 가져오기 및 추가 정보 처리
+		List<FollowVo> followerList = userService.findFollowerByUserId(user_Id);
+		followerList.forEach(follow -> {
+			UserVo followUser = userService.loadUser(follow.getFollower_id());
+			if (followUser != null) {
+				follow.setUser(followUser);
+				ProfileVo followUserprofile = userService.findProfileByUserIdx(followUser.getUser_idx());
+				follow.setProfile(followUserprofile);
+			}
+		});
+		mv.addObject("follower", followerList);
 
 		// 로그인 여부 세팅
 		Boolean isLoggedIn = (loggedInUserVo != null);

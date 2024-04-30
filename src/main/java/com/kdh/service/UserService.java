@@ -236,4 +236,28 @@ public class UserService {
 		return userMapper.findCommentsByPostIdx(post_idx);
 	}
 
+	public int countFollow(String follower_id, String following_id) {
+		
+		return userMapper.countFollow(follower_id, following_id);
+	}
+
+	public void insertFollow(String follower_id, String following_id) {
+		FollowVo follow = new FollowVo();
+		follow.setFollower_id(follower_id);
+		follow.setFollowing_id(following_id);
+		userMapper.insertFollow(follow);
+	}
+
+	public void deleteFollow(String follower_id, String following_id) {
+		FollowVo follow = new FollowVo();
+		follow.setFollower_id(follower_id);
+		follow.setFollowing_id(following_id);
+		userMapper.deleteFollow(follow);
+	}
+
+	public List<PostVo> viewLikePostsByIdx(int user_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.viewLikePostsByIdx(user_idx);
+	}
+
 }

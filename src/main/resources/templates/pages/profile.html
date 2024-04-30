@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
 <title>프로필</title>
@@ -39,6 +39,7 @@
 	/* 또는 */
 	min-height: 320px; /* 최소 높이를 설정 */
 }
+
 .notification-count {
 	display: inline-block;
 	background-color: red; /* 빨간색 배경 */
@@ -53,6 +54,7 @@
 	line-height: 1em; /* 텍스트 라인 높이를 요소의 높이와 맞춤 */
 	text-align: center; /* 텍스트를 중앙 정렬 */
 }
+
 .card-fixed-size {
 	height: 350px; /* 원하는 높이로 설정 */
 	width: 350px; /* 원하는 너비로 설정 */
@@ -66,6 +68,11 @@
 				<div th:insert="~{layout/nav.html :: nav}"></div>
 			</nav>
 			<div class="col-10 container">
+				<div th:if="${loggedInUser != null}">
+					<input type="hidden" th:value="${loggedInUser.user_idx}"
+						id="user_idx"> <input type="hidden"
+						th:value="${loggedInUser.user_id}" id="user_id">
+				</div>
 				<div class="d-flex justify-content-center me-5 mt-5">
 					<div class="">
 						<img src="/user_profile/default.jpg"
@@ -79,26 +86,35 @@
 						</div>
 					</div>
 					<div class="ms-5">
-						<div class="row">
-							<input type="text" th:value="${profileUser.user_id}"
-								class="fs-3 bg-transparent col-5" id="user_name"
-								name="user_name" readonly disabled style="border: none;"></input>
-							<a href="/updateform/" th:attrappend="href=${profileUser.user_id}"
+						<div class="d-flex">
+							<span th:text="${profileUser.user_id}"
+								class="fs-3 bg-transparent " id="user_name" name="user_name"
+								readonly style="border: none;"></span> <a href="/updateform/"
+								th:attrappend="href=${profileUser.user_id}"
 								th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}"
-								class="btn col-3 border"
+								class="btn border ms-5"
 								style="width: 7rem; height: 2rem; margin-top: 10px;">프로필 편집</a>
-							<a class="btn col-4 text-start fs-4 ms-3" href="#"
-								style="width: 4rem;"><i class="bi bi-gear-wide"></i></a>
+							<div
+								th:unless="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}"
+								class="ms-5">
+								<input
+									class="btn btn-outline-secondary follow-button mt-1 follow_btn"
+									id="follow_btn" type="button"
+									th:data-user-id="${profileUser.user_id}" value="팔로우">
+							</div>
 						</div>
 						<div class="row my-5">
-							<div class="col-4" th:text="'게시물 ' + (${posts} != null ? ${posts.size()} : 0)"></div>
+							<div class="col-4"
+								th:text="'게시물 ' + (${posts} != null ? ${posts.size()} : 0)"></div>
 							<div class="col-4">
 								<a href="#" role="button"
 									class="text-reset text-decoration-none" data-bs-toggle="modal"
 									data-bs-target="#followerModal"
 									th:text="'팔로워 ' + (${following} != null ? ${following.size()} : 0)"></a>
 							</div>
-							<div class="col-4" th:text="'팔로우 ' + (${follower} != null ? ${follower.size()} : 0)"></div>
+							<div class="col-4" role="button" data-bs-toggle="modal"
+								data-bs-target="#followModal"
+								th:text="'팔로우 ' + (${follower} != null ? ${follower.size()} : 0)"></div>
 							<input type="text" th:value="${profileUser.user_name}"
 								class="fw-bold bg-transparent col-12 my-2" id="user_name"
 								name="user_name" readonly disabled style="border: none;"></input>
@@ -115,25 +131,80 @@
 											data-bs-dismiss="modal" aria-label="Close"></button>
 									</div>
 									<div class="modal-body">
-										<div th:each="following : ${following}"
-											class="d-flex justify-content-between align-items-center mb-3">
+										<div th:each="following : ${following}">
 											<!-- 프로필 이미지와 사용자 정보를 담은 컨테이너 -->
-											<div class="d-flex align-items-center">
-												<img src="/user_profile/default.jpg"
-													th:src="${following.profile != null} ? ${following.profile.file_path} : '/user_profile/default.jpg'"
-													class="rounded-circle ms-1 me-3"
-													style="width: 40px; cursor: pointer;">
-												<div th:each="user : ${following.user}">
-													<a href="#" role="button"
-														class="text-reset text-decoration-none"
-														th:text="${user.user_name}"></a>
-													<div>
-														<span th:text="${user.user_comments}"></span>
+											<div class="align-items-center mt-3">
+												<div class="d-flex justify-content-between">
+													<div class="d-flex">
+													<a th:href="@{/profile/{userId}(userId=${following.user.user_id})}">
+													
+														<img src="/user_profile/default.jpg"
+															th:src="${following.profile != null} ? ${following.profile.file_path} : '/user_profile/default.jpg'"
+															class="rounded-circle ms-1 me-3"
+															style="width: 40px; height: 40px; cursor: pointer;">
+													</a>
+														<div>
+															<a href="#" role="button"
+																class="text-reset text-decoration-none"
+																th:text="${following.user.user_name}"></a>
+															<div>
+																<span th:text="${following.user.user_comments}"></span>
+															</div>
+														</div>
 													</div>
+													<input
+														class="btn btn-outline-secondary follow-button mt-1 follow_btn"
+														type="button" th:data-user-id="${following.user.user_id}"
+														th:if="${following.user.user_id} != ${loggedInUser.user_id}"
+														value="팔로우" />
+
 												</div>
+
 											</div>
-											<!-- 팔로우 버튼 -->
-											<input class="btn btn-primary" type="button" value="팔로우">
+										</div>
+									</div>
+
+								</div>
+							</div>
+						</div>
+						<div class="modal fade" id="followModal" tabindex="-1"
+							aria-labelledby="followModalLabel" aria-hidden="true">
+							<div class="modal-dialog modal-dialog-centered">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title" id="followModalLabel">팔로워 리스트</h5>
+										<button type="button" class="btn-close"
+											data-bs-dismiss="modal" aria-label="Close"></button>
+									</div>
+									<div class="modal-body">
+										<div th:each="follower : ${follower}">
+											<!-- 프로필 이미지와 사용자 정보를 담은 컨테이너 -->
+											<div class="align-items-center mt-3">
+												<div class="d-flex justify-content-between">
+													<div class="d-flex">
+														<a th:href="@{/profile/{userId}(userId=${follower.user.user_id})}">
+														<img src="/user_profile/default.jpg"
+															th:src="${follower.profile != null} ? ${follower.profile.file_path} : '/user_profile/default.jpg'"
+															class="rounded-circle ms-1 me-3"
+															style="width: 40px; height: 40px; cursor: pointer;"></a>
+														<div>
+															<a href="#" role="button"
+																class="text-reset text-decoration-none"
+																th:text="${follower.user.user_name}"></a>
+															<div>
+																<span th:text="${follower.user.user_comments}"></span>
+															</div>
+														</div>
+													</div>
+													<input
+														class="btn btn-outline-secondary follow-button mt-1 follow_btn"
+														th:if="${follower.user.user_id} != ${loggedInUser.user_id}"
+														type="button" th:data-user-id="${follower.user.user_id}"
+														value="팔로우" />
+
+												</div>
+
+											</div>
 										</div>
 									</div>
 
@@ -182,10 +253,59 @@
 														<svg class="w-6 h-6 text-gray-800 dark:text-white"
 															aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
 															width="24" height="24" fill="none" viewBox="0 0 24 24">
-										  <path stroke="currentColor" stroke-linecap="round"
+										  					<path stroke="currentColor" stroke-linecap="round"
 																stroke-linejoin="round" stroke-width="2"
 																d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z" />
+														</svg>
+													</a> <a href="/DeletePost"
+														th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}">
+														<svg class="w-6 h-6 text-gray-800 dark:text-white"
+															aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+															width="24" height="24" fill="none" viewBox="0 0 24 24">
+ 										 <path stroke="currentColor" stroke-linecap="round"
+																stroke-linejoin="round" stroke-width="2"
+																d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
 										</svg>
+													</a>
+												</div>
+											</div>
+											<div th:if="${not #lists.isEmpty(item.fileList)}"
+												class="card-body">
+												<div th:each="file : ${item.fileList}">
+													<img th:src="${file.file_Path}" alt="게시글 이미지">
+												</div>
+											</div>
+											<!-- 파일 리스트가 비어있는 경우 내용을 보여줍니다. -->
+											<div th:unless="${not #lists.isEmpty(item.fileList)}"
+												class="mt-3 content px-3 card-body"
+												th:id="'content' + ${iterStat.index}"
+												th:text="${item.post_contents}"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>					
+					</div>					
+					<div class="tab-pane fade show" id="likes" role="tabpanel"
+						aria-labelledby="likes-tab">
+						<div class="container mt-3">
+							<div class="row row-cols-1 row-cols-md-3 g-4">
+								<div th:each="item, iterStat : ${posts}">
+									<div class="col">
+										<div class="card card-fixed-size">
+											<div class="card-header d-flex justify-content-between">
+												<h5 th:text="${item.post_title}">post_title</h5>
+												<div class="">
+													<a href="/UpdatePost/"
+														th:attrappend="href=${item.post_idx}"
+														th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}">
+														<svg class="w-6 h-6 text-gray-800 dark:text-white"
+															aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+															width="24" height="24" fill="none" viewBox="0 0 24 24">
+										 					 <path stroke="currentColor" stroke-linecap="round"
+																stroke-linejoin="round" stroke-width="2"
+																d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z" />
+														</svg>
 													</a> <a href="/DeletePost"
 														th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}">
 														<svg class="w-6 h-6 text-gray-800 dark:text-white"
@@ -215,46 +335,114 @@
 								</div>
 							</div>
 						</div>
-						<div class="tab-pane fade" id="bookmark" role="tabpanel"
-							aria-labelledby="bookmark-tab">즐겨찾기 등록 포스트</div>
-						<div class="tab-pane fade" id="likes" role="tabpanel"
-							aria-labelledby="likes-tab">좋아요 누른 포스트</div>
 					</div>
 				</div>
+					
+				
 			</div>
 		</div>
 	</main>
 	<script src="/js/youtubeLink.js"></script>
 	<script>
-		$(document).ready(function() {
-			$(".profile-img").click(function() {
-				$("#profileInput").click();
-			});
+		$(document).ready(
+				function() {
+					const login_user = $('#user_id').val();
+					$(".profile-img").click(function() {
+						$("#profileInput").click();
+					});
+					$("#profileInput").change(
+							function() {
+								if (confirm("프로필 사진을 변경하겠습니까?")) {
+									// FormData 객체를 생성하고 파일을 추가
+									var formData = new FormData();
+									formData.append('file',
+											$('#profileInput')[0].files[0]);
 
-			$("#profileInput").change(function() {
-				if (confirm("프로필 사진을 변경하겠습니까?")) {
-					// FormData 객체를 생성하고 파일을 추가
-					var formData = new FormData();
-					formData.append('file', $('#profileInput')[0].files[0]);
+									// AJAX를 통해 서버에 파일 전송
+									$.ajax({
+										url : '/updateProfile', // 프로필 업데이트를 처리하는 서버의 URL
+										type : 'POST',
+										data : formData,
+										processData : false, // jQuery가 데이터를 처리하지 못하도록 설정
+										contentType : false, // jQuery가 contentType을 설정하지 못하도록 설정
+										success : function(data) {
+											alert("프로필 사진이 변경되었습니다.");
+											location.reload(); // 페이지를 새로고침하여 변경된 사진을 보여줌
+										},
+										error : function(e) {
+											alert("오류가 발생했습니다.");
+										}
+									});
+								}
+							});
 
-					// AJAX를 통해 서버에 파일 전송
-					$.ajax({
-						url : '/updateProfile', // 프로필 업데이트를 처리하는 서버의 URL
-						type : 'POST',
-						data : formData,
-						processData : false, // jQuery가 데이터를 처리하지 못하도록 설정
-						contentType : false, // jQuery가 contentType을 설정하지 못하도록 설정
-						success : function(data) {
-							alert("프로필 사진이 변경되었습니다.");
-							location.reload(); // 페이지를 새로고침하여 변경된 사진을 보여줌
-						},
-						error : function(e) {
-							alert("오류가 발생했습니다.");
+					const follow_btn = $('.follow_btn');
+
+					function updateFollowBtn() {
+					    follow_btn.each(function() {
+					    	const button = $(this); // 현재 반복하고 있는 개별 버튼에 대한 참조를 생성합니다.
+					        const user_id = button.data('user-id'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
+					        $.ajax({
+					            url: `/CheckFollow`,
+					            type: 'GET',
+					            dataType: 'json',
+					            data: {
+					                user_id: user_id,
+					                login_user: login_user
+					            },
+					            success: function(following) {
+					            	button.data('following', following); // 'btn'을 사용해 현재 버튼의 데이터를 업데이트합니다.
+					            	button.toggleClass('btn-primary', following)
+					                  .toggleClass('btn-outline-secondary', !following)
+					                  .val(following ? '팔로잉' : '팔로우');
+					            },
+					            error: function(error) {
+					                console.error('Error:', error);
+					            }
+					        });
+					    });
+					}
+
+					updateFollowBtn();
+
+					follow_btn.click(function() {
+						const button = $(this);
+						const user_id = button.data('user-id');
+						const following = button.data('following');
+
+						if (following) {
+							// 스크랩 삭제 요청
+							$.ajax({
+								url : `/DeleteFollow/${user_id}/${login_user}`,
+								type : 'DELETE',
+								success : function(response) {
+									alert('팔로우가 해제되었습니다.');
+									updateFollowBtn(); // 모든 팔로우 버튼 상태 갱신
+								},
+								error : function(error) {
+									console.error('Error:', error);
+									alert('오류가 발생했습니다. 다시 시도해주세요.');
+								}
+							});
+						} else {
+							// 스크랩 추가 요청
+							$.ajax({
+								url : `/InsertFollow/${user_id}/${login_user}`,
+								type : 'POST',
+								success : function(response) {
+									alert('팔로우가 추가되었습니다.');
+									updateFollowBtn(); // 모든 팔로우 버튼 상태 갱신
+								},
+								error : function(error) {
+									console.error('Error:', error);
+									alert('오류가 발생했습니다. 다시 시도해주세요.');
+								}
+							});
+							;
 						}
 					});
-				}
-			});
-		});
+
+				});
 	</script>
 
 </body>

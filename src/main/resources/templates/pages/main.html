@@ -52,22 +52,25 @@ input {
 textarea.no-resize {
 	resize: none;
 }
-</style>
-<script>
-	function showMoreContent(button) {
-		// 버튼의 data-target 속성으로부터 대상 요소의 ID를 얻습니다.
-		var contentId = button.getAttribute('data-target');
-		// 해당 ID를 사용하여 내용 요소를 찾습니다.
-		var contentElement = document.getElementById(contentId);
-		// 내용 요소의 스타일을 변경하여 -webkit 관련 스타일을 제거합니다.
-		contentElement.style.display = 'block';
-		contentElement.style.webkitLineClamp = 'unset';
-		contentElement.style.webkitBoxOrient = 'unset';
-		// 더보기 버튼을 숨깁니다.
-		button.style.display = 'none';
-	}
-</script>
 
+/* 숨겨질 요소들 */
+.post-image, .content_text, .toggleButton {
+	display: none;
+}
+
+/* 피드의 높이가 일정 수준 이상이 될 때 보이게 될 요소들 */
+.feed {
+	overflow: hidden; /* 넘치는 부분 숨김 */
+}
+
+.post-image, .content_text {
+	display: block; /* 이미지와 텍스트 보이게 함 */
+}
+
+.toggleButton {
+	display: block !important; /* "더 보기" 버튼 강제로 보이게 함 */
+}
+</style>
 </head>
 
 <body>
@@ -78,27 +81,28 @@ textarea.no-resize {
 			</nav>
 
 			<div class="justify-content-center col-10 container">
-			<input type="hidden" th:value="${loggedIn}" id="isLoggedIn">
+				<input type="hidden" th:value="${loggedIn}" id="isLoggedIn">
 				<div th:if="${loggedInUser != null}">
-					<input type="hidden" th:value="${loggedInUser.user_idx}" id="user_idx">
-					<input type="hidden" th:value="${loggedInUser.user_id}" id="user_id">
-		
+					<input type="hidden" th:value="${loggedInUser.user_idx}"
+						id="user_idx"> <input type="hidden"
+						th:value="${loggedInUser.user_id}" id="user_id">
 				</div>
 				<div
 					class="container-fluid d-flex justify-content-center align-items-center">
 					<div class="row">
 						<div class="col-md-8">
-							<div th:each="item, iterStat : ${posts}" class="border mt-5"
+							<div th:each="item, iterStat : ${posts}" class="border mt-5 feed"
 								style="width: 470px; height: auto;">
 								<div class="p-4">
 									<!-- 첫 번째 내용 블록 -->
 									<div class="d-flex justify-content-between mb-3">
 										<div class="d-flex align-items-center">
-										<a th:href="@{/profile/{id}(id=${item.post_id})}">
-											<img src="/user_profile/profile.jpg" th:src="${item.profile != null} ? ${item.profile.file_path} : '/user_profile/default.jpg'"
+											<a th:href="@{/profile/{id}(id=${item.post_id})}"> <img
+												src="/user_profile/profile.jpg"
+												th:src="${item.profile != null} ? ${item.profile.file_path} : '/user_profile/default.jpg'"
 												class="rounded-circle profile-img"
-												style="width: 50px; height: 50px; cursor: pointer;">										
-										</a>
+												style="width: 50px; height: 50px; cursor: pointer;">
+											</a>
 											<p th:text="${item.post_name}"
 												th:id="'post_name'+${item.post_idx}" class="mb-0 ml-2 ms-3"></p>
 										</div>
@@ -109,7 +113,8 @@ textarea.no-resize {
 										<div th:each="file : ${item.fileList}"
 											class="d-flex justify-content-center">
 											<img th:src="${file.file_Path}" alt="게시글 이미지"
-												class="post-image mb-3" style="width: 280px; height: auto;">
+												class="post-image mb-3 post-image"
+												style="width: 280px; height: auto;">
 										</div>
 										<div th:id="'content' + ${iterStat.index}" class="mt-3 px-3">
 											<p th:id="'content_text' + ${iterStat.index}"
@@ -137,16 +142,16 @@ textarea.no-resize {
 											th:id="'post_likes' + ${item.post_idx}">
 									</div>
 									<div th:id="'commentSection-'+${item.post_idx}">
-									<div class="mt-3" th:each="comment : ${item.commentList}">
-										<div class="border px-3 py-2">
-											<div class="d-flex justify-content-between">
-												<p th:text="${comment.from_name}">
-												<p th:text="${comment.commentTimeAgo}">
+										<div class="mt-3" th:each="comment : ${item.commentList}">
+											<div class="border px-3 py-2">
+												<div class="d-flex justify-content-between">
+													<p th:text="${comment.from_name}">
+													<p th:text="${comment.commentTimeAgo}">
+												</div>
+												<p th:text="${comment.comment_content}">
 											</div>
-											<p th:text="${comment.comment_content}">
 										</div>
-									</div>
-									
+
 									</div>
 									<div class="mt-3 row">
 										<textarea

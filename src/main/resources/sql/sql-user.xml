@@ -84,6 +84,17 @@
 		POST_ID = #{user_id}
 
 	</select>
+	<select id="viewLikePostsByIdx" parameterType="int">
+		SELECT P.post_idx,
+		P.post_id, P.post_name, P.post_title,
+		P.post_contents,
+		P.post_likes,
+		P.post_created_date, P.post_updated_date, P.deleted_yn
+		FROM POST_TB P
+		JOIN LIKES_TB L 
+		WHERE
+		POST_ID = #{user_id}
+	</select>
 	<select id="viewPost" parameterType="String"
 		resultType="com.kdh.domain.PostVo">
 		<![CDATA[
@@ -267,8 +278,9 @@
 		Select N.NOTIFICATION_IDX, N.TO_ID, N.CHECK_YN, N.MESSAGE,
 		N.CREATED_DATE, N.FROM_ID, P.post_idx
 		FROM NOTIFICATION_TB N
-        Join post_noti_tb P ON n.notification_idx = p.notification_idx
-		WHERE N.TO_ID = #{user_id} AND N.CHECK_YN = 'N'
+		Join post_noti_tb P ON n.notification_idx = p.notification_idx
+		WHERE
+		N.TO_ID = #{user_id} AND N.CHECK_YN = 'N'
 	</select>
 	<update id="updateNoti">
 		<![CDATA[
@@ -329,7 +341,8 @@
 		UPDATE USER_FILE_TB SET ORIGINAL_NAME =
 		#{original_name}, FILE_PATH = #{file_path}, FILE_SIZE = #{file_size},
 		UPLOAD_DATE = TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS')
-		WHERE FILE_IDX = #{file_idx}
+		WHERE FILE_IDX
+		= #{file_idx}
 	</update>
 
 	<select id="findProfileByUserIdx">
@@ -356,6 +369,38 @@
 	<select id="findCommentsByPostIdx">
 		SELECT *
 		FROM COMMENT_TB
-		WHERE TO_POST_IDX = #{post_idx}
+		WHERE TO_POST_IDX =
+		#{post_idx}
 	</select>
+	<select id="countFollow" resultType="int">
+		<![CDATA[ 
+			SELECT 
+				COUNT(*) AS cnt
+			FROM
+				FOLLOW_TB
+			WHERE
+				FOLLOWING_ID = #{following_id}
+			AND
+				FOLLOWER_ID = #{follower_id}
+		]]>
+	</select>
+	<insert id="insertFollow">
+	  <![CDATA[
+		insert into FOLLOW_TB (FOLLOW_IDX, FOLLOWING_ID,
+		FOLLOWER_ID, FOLLOW_DATE)
+		values((SELECT NVL(MAX(FOLLOW_IDX),0) + 1
+		FROM FOLLOW_TB), #{following_id} ,#{follower_id}, TO_CHAR(SYSDATE,
+		'YYYY-MM-DD HH24:MI:SS'))
+		 ]]>
+	</insert>
+
+	<delete id="deleteFollow">
+	<![CDATA[
+		delete from FOLLOW_TB
+		where 
+		FOLLOWING_ID = #{following_id}
+		AND
+		FOLLOWER_ID = #{follower_id}
+		 ]]>
+	</delete>
 </mapper>
