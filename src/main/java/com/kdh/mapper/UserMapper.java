@@ -10,9 +10,11 @@ import com.kdh.domain.FileVo;
 import com.kdh.domain.FollowVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
+import com.kdh.domain.PostTagsVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.ProfileVo;
+import com.kdh.domain.TagsVo;
 import com.kdh.domain.UserVo;
 
 @Mapper
@@ -56,13 +58,13 @@ public interface UserMapper {
 
 	void deleteLike(LikesVo like);
 
-	int checkLike(int user_idx, int post_idx);
+	int checkLike(Long user_idx, Long post_idx);
 
-	void updatePostLikes(int post_idx);
+	void updatePostLikes(Long post_idx);
 
 	List<PostVo> viewPostById(String user_id);
 
-	int countLike(@Param("post_idx") int post_idx);
+	int countLike(@Param("post_idx") Long post_idx);
 
 	PostVo getPostByIdx(Long post_idx);
 
@@ -70,15 +72,15 @@ public interface UserMapper {
 
 	List<NotificationVo> getNotis(String user_Id);
 
-	void updateNoti(@Param("notification_idx") int notification_idx);
+	void updateNoti(@Param("notification_idx") Long notification_idx);
 
-	int selectMaxNotificationIndex();
+	Long selectMaxNotificationIndex();
 
 	void insertPostNoti(PostnotiVo postnotiVo);
 
-	PostnotiVo findPostNotibyIdx(@Param("notification_idx") int noti);
+	PostnotiVo findPostNotibyIdx(@Param("notification_idx") Long noti);
 
-	PostVo findPostbyIdx(int post_idx);
+	PostVo findPostbyIdx(Long post_idx);
 
 	void insertComment(CommentVo vo);
 
@@ -86,7 +88,7 @@ public interface UserMapper {
 
 	void insertProfile(ProfileVo profileVo);
 
-	ProfileVo findProfileByUserIdx(int user_idx);
+	ProfileVo findProfileByUserIdx(Long user_idx);
 
 	void deleteFile(Long post_idx);
 
@@ -96,7 +98,7 @@ public interface UserMapper {
 
 	List<FollowVo> findFollowerByUserId(String user_id);
 
-	List<CommentVo> findCommentsByPostIdx(int post_idx);
+	List<CommentVo> findCommentsByPostIdx(Long post_idx);
 
 	int countFollow(@Param("follower_id") String follower_id,@Param("following_id")  String following_id);
 
@@ -104,6 +106,22 @@ public interface UserMapper {
 
 	void deleteFollow(FollowVo follow);
 
-	List<PostVo> viewLikePostsByIdx(int user_idx);
+	List<PostVo> viewLikePostsByIdx(Long user_idx);
+
+	void insertTag(TagsVo tag);
+
+	Long selectTagIdxMax();
+
+	void insertPostTag(PostTagsVo postTag);
+
+	Long findTagIdxByTagName(String tagName);
+
+	List<TagsVo> findTagsNameByPostIdx(Long post_idx);
+
+	void deletePost(Long post_idx);
+
+	void deletePostFile(Long post_idx);
+
+	List<FileVo> findFilesByPostIdx(Long post_idx);
 
 }

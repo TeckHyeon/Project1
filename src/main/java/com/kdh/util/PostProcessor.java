@@ -10,6 +10,7 @@ import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.ProfileVo;
+import com.kdh.domain.TagsVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
 
@@ -36,6 +37,10 @@ public class PostProcessor {
         List<CommentVo> comments = userService.getCommentList(post.getPost_idx());
         comments.forEach(comment -> comment.setCommentTimeAgo(calculateTimeAgo(comment.getCreated_date(), formatter)));
         post.setCommentList(comments);
+        
+        List<TagsVo> tags = userService.findTagsNameByPostIdx(post.getPost_idx());
+        post.setTagList(tags);
+        
     }
 
     private String calculateTimeAgo(String dateStr, DateTimeFormatter formatter) {

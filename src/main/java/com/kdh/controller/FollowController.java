@@ -2,8 +2,10 @@ package com.kdh.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -39,7 +41,7 @@ public class FollowController {
 		}
 	}
 
-	@RequestMapping("/InsertFollow/{user_id}/{login_user}")
+	@PostMapping("/InsertFollow/{user_id}/{login_user}")
 	public ResponseEntity<?> insertFollow(@PathVariable("user_id") String follower_id, @PathVariable("login_user") String following_id) {
 		try {
 			userService.insertFollow(follower_id, following_id);
@@ -49,7 +51,7 @@ public class FollowController {
 		}
 	}
 
-	@RequestMapping("/DeleteFollow/{user_id}/{login_user}")
+	@DeleteMapping("/DeleteFollow/{user_id}/{login_user}")
 	public ResponseEntity<?> deleteFollow(@PathVariable("user_id") String follower_id, @PathVariable("login_user") String following_id) {
 		try {
 			userService.deleteFollow(follower_id, following_id);

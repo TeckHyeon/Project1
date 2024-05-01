@@ -35,7 +35,7 @@ public class NotiController {
 
 	@PostMapping("/AddNoti")
 	public ResponseEntity<?> addNoti(@RequestParam("post_id") String post_id, @RequestParam("user_id") String user_id,
-			@RequestParam("post_idx") int post_idx, @RequestParam("message") int message, NotificationVo notiVo,
+			@RequestParam("post_idx") Long post_idx, @RequestParam("message") Long message, NotificationVo notiVo,
 			PostnotiVo postnotiVo) {
 		try {
 			// post_id와 user_id가 같은지 확인합니다. 같다면 본인의 게시물에 알림을 추가하는 것이므로 요청을 거절합니다.
@@ -64,10 +64,10 @@ public class NotiController {
 	}
 
 	@PostMapping("/findPostNotibyIdx")
-	public ModelAndView findPostNotibyIdx(@RequestParam("noti") int noti, PostnotiVo vo, PostVo post) {
+	public ModelAndView findPostNotibyIdx(@RequestParam("noti") Long noti, PostnotiVo vo, PostVo post) {
 		ModelAndView modelAndView = new ModelAndView("layout/postdetail");
 		vo = userService.findPostNotibyIdx(noti);
-		int post_idx = vo.getPost_idx();
+		Long post_idx = vo.getPost_idx();
 		post = userService.findPostbyIdx(post_idx);
 
 		List<FileVo> allFiles = new ArrayList<>();
@@ -97,7 +97,7 @@ public class NotiController {
         return TimeAgo.calculateTimeAgo(dateTime);
     }
 	@PostMapping("/CheckNoti")
-	public ResponseEntity<?> checkNoti(@RequestParam("notification_idx") int notification_idx) {
+	public ResponseEntity<?> checkNoti(@RequestParam("notification_idx") Long notification_idx) {
 		try {
 			userService.updateNoti(notification_idx);
 			return ResponseEntity.ok().build();

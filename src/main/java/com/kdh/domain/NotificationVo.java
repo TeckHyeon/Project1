@@ -8,12 +8,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotificationVo {
-	int notification_idx;
+	Long notification_idx;
 	String to_id;
 	String check_yn;
-	int message;
+	Long message;
 	String created_date;
 	String from_id;
-	int post_idx;
+	Long post_idx;
 	PostnotiVo postNotiVo;
 }

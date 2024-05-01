@@ -20,7 +20,7 @@ public class ProfileFiles {
     @Value("${file.upload-dir}")
     private String uploadDir; // application.properties에서 설정한 업로드 경로
 
-    public ProfileVo parseProfileInfo(int user_idx, MultipartFile file) throws Exception {
+    public ProfileVo parseProfileInfo(Long user_idx, MultipartFile file) throws Exception {
         if (file.isEmpty() || ObjectUtils.isEmpty(file.getContentType())) {
             return new ProfileVo(); // 빈 프로필 객체 반환
         }

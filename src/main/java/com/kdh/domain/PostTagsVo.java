@@ -7,11 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PostnotiVo {
-	Long postnoti_idx;
-	String from_id;
-	String to_id;
-	Long post_idx;
-	Long notification_idx;
-	
+public class PostTagsVo {
+	private Long post_tag_idx;
+	private Long tag_idx;
+	private Long post_idx;
+
 }

@@ -20,7 +20,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 				.excludePathPatterns("/js/**").excludePathPatterns("/nav")
 				.excludePathPatterns("/resources/templates/layout/**") // 오타 수정
 				.excludePathPatterns("/post_file/**") // 오타 수정
-				.excludePathPatterns("/profile_file/**"); // 오타 수정
+				.excludePathPatterns("/profile_file/**").excludePathPatterns("/user_profile/**"); // 오타 수정
 	}
 
 	@Bean

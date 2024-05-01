@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProfileVo {
 	private Long file_idx;
-	private int user_idx;
+	private Long user_idx;
 	private String original_name;
 	private String file_path;
 	private String file_size;

@@ -24,6 +24,6 @@ public class PostVo {
     private ProfileVo profile = new ProfileVo();
     private List<FileVo> fileList = new ArrayList<>();
     private List<CommentVo> commentList = new ArrayList<>();
-
+    private List<TagsVo> tagList = new ArrayList<>();
     
 }

@@ -3,8 +3,8 @@ package com.kdh.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -16,9 +16,11 @@ import com.kdh.domain.FileVo;
 import com.kdh.domain.FollowVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
+import com.kdh.domain.PostTagsVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.ProfileVo;
+import com.kdh.domain.TagsVo;
 import com.kdh.domain.UserVo;
 import com.kdh.mapper.UserMapper;
 
@@ -30,7 +32,7 @@ public class UserService {
 
 	@Autowired
 	private PostFiles postFiles;
-	
+
 	@Autowired
 	private ProfileFiles profileFiles;
 
@@ -74,13 +76,35 @@ public class UserService {
 
 	}
 
-	public void insertPost(PostVo postVo, MultipartHttpServletRequest multiFiles) {
+	public void insertPost(PostVo postVo, MultipartHttpServletRequest multiFiles, List<String> tags) {
 		// 시퀀스 값 조회 및 설정
-		Long postIdx = userMapper.selectPostSeqNextVal(); // 시퀀스 값 조회 메소드 호출
-		postVo.setPost_idx(postIdx); // 조회한 시퀀스 값을 PostVo에 설정
+		Long post_idx = userMapper.selectPostSeqNextVal(); // 시퀀스 값 조회 메소드 호출
+		postVo.setPost_idx(post_idx); // 조회한 시퀀스 값을 PostVo에 설정
 
 		// 게시글 정보를 DB에 삽입
 		userMapper.insertPost(postVo);
+		
+		// 리스트의 각 요소를 반복하면서 데이터베이스에 저장
+	    for (String tagName : tags) {
+	    	Long existTag_idx = userMapper.findTagIdxByTagName(tagName);
+	    	Long tag_idx = userMapper.selectTagIdxMax();// 새 태그에 대한 새로운 index 생성
+	    	   if (existTag_idx == null) {
+	    	        TagsVo tag = new TagsVo(); // 새 TagsVo 객체 생성 
+	    	        tag.setTag_idx(tag_idx);
+	    	        tag.setTag_name(tagName);
+	    	        userMapper.insertTag(tag); // 태그 데이터베이스에 삽입
+	    	        PostTagsVo postTag = new PostTagsVo();
+	    	        postTag.setPost_idx(post_idx);
+	    	        postTag.setTag_idx(tag_idx);
+	    	        userMapper.insertPostTag(postTag);
+	    	    } else {
+	    	    	  PostTagsVo postTag = new PostTagsVo();
+	    	    	  postTag.setPost_idx(post_idx);
+	    	    	  postTag.setTag_idx(existTag_idx);
+	    	    	  userMapper.insertPostTag(postTag);
+	    	    }
+		}
+
 
 		try {
 			// 파일 정보 파싱 및 삽입
@@ -121,18 +145,18 @@ public class UserService {
 		}
 	}
 
-	public void insertLike(LikesVo like, int post_idx) {
+	public void insertLike(LikesVo like, Long post_idx) {
 		userMapper.insertLike(like);
 		userMapper.updatePostLikes(post_idx);
 	}
 
 	public void deleteLike(LikesVo like) {
-		int post_idx = like.getPost_idx();
+		Long post_idx = like.getPost_idx();
 		userMapper.deleteLike(like);
 		userMapper.updatePostLikes(post_idx);
 	}
 
-	public int checkLike(int user_idx, int post_idx) {
+	public int checkLike(Long user_idx, Long post_idx) {
 		int checkLike = userMapper.checkLike(user_idx, post_idx);
 		return checkLike;
 	}
@@ -142,23 +166,23 @@ public class UserService {
 		return userMapper.viewPostById(user_id);
 	}
 
-	public int countLike(int post_idx) {
+	public int countLike(Long post_idx) {
 		// TODO Auto-generated method stub
 		return userMapper.countLike(post_idx);
 	}
 
 	public void insertNoti(NotificationVo notiVo, PostnotiVo postnotiVo) {
-		int notiIdx = userMapper.selectMaxNotificationIndex();
+		Long notiIdx = userMapper.selectMaxNotificationIndex();
 		notiVo.setNotification_idx(notiIdx);
 		userMapper.insertNoti(notiVo);
-		
-		if(notiVo.getMessage() != 4) {
+
+		if (notiVo.getMessage() != 4) {
 			postnotiVo.setNotification_idx(notiIdx);
-			userMapper.insertPostNoti(postnotiVo);	
+			userMapper.insertPostNoti(postnotiVo);
 		} else {
-			
+
 		}
-		
+
 	}
 
 	public List<NotificationVo> getNotis(String user_Id) {
@@ -166,16 +190,16 @@ public class UserService {
 		return userMapper.getNotis(user_Id);
 	}
 
-	public void updateNoti(int notification_idx) {
+	public void updateNoti(Long notification_idx) {
 		userMapper.updateNoti(notification_idx);
 	}
 
-	public PostnotiVo findPostNotibyIdx(int noti) {
+	public PostnotiVo findPostNotibyIdx(Long noti) {
 		// TODO Auto-generated method stub
 		return userMapper.findPostNotibyIdx(noti);
 	}
 
-	public PostVo findPostbyIdx(int post_idx) {
+	public PostVo findPostbyIdx(Long post_idx) {
 		// TODO Auto-generated method stub
 		return userMapper.findPostbyIdx(post_idx);
 	}
@@ -190,33 +214,32 @@ public class UserService {
 	}
 
 	public void saveProfile(MultipartFile file, UserVo user) {
-	    int userIdx = user.getUser_idx(); // 시퀀스 값 조회 메소드 호출
-	    
-	    try {
-	        // 파일 정보 파싱
-	        ProfileVo profileVo = profileFiles.parseProfileInfo(userIdx, file);
-	        if (profileVo != null) {
-	            // 기존 프로필 사진이 있는지 확인
-	            ProfileVo existingProfile = userMapper.findProfileByUserIdx(userIdx);
-	            
-	            if (existingProfile != null) {
-	                // 기존 프로필 사진이 있으면 업데이트 또는 삭제 후 삽입
-	            	Long file_idx = existingProfile.getFile_idx();
-	            	profileVo.setFile_idx(file_idx);
-	                userMapper.updateProfile(profileVo); // 프로필 사진 정보 업데이트 메소드
-	                // 필요에 따라 기존 파일을 서버에서 삭제하는 로직도 추가할 수 있습니다.
-	            } else {
-	                // 기존 프로필 사진이 없으면 새로 삽입
-	                userMapper.insertProfile(profileVo);
-	            }
-	        }
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
+		Long userIdx = user.getUser_idx(); // 시퀀스 값 조회 메소드 호출
+
+		try {
+			// 파일 정보 파싱
+			ProfileVo profileVo = profileFiles.parseProfileInfo(userIdx, file);
+			if (profileVo != null) {
+				// 기존 프로필 사진이 있는지 확인
+				ProfileVo existingProfile = userMapper.findProfileByUserIdx(userIdx);
+
+				if (existingProfile != null) {
+					// 기존 프로필 사진이 있으면 업데이트 또는 삭제 후 삽입
+					Long file_idx = existingProfile.getFile_idx();
+					profileVo.setFile_idx(file_idx);
+					userMapper.updateProfile(profileVo); // 프로필 사진 정보 업데이트 메소드
+					// 필요에 따라 기존 파일을 서버에서 삭제하는 로직도 추가할 수 있습니다.
+				} else {
+					// 기존 프로필 사진이 없으면 새로 삽입
+					userMapper.insertProfile(profileVo);
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
-
-	public ProfileVo findProfileByUserIdx(int user_idx) {
+	public ProfileVo findProfileByUserIdx(Long user_idx) {
 		// TODO Auto-generated method stub
 		return userMapper.findProfileByUserIdx(user_idx);
 	}
@@ -231,13 +254,13 @@ public class UserService {
 		return userMapper.findFollowerByUserId(user_id);
 	}
 
-	public List<CommentVo> findCommentsByPostIdx(int post_idx) {
+	public List<CommentVo> findCommentsByPostIdx(Long post_idx) {
 		// TODO Auto-generated method stub
 		return userMapper.findCommentsByPostIdx(post_idx);
 	}
 
 	public int countFollow(String follower_id, String following_id) {
-		
+
 		return userMapper.countFollow(follower_id, following_id);
 	}
 
@@ -255,9 +278,26 @@ public class UserService {
 		userMapper.deleteFollow(follow);
 	}
 
-	public List<PostVo> viewLikePostsByIdx(int user_idx) {
+	public List<PostVo> viewLikePostsByIdx(Long user_idx) {
 		// TODO Auto-generated method stub
 		return userMapper.viewLikePostsByIdx(user_idx);
+	}
+
+	public List<TagsVo> findTagsNameByPostIdx(Long post_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.findTagsNameByPostIdx(post_idx);
+	}
+
+	public void deletePost(Long post_idx) {
+	
+		userMapper.deletePost(post_idx);
+		
+		List<FileVo> files = userMapper.findFilesByPostIdx(post_idx);
+		
+		if(files == null) {
+			userMapper.deletePostFile(post_idx);
+		}
+	
 	}
 
 }

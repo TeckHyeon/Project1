@@ -123,9 +123,13 @@ textarea.no-resize {
 												class="toggleButton btn btn-link text-dark text-decoration-none"
 												th:data-target="'content_text' + ${iterStat.index}"
 												onclick="showMoreContent(this)">더보기</button>
-
 										</div>
-
+										<div class="d-flex">
+											<div th:each="tag : ${item.tagList}">
+												<button class="btn btn-outline-primary m-1 mt-3 tag-btn"
+													th:text="${tag.tag_name}"></button>
+											</div>
+										</div>
 									</div>
 									<div class="ms-3 my-1">
 										<span class="fw-bold like_btn"

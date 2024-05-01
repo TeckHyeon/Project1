@@ -3,7 +3,6 @@ package com.kdh.controller;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,14 +22,15 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.kdh.common.PostFiles;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
 import com.kdh.domain.FollowVo;
 import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
-import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.ProfileVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
@@ -59,7 +59,7 @@ public class UserController {
 		if (SessionManager.isLoggedIn(session)) {
 			loggedInUserVo = SessionManager.getUserVo(session);
 			String user_Id = loggedInUserVo.getUser_id();
-			int user_idx = loggedInUserVo.getUser_idx();
+			Long user_idx = loggedInUserVo.getUser_idx();
 			posts = userService.viewPost(user_Id);
 			noti = userService.getNotis(user_Id);
 			profile = userService.findProfileByUserIdx(user_idx);
@@ -79,7 +79,7 @@ public class UserController {
 			processor.processPost(post, allFiles);
 			String post_id = post.getPost_id();
 			UserVo postUserVo = userService.loadUser(post_id);
-			int user_idx = postUserVo.getUser_idx();
+			Long user_idx = postUserVo.getUser_idx();
 			profile = userService.findProfileByUserIdx(user_idx);
 			log.info("profile = {}", profile);
 			post.setProfile(profile);
@@ -173,9 +173,17 @@ public class UserController {
 	}
 
 	@PostMapping("/write")
-	public ModelAndView write(PostVo postVo, MultipartHttpServletRequest multiFiles) {
+	public ModelAndView write(PostVo postVo, MultipartHttpServletRequest multiFiles,
+			@RequestParam("tags") String tagsJson) {
 		ModelAndView mv = new ModelAndView();
-		userService.insertPost(postVo, multiFiles);
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+		    List<String> tags = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
+			userService.insertPost(postVo, multiFiles, tags);
+		} catch (JsonProcessingException e) {
+		    e.printStackTrace();
+		}
+
 		mv.setViewName("redirect:/");
 		return mv;
 	}
@@ -198,9 +206,9 @@ public class UserController {
 		// 프로필 페이지 주인의 게시글 목록 가져오기
 		List<PostVo> posts = userService.viewPostById(user_Id);
 		mv.addObject("posts", posts);
-		
+
 		// 프로필 페이지 주인이 좋아요 누른 게시물 목록 가져오기
-		int user_idx = profileUserVo.getUser_idx();
+		Long user_idx = profileUserVo.getUser_idx();
 		List<PostVo> likePosts = userService.viewLikePostsByIdx(user_idx);
 		mv.addObject("likePosts", likePosts);
 
@@ -218,7 +226,7 @@ public class UserController {
 		List<FileVo> allFiles = new ArrayList<>();
 		PostProcessor processor = new PostProcessor(userService);
 		posts.forEach(post -> processor.processPost(post, allFiles));
-
+		likePosts.forEach(likepost -> processor.processPost(likepost, allFiles));
 		// 팔로잉 목록 가져오기 및 추가 정보 처리
 		List<FollowVo> followingList = userService.findFollowingByUserId(user_Id);
 		followingList.forEach(following -> {
@@ -300,10 +308,19 @@ public class UserController {
 		return mv;
 	}
 
+	@PutMapping("/DeletePost/{post_idx}")
+	public ResponseEntity<?> PostUpdate(@PathVariable("post_idx") Long post_idx) {
+		try {
+			userService.deletePost(post_idx);	
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("Post 삭제에 실패했습니다.");
+		}
+	}
 	@PostMapping("/LikeAdd")
 	public ResponseEntity<?> addLike(@RequestBody LikesVo like) {
 		try {
-			int post_idx = like.getPost_idx();
+			Long post_idx = like.getPost_idx();
 			userService.insertLike(like, post_idx);
 			log.info("post_idx = {}", post_idx);
 			return ResponseEntity.ok().build();
@@ -323,7 +340,8 @@ public class UserController {
 	}
 
 	@GetMapping("/CheckLike")
-	public ResponseEntity<?> checkLike(@RequestParam("post_idx") int post_idx, @RequestParam("user_idx") int user_idx) {
+	public ResponseEntity<?> checkLike(@RequestParam("post_idx") Long post_idx,
+			@RequestParam("user_idx") Long user_idx) {
 		int checkLike = userService.checkLike(user_idx, post_idx);
 		try {
 			if (checkLike != 0) {
@@ -341,7 +359,7 @@ public class UserController {
 
 	@PostMapping("/LoadLikes")
 	@ResponseBody
-	public int loadLikes(@RequestParam("post_idx") int post_idx) {
+	public int loadLikes(@RequestParam("post_idx") Long post_idx) {
 		// postId를 기반으로 좋아요 수를 업데이트하고, 업데이트된 좋아요 수를 반환하는 로직 구현
 		int loadlikes = userService.countLike(post_idx);
 		// 업데이트된 좋아요 수를 int로 직접 반환
@@ -373,17 +391,20 @@ public class UserController {
 
 	@GetMapping("/LoadComments")
 	@ResponseBody
-	public List<CommentVo> loadComments(@RequestParam("post_idx") int post_idx) {
-	    // 특정 게시물에 대한 댓글 조회
-	    List<CommentVo> comments = userService.findCommentsByPostIdx(post_idx);
-	    comments.forEach(comment -> {
-	    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-	        comment.setCommentTimeAgo(calculateTimeAgo(comment.getUpdated_date(), formatter));
-	    });
-	    return comments;
+	public List<CommentVo> loadComments(@RequestParam("post_idx") Long post_idx) {
+		// 특정 게시물에 대한 댓글 조회
+		List<CommentVo> comments = userService.findCommentsByPostIdx(post_idx);
+		comments.forEach(comment -> {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			comment.setCommentTimeAgo(calculateTimeAgo(comment.getUpdated_date(), formatter));
+		});
+		return comments;
 	}
-    private String calculateTimeAgo(String dateStr, DateTimeFormatter formatter) {
-        LocalDateTime dateTime = LocalDateTime.parse(dateStr, formatter);
-        return TimeAgo.calculateTimeAgo(dateTime);
-    }
+
+	private String calculateTimeAgo(String dateStr, DateTimeFormatter formatter) {
+		LocalDateTime dateTime = LocalDateTime.parse(dateStr, formatter);
+		return TimeAgo.calculateTimeAgo(dateTime);
+	}
+	
+	
 }

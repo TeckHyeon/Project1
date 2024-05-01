@@ -28,7 +28,7 @@
 	]]>
 	</select>
 
-	<select id="selectPostSeqNextVal" resultType="long">
+	<select id="selectPostSeqNextVal" resultType="Long">
 		SELECT
 		post_seq.NEXTVAL FROM dual
 	</select>
@@ -84,16 +84,16 @@
 		POST_ID = #{user_id}
 
 	</select>
-	<select id="viewLikePostsByIdx" parameterType="int">
+	<select id="viewLikePostsByIdx" parameterType="Long">
 		SELECT P.post_idx,
 		P.post_id, P.post_name, P.post_title,
 		P.post_contents,
 		P.post_likes,
 		P.post_created_date, P.post_updated_date, P.deleted_yn
 		FROM POST_TB P
-		JOIN LIKES_TB L 
+		JOIN LIKES_TB L ON P.post_idx = L.post_idx
 		WHERE
-		POST_ID = #{user_id}
+		USER_IDX = #{user_idx}
 	</select>
 	<select id="viewPost" parameterType="String"
 		resultType="com.kdh.domain.PostVo">
@@ -176,7 +176,7 @@
 				deleted_yn = 'N'
 		]]>
 	</update>
-	<select id="viewPostFileList" parameterType="long"
+	<select id="viewPostFileList" parameterType="Long"
 		resultType="com.kdh.domain.FileVo">
 	<![CDATA[	
 	SELECT
@@ -192,7 +192,7 @@
 	    f.deleted_yn = 'N'	
 		]]>
 	</select>
-	<select id="view" parameterType="long">
+	<select id="view" parameterType="Long">
 		select * from POST_TB where
 		post_idx = #{post_idx}
 	</select>
@@ -233,7 +233,7 @@
 		where USER_IDX = #{arg0} and POST_IDX =
 		#{arg1}
 	</select>
-	<update id="updatePostLikes" parameterType="int">
+	<update id="updatePostLikes" parameterType="Long">
 	<![CDATA[	
 		UPDATE
 		POST_TB
@@ -244,12 +244,12 @@
 		deleted_yn = 'N'
 				]]>
 	</update>
-	<select id="countLike" resultType="int">
+	<select id="countLike" resultType="Long">
 		select count(*) from
 		LIKES_TB
 		where POST_IDX = #{post_idx}
 	</select>
-	<select id="getPostByIdx" parameterType="int">
+	<select id="getPostByIdx" parameterType="Long">
 		select POST_IDX,
 		POST_ID, POST_NAME, POST_TITLE, POST_CONTENTS, POST_LIKES,
 		POST_CREATED_DATE, POST_UPDATED_DATE, DELETED_YN
@@ -278,9 +278,11 @@
 		Select N.NOTIFICATION_IDX, N.TO_ID, N.CHECK_YN, N.MESSAGE,
 		N.CREATED_DATE, N.FROM_ID, P.post_idx
 		FROM NOTIFICATION_TB N
-		Join post_noti_tb P ON n.notification_idx = p.notification_idx
+		Join
+		post_noti_tb P ON n.notification_idx = p.notification_idx
 		WHERE
-		N.TO_ID = #{user_id} AND N.CHECK_YN = 'N'
+		N.TO_ID
+		= #{user_id} AND N.CHECK_YN = 'N'
 	</select>
 	<update id="updateNoti">
 		<![CDATA[
@@ -372,7 +374,7 @@
 		WHERE TO_POST_IDX =
 		#{post_idx}
 	</select>
-	<select id="countFollow" resultType="int">
+	<select id="countFollow" resultType="Long">
 		<![CDATA[ 
 			SELECT 
 				COUNT(*) AS cnt
@@ -393,7 +395,39 @@
 		'YYYY-MM-DD HH24:MI:SS'))
 		 ]]>
 	</insert>
-
+	<select id="selectTagIdxMax">
+		SELECT NVL(MAX(TAG_IDX),0) + 1
+		FROM TAGS_TB
+	</select>
+	<insert id="insertTag">
+	  <![CDATA[
+		insert into TAGS_TB (TAG_IDX, TAG_NAME)
+		values(#{tag_idx}, #{tag_name})
+		 ]]>
+	</insert>
+	<insert id="insertPostTag">
+	  <![CDATA[
+		insert into POST_TAGS_TB (POST_TAG_IDX, TAG_IDX, POST_IDX)
+		values((SELECT NVL(MAX(POST_TAG_IDX),0) + 1
+		FROM POST_TAGS_TB), #{tag_idx}, #{post_idx})
+		 ]]>
+	</insert>
+	<select id ="findTagIdxByTagName">
+	select TAG_IDX
+	FROM TAGS_TB
+	WHERE TAG_NAME = #{tag_name}
+	</select>
+	<select id ="findTagsNameByPostIdx">
+	select T.TAG_NAME, T.TAG_IDX, PT.POST_IDX
+	FROM TAGS_TB T
+	JOIN POST_TAGS_TB PT ON pt.tag_idx = t.tag_idx
+	where PT.post_idx = #{post_idx}
+	</select>
+	<select id ="findFilesByPostIdx">
+	select *
+	FROM POST_FILE_TB
+	where post_idx = #{post_idx}
+	</select>
 	<delete id="deleteFollow">
 	<![CDATA[
 		delete from FOLLOW_TB
@@ -403,4 +437,20 @@
 		FOLLOWER_ID = #{follower_id}
 		 ]]>
 	</delete>
+	<update id="deletePost">
+			UPDATE
+				POST_TB
+			SET
+				DELETED_YN = 'Y'
+			WHERE
+				POST_IDX = #{post_idx}
+	</update>
+	<update id="deletePostFile">
+			UPDATE
+				POST_FILE_TB
+			SET
+				DELETED_YN = 'Y'
+			WHERE
+				POST_IDX = #{post_idx}
+	</update>
 </mapper>

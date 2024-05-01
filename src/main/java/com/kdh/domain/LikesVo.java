@@ -8,10 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LikesVo {
-	public LikesVo(int updatedLikes) {
-		// TODO Auto-generated constructor stub
-	}
-	private int likes_idx;
-	private int post_idx;
-	private int user_idx;
+	private Long likes_idx;
+	private Long post_idx;
+	private Long user_idx;
 }
