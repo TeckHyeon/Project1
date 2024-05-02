@@ -22,10 +22,10 @@ public class FollowController {
 	@Autowired
 	private UserService userService;
 
-	@GetMapping("/CheckFollow")
-	public ResponseEntity<?> checkFollow(@RequestParam("user_id") String follower_id,
-			@RequestParam("login_user") String following_id) {
-		int followCount = userService.countFollow(follower_id, following_id);
+	@GetMapping("/CheckFollow/{user_id}/{login_user}")
+	public ResponseEntity<?> checkFollow(@PathVariable("user_id") String follower_id,
+			@PathVariable("login_user") String following_id) {
+		Long followCount = userService.countFollow(follower_id, following_id);
 		try {
 
 			if (followCount != 0) {

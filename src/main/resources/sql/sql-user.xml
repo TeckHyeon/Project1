@@ -82,7 +82,8 @@
 		FROM POST_TB
 		WHERE
 		POST_ID = #{user_id}
-
+		AND 
+		deleted_yn = 'N'
 	</select>
 	<select id="viewLikePostsByIdx" parameterType="Long">
 		SELECT P.post_idx,
@@ -94,6 +95,8 @@
 		JOIN LIKES_TB L ON P.post_idx = L.post_idx
 		WHERE
 		USER_IDX = #{user_idx}
+		AND 
+		deleted_yn = 'N'
 	</select>
 	<select id="viewPost" parameterType="String"
 		resultType="com.kdh.domain.PostVo">

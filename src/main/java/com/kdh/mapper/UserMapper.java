@@ -100,7 +100,7 @@ public interface UserMapper {
 
 	List<CommentVo> findCommentsByPostIdx(Long post_idx);
 
-	int countFollow(@Param("follower_id") String follower_id,@Param("following_id")  String following_id);
+	Long countFollow(@Param("follower_id") String follower_id,@Param("following_id")  String following_id);
 
 	void insertFollow(FollowVo follow);
 

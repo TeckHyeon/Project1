@@ -17,7 +17,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 		registry.addInterceptor(new LoginCheckInterceptor()).addPathPatterns("/**").excludePathPatterns("/loginFail")
 				.excludePathPatterns("/login").excludePathPatterns("/loginCheck").excludePathPatterns("/")
 				.excludePathPatterns("/signin").excludePathPatterns("/profile/*").excludePathPatterns("/post_file/**")
-				.excludePathPatterns("/js/**").excludePathPatterns("/nav")
+				.excludePathPatterns("/js/**").excludePathPatterns("/nav").excludePathPatterns("/css/**").excludePathPatterns("/images/**")
 				.excludePathPatterns("/resources/templates/layout/**") // 오타 수정
 				.excludePathPatterns("/post_file/**") // 오타 수정
 				.excludePathPatterns("/profile_file/**").excludePathPatterns("/user_profile/**"); // 오타 수정
@@ -31,7 +31,6 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
-		registry.addResourceHandler("/images/**").addResourceLocations("file:///C:/images/");
 		registry.addResourceHandler("/resources/**").addResourceLocations("classpath:/public/", "classpath:/static/");
 		registry.addResourceHandler("/dev/**").addResourceLocations("file:///C:/dev/");// 정적 리소스 경로 추가
 	}

@@ -4,16 +4,7 @@
 <meta charset="UTF-8">
 <title>프로필</title>
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
-<link
-	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-	rel="stylesheet"
-	integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-	crossorigin="anonymous">
-<script
-	src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-	integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-	crossorigin="anonymous"></script>
-
+<link rel="stylesheet" href="/css/bootstrap.min.css">
 <style type="text/css">
 .content {
 	display: -webkit-box;
@@ -240,31 +231,18 @@
 						aria-labelledby="posts-tab">
 						<div class="container mt-3">
 							<div class="row row-cols-1 row-cols-md-3 g-4">
-								<div th:each="item, iterStat : ${posts}" >
+								<div th:each="item, iterStat : ${posts}">
 									<div class="col" th:id="'post_card' + ${item.post_idx}">
 										<div class="card card-fixed-size">
 											<div class="card-header d-flex justify-content-between">
 												<h5 th:text="${item.post_title}">post_title</h5>
-												<div class="">
-													<a href="/UpdatePost/"
-														th:attrappend="href=${item.post_idx}"
+												<div>
+													<img class="edit_btn me-2" src="/images/pencil-square.svg" alt="게시물 수정" th:data-post-idx="${item.post_idx}" style="cursor: pointer; width: 20px;">
+													<a th:data-post-idx="${item.post_idx}"
+														th:data-profile-id="${profileUser.user_id}"
 														th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}">
-														<svg class="w-6 h-6 text-gray-800 dark:text-white"
-															aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-															width="24" height="24" fill="none" viewBox="0 0 24 24">
-										  					<path stroke="currentColor" stroke-linecap="round"
-																stroke-linejoin="round" stroke-width="2"
-																d="m14.304 4.844 2.852 2.852M7 7H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-4.5m2.409-9.91a2.017 2.017 0 0 1 0 2.853l-6.844 6.844L8 14l.713-3.565 6.844-6.844a2.015 2.015 0 0 1 2.852 0Z" />
-														</svg>
-													</a> <button th:data-post-idx="${item.post_idx}"  th:data-profile-id="${profileUser.user_id}"th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}" class="delete_post">
-														<svg class="w-6 h-6 text-gray-800 dark:text-white"
-															aria-hidden="true" xmlns="http://www.w3.org/2000/svg"	
-															width="24" height="24" fill="none" viewBox="0 0 24 24">
- 										 <path stroke="currentColor" stroke-linecap="round"
-																stroke-linejoin="round" stroke-width="2"
-																d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
-										</svg>
-													</button>
+														<img src="/images/trash3.svg" alt="게시물 삭제" style="cursor: pointer; width: 20px;">
+													</a>
 												</div>
 											</div>
 											<div th:if="${not #lists.isEmpty(item.fileList)}"
@@ -317,10 +295,37 @@
 			</div>
 		</div>
 	</main>
+	<script src="/js/bootstrap.bundle.min.js"></script>
 	<script src="/js/youtubeLink.js"></script>
 	<script>
-		$(document).ready(
-				function() {
+		const delete_btn = $('.delete_post');
+		delete_btn.click(function() {
+			const button = $(this); // 현재 반복하고 있는 개별 버튼에 대한 참조를 생성합니다.
+			const user_id = button.data('profile-id'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
+			const post_idx = button.data('post-idx'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
+			$.ajax({
+			    url : '/DeletePost/' + post_idx,
+			    type : 'DELETE', 
+			    contentType: 'application/json', 
+			    dataType : 'json',
+			    data : JSON.stringify({
+			        post_idx : post_idx
+			    }),
+				success : function(response) {
+					window.location.reload();
+				},
+				error : function(error) {
+					console.error('Error:', error);
+				}
+			});
+		});
+		const edit_btn = $('.edit_btn');
+		edit_btn.click(function() {
+			const button = $(this);
+			const post_idx = button.data('post-idx');
+			 window.location.href = `/UpdatePost/${post_idx}`;
+		});
+		$(document).ready(function () {
 					const login_user = $('#user_id').val();
 					$(".profile-img").click(function() {
 						$("#profileInput").click();
@@ -351,54 +356,32 @@
 								}
 							});
 
-					const delete_btn = $('.delete_post');
-	
-				delete_btn.click(function() {
-					const button = $(this); // 현재 반복하고 있는 개별 버튼에 대한 참조를 생성합니다.
-					const user_id = button.data('profile-id'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
-					const post_idx = button.data('post-idx'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
-					$.ajax({
-						url : `/DeletePost/` + post_idx,
-						type : 'PUT',
-						dataType : 'json',
-						data : {
-							post_idx : post_idx
-						},
-						success : function(response) {
-							$('#post_card' + post_idx).remove();
-						},
-						error : function(error) {
-							console.error('Error:', error);
-						}
-					});
-					});
 					const follow_btn = $('.follow_btn');
 
 					function updateFollowBtn() {
-							const button = $(this); // 현재 반복하고 있는 개별 버튼에 대한 참조를 생성합니다.
-							const user_id = button.data('user-id'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
-							$.ajax({
-								url : `/CheckFollow`,
-								type : 'GET',
-								dataType : 'json',
-								data : {
-									user_id : user_id,
-									login_user : login_user
-								},
-								success : function(following) {
-									button.data('following', following); // 'btn'을 사용해 현재 버튼의 데이터를 업데이트합니다.
-									button
-											.toggleClass('btn-primary',
-													following).toggleClass(
-													'btn-outline-secondary',
-													!following).val(
-													following ? '팔로잉' : '팔로우');
-								},
-								error : function(error) {
-									console.error('Error:', error);
-								}
-							});
-						
+						const button = $(this); // 현재 반복하고 있는 개별 버튼에 대한 참조를 생성합니다.
+						const user_id = button.data('user-id'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
+						$.ajax({
+							url : `/CheckFollow/${user_id}/${login_user}`,
+							type : 'GET',
+							dataType : 'json',
+							data : {
+								user_id : user_id,
+								login_user : login_user
+							},
+							success : function(following) {
+								button.data('following', following); // 'btn'을 사용해 현재 버튼의 데이터를 업데이트합니다.
+								button.toggleClass('btn-primary', following)
+										.toggleClass('btn-outline-secondary',
+												!following).val(
+												following ? '팔로잉' : '팔로우');
+							},
+							error : function(error) {
+								console.error('Error:', error);
+								alert('오류가 발생했습니다. 다시 시도해주세요.');
+							}
+						});
+
 					}
 
 					updateFollowBtn();
@@ -409,7 +392,6 @@
 						const following = button.data('following');
 
 						if (following) {
-							// 스크랩 삭제 요청
 							$.ajax({
 								url : `/DeleteFollow/${user_id}/${login_user}`,
 								type : 'DELETE',
@@ -423,7 +405,6 @@
 								}
 							});
 						} else {
-							// 스크랩 추가 요청
 							$.ajax({
 								url : `/InsertFollow/${user_id}/${login_user}`,
 								type : 'POST',
@@ -442,6 +423,5 @@
 
 				});
 	</script>
-
 </body>
 </html>

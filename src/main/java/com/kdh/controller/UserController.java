@@ -32,6 +32,7 @@ import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.ProfileVo;
+import com.kdh.domain.TagsVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
 import com.kdh.util.PostProcessor;
@@ -163,31 +164,6 @@ public class UserController {
 		return mv;
 	}
 
-	@GetMapping("/write/{user_Id}")
-	public ModelAndView writeform(@PathVariable("user_Id") String user_Id, UserVo userVo) {
-		ModelAndView mv = new ModelAndView();
-		userVo = userService.viewProfile(user_Id);
-		mv.addObject("user", userVo);
-		mv.setViewName("/pages/write");
-		return mv;
-	}
-
-	@PostMapping("/write")
-	public ModelAndView write(PostVo postVo, MultipartHttpServletRequest multiFiles,
-			@RequestParam("tags") String tagsJson) {
-		ModelAndView mv = new ModelAndView();
-		ObjectMapper objectMapper = new ObjectMapper();
-		try {
-		    List<String> tags = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
-			userService.insertPost(postVo, multiFiles, tags);
-		} catch (JsonProcessingException e) {
-		    e.printStackTrace();
-		}
-
-		mv.setViewName("redirect:/");
-		return mv;
-	}
-
 	@GetMapping("/profile/{user_Id}")
 	public ModelAndView profile(@PathVariable("user_Id") String user_Id, HttpSession session) throws Exception {
 		ModelAndView mv = new ModelAndView();
@@ -285,34 +261,64 @@ public class UserController {
 		return mv;
 	}
 
-	@GetMapping("/UpdatePost/{post_idx}")
-	public ModelAndView updatePost(@PathVariable("post_idx") Long post_idx, PostVo postVo) {
+	@GetMapping("/write/{user_Id}")
+	public ModelAndView writeform(@PathVariable("user_Id") String user_Id, UserVo userVo) {
 		ModelAndView mv = new ModelAndView();
-		postVo = userService.view(post_idx);
+		userVo = userService.viewProfile(user_Id);
+		mv.addObject("user", userVo);
+		mv.setViewName("/pages/write");
+		return mv;
+	}
 
-		List<FileVo> filesForPost = userService.viewPostFileList(post_idx);
-		log.info("file = {}", post_idx);
-		mv.addObject("postVo", postVo);
-		mv.addObject("file", filesForPost);
+	@PostMapping("/write")
+	public ModelAndView write(PostVo postVo, MultipartHttpServletRequest multiFiles,
+			@RequestParam("tags") String tagsJson) {
+		ModelAndView mv = new ModelAndView();
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+		    List<String> tags = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
+			userService.insertPost(postVo, multiFiles, tags);
+		} catch (JsonProcessingException e) {
+		    e.printStackTrace();
+		}
+
+		mv.setViewName("redirect:/");
+		return mv;
+	}
+	
+	@GetMapping("/UpdatePost/{post_idx}")
+	public ModelAndView updatePost(@PathVariable("post_idx") Long post_idx, PostVo post) {
+		ModelAndView mv = new ModelAndView();
+		post = userService.view(post_idx);
+		List<FileVo> allFiles = new ArrayList<>();
+		PostProcessor processor = new PostProcessor(userService);
+		processor.processPost(post, allFiles);
+		mv.addObject("post", post);
 		mv.setViewName("/pages/updatepost");
 		return mv;
 	}
 
 	@PutMapping("/UpdatePost/{post_idx}")
 	public ModelAndView PostUpdate(@PathVariable("post_idx") Long post_idx, MultipartHttpServletRequest multiFiles,
-			PostVo postVo) {
+			PostVo postVo, @RequestParam("tags") String tagsJson) {
 		ModelAndView mv = new ModelAndView();
-		postVo.setPost_idx(post_idx);
-		userService.updatePost(postVo, multiFiles);
+		ObjectMapper objectMapper = new ObjectMapper();
+		try {
+			postVo.setPost_idx(post_idx);
+		    List<String> tags = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
+			userService.updatePost(postVo, multiFiles, tags);
+		} catch (JsonProcessingException e) {
+		    e.printStackTrace();
+		}
 		mv.setViewName("redirect:/");
 		return mv;
 	}
 
-	@PutMapping("/DeletePost/{post_idx}")
-	public ResponseEntity<?> PostUpdate(@PathVariable("post_idx") Long post_idx) {
+	@DeleteMapping("/DeletePost/{post_idx}")
+	public ResponseEntity<?> PostDelete(@PathVariable("post_idx") Long post_idx) {
 		try {
 			userService.deletePost(post_idx);	
-			return ResponseEntity.ok().build();
+			return ResponseEntity.ok().body("{\"message\":\"게시물 삭제 성공\"}");
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body("Post 삭제에 실패했습니다.");
 		}

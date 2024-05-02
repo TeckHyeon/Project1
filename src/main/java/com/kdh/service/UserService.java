@@ -129,8 +129,27 @@ public class UserService {
 		return userMapper.view(post_idx);
 	}
 
-	public void updatePost(PostVo postVo, MultipartHttpServletRequest multiFiles) {
+	public void updatePost(PostVo postVo, MultipartHttpServletRequest multiFiles, List<String> tags) {
 		userMapper.updatePost(postVo);
+	    for (String tagName : tags) {
+	    	Long existTag_idx = userMapper.findTagIdxByTagName(tagName);
+	    	Long tag_idx = userMapper.selectTagIdxMax();// 새 태그에 대한 새로운 index 생성
+	    	   if (existTag_idx == null) {
+	    	        TagsVo tag = new TagsVo(); // 새 TagsVo 객체 생성 
+	    	        tag.setTag_idx(tag_idx);
+	    	        tag.setTag_name(tagName);
+	    	        userMapper.insertTag(tag); // 태그 데이터베이스에 삽입
+	    	        PostTagsVo postTag = new PostTagsVo();
+	    	        postTag.setPost_idx(postVo.getPost_idx());
+	    	        postTag.setTag_idx(tag_idx);
+	    	        userMapper.insertPostTag(postTag);
+	    	    } else {
+	    	    	  PostTagsVo postTag = new PostTagsVo();
+	    	    	  postTag.setPost_idx(postVo.getPost_idx());
+	    	    	  postTag.setTag_idx(existTag_idx);
+	    	    	  userMapper.insertPostTag(postTag);
+	    	    }
+		}
 		userMapper.deleteFile(postVo.getPost_idx());
 		try {
 			// 파일 정보 파싱 및 삽입
@@ -259,7 +278,7 @@ public class UserService {
 		return userMapper.findCommentsByPostIdx(post_idx);
 	}
 
-	public int countFollow(String follower_id, String following_id) {
+	public Long countFollow(String follower_id, String following_id) {
 
 		return userMapper.countFollow(follower_id, following_id);
 	}
@@ -289,15 +308,17 @@ public class UserService {
 	}
 
 	public void deletePost(Long post_idx) {
-	
-		userMapper.deletePost(post_idx);
-		
-		List<FileVo> files = userMapper.findFilesByPostIdx(post_idx);
-		
-		if(files == null) {
-			userMapper.deletePostFile(post_idx);
-		}
-	
+	    // 글 삭제
+	    userMapper.deletePost(post_idx);
+
+	    // 파일 정보 조회
+	    List<FileVo> files = userMapper.findFilesByPostIdx(post_idx);
+	    
+	    // 파일 목록이 비어있지 않은 경우 파일 정보 삭제
+	    if(files != null && !files.isEmpty()) {
+	        userMapper.deletePostFile(post_idx);
+	    }
 	}
+
 
 }
