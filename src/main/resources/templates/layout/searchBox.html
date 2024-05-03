@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<div id="searchBox" style="display: none;" th:fragment="searchBox"
+		class="bg-body-tertiary sticky-top col-2 border">
+		<h4 class="mt-5">검색</h4>
+		<div class="search-box">
+			<input type="text" class="form-control search-input" placeholder="검색"> <img
+				alt="검색 아이콘" src="/images/search.svg" class="search-icon"> <img
+				alt="삭제 아이콘" src="/images/x-circle.svg" class="clear-icon">
+		</div>
+		<div class="card mt-3">
+			<div class="card-body" id="searchResult">검색 결과가 여기에 나타납니다.</div>
+		</div>
+		<script>
+		$(document).ready(function() {
+			$("#searchToggle").click(function(e) {
+				e.stopPropagation(); // 이벤트 버블링 방지
+				$("#searchBox").toggle(); // searchBox 표시 상태 토글
+			});
+
+			$(document).click(function() {
+				$("#searchBox").hide(); // 외부 클릭 시 searchBox 숨김
+			});
+
+			$("#searchBox").click(function(e) {
+				e.stopPropagation(); // searchBox 내부 클릭 시 이벤트 버블링 방지
+			});
+			
+		    // 'X' 아이콘 클릭 이벤트
+		    $(".clear-icon").click(function(){
+		        $(this).siblings("input").val("").focus();
+		        $(".clear-icon").hide(); // 'X' 아이콘 숨김
+		        $(".search-icon").show(); // 돋보기 아이콘 다시 표시
+		    });
+
+		    // 입력란에 값 입력 시 'X' 아이콘 표시
+		    $(".search-box input").on("input", function(){
+		        if($(this).val() == "") {
+		            $(".clear-icon").hide();
+		            $(".search-icon").show(); // 입력란이 비었을 때 돋보기 아이콘 표시
+		        } else {
+		            $(".clear-icon").show();
+		            $(".search-icon").hide(); // 입력란에 텍스트가 있을 때 돋보기 아이콘 숨김
+		        }
+		    });
+		});
+		</script>
+	</div>
+</body>
+</html>

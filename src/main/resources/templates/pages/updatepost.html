@@ -7,50 +7,48 @@
 <link rel="stylesheet" href="/css/bootstrap.min.css">
 <script>
 $(document).ready(function() {
-	
-	var tags = [];
-	
-    // Enter 키 입력 시 태그 추가
-$("#tagInput").keypress(function(event) {
-    if (event.which === 13) { // Enter key
-        event.preventDefault();
-        var tagName = $("#tagInput").val().trim();
-        if (tagName !== "") {
-            // 태그 배열에 추가
-            tags.push(tagName);
-
-            var tagButton = $("<input>").attr({
-                "type": "button",
-                "class": "btn btn-outline-primary btn-sm m-1 mt-3 tag-btn",
-                "value": tagName
-            });
-            $("#tagContainer").append(tagButton);
-
-            // 입력창 초기화
-            $("#tagInput").val("");
+    var tags = JSON.parse(document.getElementById('tagData').value);
+    $("#tagInput").keypress(function(event) {
+        if (event.which === 13) { // 엔터 키가 눌렸을 때
+            event.preventDefault(); // 폼 제출 방지
+            var tagName = $("#tagInput").val().trim(); // 입력 필드에서 태그 이름 가져오기
+            if (tagName !== "" && tags.indexOf(tagName) === -1) { // 태그 이름이 비어있지 않고, 중복되지 않은 경우
+                tags.push(tagName); // 태그 배열에 추가
+                var tagButton = $("<input>").attr({
+                    "type": "button",
+                    "class": "btn btn-outline-primary btn-sm m-1 mt-3 tag-btn",
+                    "value": tagName
+                });
+                $("#tagContainer").append(tagButton); // 태그 버튼 UI에 추가
+            }
+            $("#tagInput").val(""); // 입력 필드 초기화 (중복되었든 안되었든 항상 초기화)
         }
-    }
-});
-    
-$("#postWrite").submit(function() {
-    // 태그 배열을 JSON 문자열로 변환하여 숨겨진 input 필드에 설정
-    $('<input>').attr({
-        type: 'hidden',
-        name: 'tags',
-        value: JSON.stringify(tags)
-    }).appendTo(this);
-    
-    return true; // 폼 제출 계속 진행
-});
-    
-    // 태그 삭제 버튼 클릭 시 태그 삭제
+    });
+
+    $("#updatePost").submit(function() {
+        $('<input>').attr({
+            type: 'hidden',
+            name: 'tags',
+            value: JSON.stringify(tags)
+        }).appendTo(this);
+        return true;
+    });
+
     $(document).on("click", ".tag-btn", function() {
-        $(this).remove();
+        var tagValue = $(this).val(); // 클릭된 태그 버튼의 값(태그 이름)을 가져옵니다.
+        
+        // 태그 배열에서 해당 태그 값을 찾아서 삭제합니다.
+        var index = tags.indexOf(tagValue);
+        if (index > -1) {
+            tags.splice(index, 1); // 배열에서 해당 태그를 제거합니다.
+        }
+        
+        // tagData input 필드의 값을 업데이트합니다.
+        $('#tagData').val(JSON.stringify(tags));
+        
+        $(this).remove(); // UI에서 태그 버튼을 제거합니다.
     });
     
-    // 페이지 로드 시 파일 선택 상태를 확인하여 텍스트 업데이트
-    updateDisplayText();
-
     // 파일 선택 상태가 변경될 때마다 해당 함수를 호출하여 텍스트 업데이트
     $('#images').on('change', function() {
         updateDisplayText();
@@ -71,29 +69,24 @@ $("#postWrite").submit(function() {
         }
 
         $('#file-names').text(displayText);
-    }
+    } 
+
     const area = $("#post_contents");
 
-    // 입력이 발생할 때마다 localStorage에 내용 저장
-    area.on("input", function() {
-        console.log(area.val());
-    });
-
-    // 페이지를 나갈 때 localStorage에 내용 저장
-    $(window).on("beforeunload", function() {
-        localStorage.setItem("textArea", area.val());
-    });
-
-    // 페이지 로드 시 localStorage에서 내용 불러오기
     if (localStorage.getItem("textArea")) {
         if (confirm("최근 작성한 글을 불러오시겠습니까?")) {
             console.log(localStorage.getItem("textArea"));
             // jQuery의 val() 메서드를 사용하여 값 설정
             area.val(localStorage.getItem("textArea"));
-        } else {
-            localStorage.removeItem("textArea");
+       /*      updateDisplayText(); */
         }
     }
+
+    // "취소" 버튼 클릭 시 localStorage에 내용 저장
+    $('#btn-cancel').click(function() {
+        localStorage.removeItem("textArea");
+    });
+
     // "목록" 버튼 클릭 시 이벤트 핸들러
     $('#btn-list').click(function() {
         location.href = '/'; // 페이지 이동
@@ -105,32 +98,49 @@ $("#postWrite").submit(function() {
         $('#post_contents').val(''); // 내용 입력 필드 초기화
     });
 });
+
 </script>
 </head>
 <body>
 	<main class="container mt-5">
 		<div class="row">
 			<div class="col-sm">
-				<form action="/UpdatePost/" th:attrappend="action=${post.post_idx}"  method="post"
-					enctype="multipart/form-data">
+				<form action="/UpdatePost/" th:attrappend="action=${post.post_idx}" id="updatePost"
+					method="post" enctype="multipart/form-data">
 					<input type="hidden" name="_method" value="PUT" />
 					<div class="form-floating my-3">
-						<input type="text" class="form-control" name="post_title" th:value="${post.post_title}" id="post_title" /> <label
+						<input type="text" class="form-control" name="post_title"
+							th:value="${post.post_title}" id="post_title" /> <label
 							for="post_title">글 제목</label>
 					</div>
 
 					<div class="form-floating my-3">
-						<textarea rows="20" class=" form-control" id="post_contents" name="post_contents" style="height: 250px; width: 100%;"
+						<textarea rows="20" class=" form-control" id="post_contents"
+							name="post_contents" style="height: 250px; width: 100%;"
 							th:text="${post.post_contents}"></textarea>
 						<label for="post_contents">내용</label>
 					</div>
+					<div class="form-floating my-3">
+						<input type="text" class="form-control" id="tagInput" /> <label
+							for="tagInput">태그</label>
+						<div class="d-flex">
+							<div id="tagContainer">
+								<th:block th:each="tag : ${post.tagList}">
+									<input type="button"
+										class="btn btn-outline-primary btn-sm m-1 mt-3 tag-btn"
+										th:value="${tag.tag_name}">
+								</th:block>
+							</div>
+						</div>
+						<input type="hidden" id="tagData" th:value="${tagListJson}">
+					</div>
 					<div class="my-3 clearfix">
-						<label class="btn" for="images"><img class="edit_btn me-2" src="/images/image.svg" alt="이미지"  style="cursor: pointer; width: 40px;"></label> <input type="file"
+						<label class="btn" for="images"><img class="edit_btn me-2"
+							src="/images/image.svg" alt="이미지"
+							style="cursor: pointer; width: 40px;"></label> <input type="file"
 							class="form-control" id="images" name="images" multiple
-							style="display: none;"> <span id="file-names"
-							class="text-muted"
-							th:text="${#lists.isEmpty(file) ? '선택된 파일 없음' : #strings.listJoin(file.![original_Name], ', ')}">선택된
-							파일 없음</span>
+							style="display: none;"> <span id="file-names" class="text-muted"
+							th:text="${#lists.isEmpty(post.fileList) ? '선택된 파일 없음' : #strings.listJoin(post.fileList.![original_Name], ', ')}"></span>
 						<button type="button" id="btn-list"
 							class="btn btn-secondary float-start">목록</button>
 						<button type="reset" id="btn-reset"

@@ -61,6 +61,8 @@ public class PostFiles {
                             originalFileExtension = ".jpg";
                         } else if (contentType.contains("image/png")) {
                             originalFileExtension = ".png";
+                        }else if (contentType.contains("image/svg")) {
+                            originalFileExtension = ".svg";
                         } else if (contentType.contains("image/gif")) {
                             originalFileExtension = ".gif";
                         } else {

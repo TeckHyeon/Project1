@@ -5,7 +5,25 @@
 <title>프로필</title>
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <link rel="stylesheet" href="/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/main.css">
 <style type="text/css">
+.card-header {
+    display: flex;
+    justify-content: space-between; /* 타이틀과 버튼 그룹 사이의 공간을 균등하게 배분 */
+    align-items: center; /* 세로 중앙 정렬 */
+}
+
+.card-header h5 {
+    margin-right: auto; /* h5와 btn_group 사이에 자동으로 공간을 추가 */
+    white-space: nowrap; /* 타이틀을 한 줄로 유지 */
+    overflow: hidden; /* 내용이 넘칠 경우 숨김 처리 */
+    text-overflow: ellipsis; /* 내용이 넘칠 경우 말줄임표(...)로 표시 */
+}
+
+.btn_group {
+    display: flex; /* 버튼 그룹 내부 요소를 flex로 정렬 */
+    align-items: center; /* 버튼을 세로 중앙 정렬 */
+}
 .content {
 	display: -webkit-box;
 	-webkit-line-clamp: 3; /* 3줄까지만 보임 */
@@ -14,7 +32,6 @@
 	max-height: 4.5em;
 	/* (line-height * line-clamp) + padding + border 등을 고려한 최대 높이 */
 }
-
 .navbar-fixed-left {
 	position: fixed;
 	top: 0;
@@ -58,7 +75,10 @@
 			<nav class="col-2 bg-white sticky-top vh-100">
 				<div th:insert="~{layout/nav.html :: nav}"></div>
 			</nav>
-			<div class="col-10 container">
+			<div class="col">
+				<div class="row">
+				<div th:replace="~{layout/searchBox.html :: searchBox}"></div>
+				<div class="col container">
 				<div th:if="${loggedInUser != null}">
 					<input type="hidden" th:value="${loggedInUser.user_idx}"
 						id="user_idx"> <input type="hidden"
@@ -147,14 +167,12 @@
 													<input
 														class="btn btn-outline-secondary follow-button mt-1 follow_btn"
 														type="button" th:data-user-id="${following.user.user_id}"
-														th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}"
+														th:if="${loggedInUser != null and following.user.user_id != loggedInUser.user_id}"
 														value="팔로우" />
 												</div>
-
 											</div>
 										</div>
 									</div>
-
 								</div>
 							</div>
 						</div>
@@ -173,8 +191,7 @@
 											<div class="align-items-center mt-3">
 												<div class="d-flex justify-content-between">
 													<div class="d-flex">
-														<a
-															th:href="@{/profile/{userId}(userId=${follower.user.user_id})}">
+														<a th:href="@{/profile/{userId}(userId=${follower.user.user_id})}">
 															<img src="/user_profile/default.jpg"
 															th:src="${follower.profile != null} ? ${follower.profile.file_path} : '/user_profile/default.jpg'"
 															class="rounded-circle ms-1 me-3"
@@ -191,7 +208,7 @@
 													</div>
 													<input
 														class="btn btn-outline-secondary follow-button mt-1 follow_btn"
-														th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}"
+														th:if="${loggedInUser != null and follower.user.user_id != loggedInUser.user_id}"
 														type="button" th:data-user-id="${follower.user.user_id}"
 														value="팔로우" />
 												</div>
@@ -236,24 +253,29 @@
 										<div class="card card-fixed-size">
 											<div class="card-header d-flex justify-content-between">
 												<h5 th:text="${item.post_title}">post_title</h5>
-												<div>
-													<img class="edit_btn me-2" src="/images/pencil-square.svg" alt="게시물 수정" th:data-post-idx="${item.post_idx}" style="cursor: pointer; width: 20px;">
-													<a th:data-post-idx="${item.post_idx}"
+												<div class="btn_group">
+													<img
+														th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}"
+														class="edit_btn me-2" src="/images/pencil-square.svg"
+														alt="게시물 수정" th:data-post-idx="${item.post_idx}"
+														style="cursor: pointer; width: 20px;"> <a
+														th:data-post-idx="${item.post_idx}"
 														th:data-profile-id="${profileUser.user_id}"
 														th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}">
-														<img src="/images/trash3.svg" alt="게시물 삭제" style="cursor: pointer; width: 20px;">
+														<img src="/images/trash3.svg" alt="게시물 삭제"
+														style="cursor: pointer; width: 20px;">
 													</a>
 												</div>
 											</div>
 											<div th:if="${not #lists.isEmpty(item.fileList)}"
-												class="card-body">
+												class="card-body align-items-center text-center">
 												<div th:each="file : ${item.fileList}">
 													<img th:src="${file.file_Path}" alt="게시글 이미지">
 												</div>
 											</div>
 											<!-- 파일 리스트가 비어있는 경우 내용을 보여줍니다. -->
 											<div th:unless="${not #lists.isEmpty(item.fileList)}"
-												class="mt-3 content px-3 card-body"
+												class="mt-3 content px-3 card-body align-items-center text-center"
 												th:id="'content' + ${iterStat.index}"
 												th:text="${item.post_contents}"></div>
 										</div>
@@ -266,14 +288,14 @@
 						aria-labelledby="likes-tab">
 						<div class="container mt-3">
 							<div class="row row-cols-1 row-cols-md-3 g-4">
-								<div th:each="like, iterStat : ${posts}">
+								<div th:each="like, iterStat : ${likePosts}">
 									<div class="col">
 										<div class="card card-fixed-size">
 											<div class="card-header d-flex justify-content-between">
 												<h5 th:text="${like.post_title}">post_title</h5>
 											</div>
 											<div th:if="${not #lists.isEmpty(like.fileList)}"
-												class="card-body">
+												class="card-body text-center">
 												<div th:each="file : ${like.fileList}">
 													<img th:src="${file.file_Path}" alt="게시글 이미지">
 												</div>
@@ -293,6 +315,10 @@
 
 
 			</div>
+				</div>
+			</div>
+
+			
 		</div>
 	</main>
 	<script src="/js/bootstrap.bundle.min.js"></script>
@@ -304,13 +330,13 @@
 			const user_id = button.data('profile-id'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
 			const post_idx = button.data('post-idx'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
 			$.ajax({
-			    url : '/DeletePost/' + post_idx,
-			    type : 'DELETE', 
-			    contentType: 'application/json', 
-			    dataType : 'json',
-			    data : JSON.stringify({
-			        post_idx : post_idx
-			    }),
+				url : '/DeletePost/' + post_idx,
+				type : 'DELETE',
+				contentType : 'application/json',
+				dataType : 'json',
+				data : JSON.stringify({
+					post_idx : post_idx
+				}),
 				success : function(response) {
 					window.location.reload();
 				},
@@ -323,9 +349,10 @@
 		edit_btn.click(function() {
 			const button = $(this);
 			const post_idx = button.data('post-idx');
-			 window.location.href = `/UpdatePost/${post_idx}`;
+			window.location.href = `/UpdatePost/${post_idx}`;
 		});
-		$(document).ready(function () {
+		$(document).ready(
+				function() {
 					const login_user = $('#user_id').val();
 					$(".profile-img").click(function() {
 						$("#profileInput").click();
@@ -359,33 +386,32 @@
 					const follow_btn = $('.follow_btn');
 
 					function updateFollowBtn() {
-						const button = $(this); // 현재 반복하고 있는 개별 버튼에 대한 참조를 생성합니다.
-						const user_id = button.data('user-id'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
-						$.ajax({
-							url : `/CheckFollow/${user_id}/${login_user}`,
-							type : 'GET',
-							dataType : 'json',
-							data : {
-								user_id : user_id,
-								login_user : login_user
-							},
-							success : function(following) {
-								button.data('following', following); // 'btn'을 사용해 현재 버튼의 데이터를 업데이트합니다.
-								button.toggleClass('btn-primary', following)
-										.toggleClass('btn-outline-secondary',
-												!following).val(
-												following ? '팔로잉' : '팔로우');
-							},
-							error : function(error) {
-								console.error('Error:', error);
-								alert('오류가 발생했습니다. 다시 시도해주세요.');
-							}
+
+						follow_btn.each(function() {
+							const button = $(this); // 현재 반복하고 있는 개별 버튼에 대한 참조를 생성합니다.
+							const user_id = button.data('user-id'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
+							$.ajax({
+								url : `/CheckFollow/` + user_id + `/`
+										+ login_user,
+								type : 'GET',
+								dataType : 'json',
+								success : function(following) {
+									button.data('following', following); // 'btn'을 사용해 현재 버튼의 데이터를 업데이트합니다.
+									button
+											.toggleClass('btn-primary',
+													following).toggleClass(
+													'btn-outline-secondary',
+													!following).val(
+													following ? '팔로잉' : '팔로우');
+								},
+								error : function(error) {
+									console.error('Error:', error);
+									alert('오류가 발생했습니다. 다시 시도해주세요.');
+								}
+							});
 						});
-
 					}
-
 					updateFollowBtn();
-
 					follow_btn.click(function() {
 						const button = $(this);
 						const user_id = button.data('user-id');

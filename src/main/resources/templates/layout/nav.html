@@ -3,18 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
-
 </head>
 <body>
-	<div th:fragment="nav" 
+	<div th:fragment="nav"
 		class="d-flex flex-column flex-shrink-0 p-3 bg-body-tertiary navbar-fixed-left">
-		<ul class="nav nav-pills flex-column mb-auto" id="first_ul" th:data-logged-in="${loggedIn}">
+		<ul class="nav nav-pills flex-column mb-auto" id="first_ul"
+			th:data-logged-in="${loggedIn}">
 			<li class="nav-item mt-5"><a href="/"
 				class="nav-link link-body-emphasis" aria-current="page"><h2>Project1</h2>
 			</a></li>
 			<li class="nav-item"><a href="/"
 				class="nav-link link-body-emphasis" aria-current="page">Home </a></li>
-			<li><a href="#" class="nav-link link-body-emphasis">검색 </a></li>
+			<li><a href="#" class="nav-link link-body-emphasis"
+				id="searchToggle">검색 </a></li>
 			<li><div th:if="${loggedInUser != null}">
 					<div id="notificationArea">
 						<div th:replace=" ~{layout/notifragment.html :: noti}"></div>
@@ -61,36 +62,36 @@
 
 		<script>
 			$(document).ready(function() {
-				 const isLoggedIn = $('#first_ul').data('logged-in');
-				 if (isLoggedIn) {
-				setInterval(fetchNotifications, 100000);
-				function fetchNotifications() {
-					$.ajax({
-						url : '/notiRefresh',
-						success : function(data) {
+				const isLoggedIn = $('#first_ul').data('logged-in');
+				if (isLoggedIn) {
+					setInterval(fetchNotifications, 100000);
+					function fetchNotifications() {
+						$.ajax({
+							url : '/notiRefresh',
+							success : function(data) {
 
-							$('#notificationArea').html(data);
-						}
+								$('#notificationArea').html(data);
+							}
+						});
+					}
+
+					$(document).on('hidden.bs.modal', '.modal', function(e) {
+						var notiIdx = $(this).attr('data-noti-idx');
+
+						console.log(notiIdx);
+						$.ajax({
+							url : '/CheckNoti',
+							type : 'POST',
+							data : {
+								notification_idx : notiIdx
+							},
+							success : function(response) {
+								fetchNotifications();
+							}
+						});
 					});
-				}
 
-				$(document).on('hidden.bs.modal', '.modal', function(e) {
-					 var notiIdx = $(this).attr('data-noti-idx');
-
-					console.log(notiIdx);
-					$.ajax({
-						url : '/CheckNoti',
-						type : 'POST',
-						data : {
-							notification_idx : notiIdx
-						},
-						success : function(response) {
-							fetchNotifications();
-						}
-					});
-				});
-					 
-				 }
+				}				
 			});
 		</script>
 	</div>

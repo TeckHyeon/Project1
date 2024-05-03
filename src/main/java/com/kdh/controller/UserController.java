@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.naming.directory.SearchResult;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
@@ -32,6 +35,7 @@ import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.ProfileVo;
+import com.kdh.domain.SearchResultVo;
 import com.kdh.domain.TagsVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
@@ -287,12 +291,16 @@ public class UserController {
 	}
 	
 	@GetMapping("/UpdatePost/{post_idx}")
-	public ModelAndView updatePost(@PathVariable("post_idx") Long post_idx, PostVo post) {
+	public ModelAndView updatePost(@PathVariable("post_idx") Long post_idx, PostVo post) throws JsonProcessingException {
 		ModelAndView mv = new ModelAndView();
 		post = userService.view(post_idx);
 		List<FileVo> allFiles = new ArrayList<>();
 		PostProcessor processor = new PostProcessor(userService);
 		processor.processPost(post, allFiles);
+		ObjectMapper objectMapper = new ObjectMapper();
+		List<String> tagNames = post.getTagList().stream().map(tag -> tag.getTag_name()).collect(Collectors.toList());
+			String tagListJson = objectMapper.writeValueAsString(tagNames);
+		mv.addObject("tagListJson", tagListJson);
 		mv.addObject("post", post);
 		mv.setViewName("/pages/updatepost");
 		return mv;
@@ -365,9 +373,9 @@ public class UserController {
 
 	@PostMapping("/LoadLikes")
 	@ResponseBody
-	public int loadLikes(@RequestParam("post_idx") Long post_idx) {
+	public Long loadLikes(@RequestParam("post_idx") Long post_idx) {
 		// postId를 기반으로 좋아요 수를 업데이트하고, 업데이트된 좋아요 수를 반환하는 로직 구현
-		int loadlikes = userService.countLike(post_idx);
+		Long loadlikes = userService.countLike(post_idx);
 		// 업데이트된 좋아요 수를 int로 직접 반환
 		return loadlikes;
 	}
@@ -410,6 +418,12 @@ public class UserController {
 	private String calculateTimeAgo(String dateStr, DateTimeFormatter formatter) {
 		LocalDateTime dateTime = LocalDateTime.parse(dateStr, formatter);
 		return TimeAgo.calculateTimeAgo(dateTime);
+	}
+	
+	@GetMapping("/SearchResult")
+	public List<SearchResultVo> searchResult(@RequestParam("keyword") String keyword) {
+		List<SearchResultVo> lists = userService.findSearchResultList(keyword);
+		return lists;
 	}
 	
 	

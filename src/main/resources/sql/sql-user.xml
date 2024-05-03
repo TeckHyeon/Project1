@@ -82,7 +82,7 @@
 		FROM POST_TB
 		WHERE
 		POST_ID = #{user_id}
-		AND 
+		AND
 		deleted_yn = 'N'
 	</select>
 	<select id="viewLikePostsByIdx" parameterType="Long">
@@ -95,7 +95,7 @@
 		JOIN LIKES_TB L ON P.post_idx = L.post_idx
 		WHERE
 		USER_IDX = #{user_idx}
-		AND 
+		AND
 		deleted_yn = 'N'
 	</select>
 	<select id="viewPost" parameterType="String"
@@ -355,6 +355,15 @@
 		FROM USER_FILE_TB
 		WHERE USER_IDX = #{user_idx}
 	</select>
+	<select id="findSearchResultList">
+		SELECT u.user_name
+		FROM user_list_tb u
+		WHERE u.user_name LIKE CONCAT('%', #{keyword}, '%')
+		UNION
+		SELECT t.tag_name
+		FROM tags_TB t
+		WHERE t.tag_name LIKE CONCAT('%', #{keyword}, '%');
+	</select>
 	<select id="findFollowingByUserId">
 		SELECT *
 		FROM FOLLOW_TB
@@ -415,21 +424,24 @@
 		FROM POST_TAGS_TB), #{tag_idx}, #{post_idx})
 		 ]]>
 	</insert>
-	<select id ="findTagIdxByTagName">
-	select TAG_IDX
-	FROM TAGS_TB
-	WHERE TAG_NAME = #{tag_name}
+	<select id="findTagIdxByTagName">
+		select TAG_IDX
+		FROM TAGS_TB
+		WHERE TAG_NAME =
+		#{tag_name}
 	</select>
-	<select id ="findTagsNameByPostIdx">
-	select T.TAG_NAME, T.TAG_IDX, PT.POST_IDX
-	FROM TAGS_TB T
-	JOIN POST_TAGS_TB PT ON pt.tag_idx = t.tag_idx
-	where PT.post_idx = #{post_idx}
+	<select id="findTagsNameByPostIdx">
+		select T.TAG_NAME, T.TAG_IDX, PT.POST_IDX
+		FROM TAGS_TB
+		T
+		JOIN POST_TAGS_TB PT ON pt.tag_idx = t.tag_idx
+		where PT.post_idx =
+		#{post_idx}
 	</select>
-	<select id ="findFilesByPostIdx">
-	select *
-	FROM POST_FILE_TB
-	where post_idx = #{post_idx}
+	<select id="findFilesByPostIdx">
+		select *
+		FROM POST_FILE_TB
+		where post_idx = #{post_idx}
 	</select>
 	<delete id="deleteFollow">
 	<![CDATA[
@@ -440,20 +452,29 @@
 		FOLLOWER_ID = #{follower_id}
 		 ]]>
 	</delete>
+	<delete id="deletePostTags">
+	<![CDATA[
+		DELETE FROM POST_TAGS_TB
+		where 
+		POST_IDX = #{post_idx}
+		 ]]>
+	</delete>
 	<update id="deletePost">
-			UPDATE
-				POST_TB
-			SET
-				DELETED_YN = 'Y'
-			WHERE
-				POST_IDX = #{post_idx}
+		UPDATE
+		POST_TB
+		SET
+		DELETED_YN = 'Y'
+		WHERE
+		POST_IDX =
+		#{post_idx}
 	</update>
 	<update id="deletePostFile">
-			UPDATE
-				POST_FILE_TB
-			SET
-				DELETED_YN = 'Y'
-			WHERE
-				POST_IDX = #{post_idx}
+		UPDATE
+		POST_FILE_TB
+		SET
+		DELETED_YN = 'Y'
+		WHERE
+		POST_IDX =
+		#{post_idx}
 	</update>
 </mapper>

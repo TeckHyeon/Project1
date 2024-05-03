@@ -14,6 +14,7 @@ import com.kdh.domain.PostTagsVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.ProfileVo;
+import com.kdh.domain.SearchResultVo;
 import com.kdh.domain.TagsVo;
 import com.kdh.domain.UserVo;
 
@@ -64,7 +65,7 @@ public interface UserMapper {
 
 	List<PostVo> viewPostById(String user_id);
 
-	int countLike(@Param("post_idx") Long post_idx);
+	Long countLike(@Param("post_idx") Long post_idx);
 
 	PostVo getPostByIdx(Long post_idx);
 
@@ -123,5 +124,9 @@ public interface UserMapper {
 	void deletePostFile(Long post_idx);
 
 	List<FileVo> findFilesByPostIdx(Long post_idx);
+
+	void deletePostTags(Long post_idx);
+
+	List<SearchResultVo> findSearchResultList(String keyword);
 
 }

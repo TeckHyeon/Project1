@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -20,6 +19,7 @@ import com.kdh.domain.PostTagsVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.ProfileVo;
+import com.kdh.domain.SearchResultVo;
 import com.kdh.domain.TagsVo;
 import com.kdh.domain.UserVo;
 import com.kdh.mapper.UserMapper;
@@ -130,8 +130,11 @@ public class UserService {
 	}
 
 	public void updatePost(PostVo postVo, MultipartHttpServletRequest multiFiles, List<String> tags) {
+		
 		userMapper.updatePost(postVo);
-	    for (String tagName : tags) {
+	    Long post_idx = postVo.getPost_idx();
+	    userMapper.deletePostTags(post_idx);
+		for (String tagName : tags) {
 	    	Long existTag_idx = userMapper.findTagIdxByTagName(tagName);
 	    	Long tag_idx = userMapper.selectTagIdxMax();// 새 태그에 대한 새로운 index 생성
 	    	   if (existTag_idx == null) {
@@ -140,20 +143,20 @@ public class UserService {
 	    	        tag.setTag_name(tagName);
 	    	        userMapper.insertTag(tag); // 태그 데이터베이스에 삽입
 	    	        PostTagsVo postTag = new PostTagsVo();
-	    	        postTag.setPost_idx(postVo.getPost_idx());
+	    	        postTag.setPost_idx(post_idx);
 	    	        postTag.setTag_idx(tag_idx);
 	    	        userMapper.insertPostTag(postTag);
 	    	    } else {
 	    	    	  PostTagsVo postTag = new PostTagsVo();
-	    	    	  postTag.setPost_idx(postVo.getPost_idx());
+	    	    	  postTag.setPost_idx(post_idx);
 	    	    	  postTag.setTag_idx(existTag_idx);
 	    	    	  userMapper.insertPostTag(postTag);
 	    	    }
 		}
-		userMapper.deleteFile(postVo.getPost_idx());
+		userMapper.deleteFile(post_idx);
 		try {
 			// 파일 정보 파싱 및 삽입
-			List<FileVo> list = postFiles.parseFileInfo(postVo.getPost_idx(), multiFiles);
+			List<FileVo> list = postFiles.parseFileInfo(post_idx, multiFiles);
 			if (!CollectionUtils.isEmpty(list)) {
 				for (FileVo fileVo : list) {
 					userMapper.insertFile(fileVo);
@@ -185,7 +188,7 @@ public class UserService {
 		return userMapper.viewPostById(user_id);
 	}
 
-	public int countLike(Long post_idx) {
+	public Long countLike(Long post_idx) {
 		// TODO Auto-generated method stub
 		return userMapper.countLike(post_idx);
 	}
@@ -318,6 +321,11 @@ public class UserService {
 	    if(files != null && !files.isEmpty()) {
 	        userMapper.deletePostFile(post_idx);
 	    }
+	}
+
+	public List<SearchResultVo> findSearchResultList(String keyword) {
+		// TODO Auto-generated method stub
+		return userMapper.findSearchResultList(keyword);
 	}
 
 

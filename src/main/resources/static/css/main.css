@@ -1,0 +1,103 @@
+@charset "UTF-8";
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-box input {
+    padding-left: 35px; /* 왼쪽에 아이콘을 위한 여백 */
+    padding-right: 35px; /* 'X' 버튼을 위한 여백 */
+}
+
+.search-icon, .clear-icon {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    z-index: 10;
+}
+
+.search-icon {
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.clear-icon {
+    right: 10px; /* 입력란 바깥쪽에 위치 */
+    top: 50%;
+    cursor: pointer;
+    transform: translateY(-50%);
+    display: none; /* 초기 상태에서 숨김 */
+}
+
+/* 입력란에 값이 있을 때만 X 아이콘 표시 */
+.search-box input:not(:placeholder-shown) ~ .clear-icon {
+    display: block;
+}
+#searchBox {
+	position: fixed; /* 또는 absolute, 화면 상단에 고정 */
+	top: 0; /* 화면 상단에서부터의 위치 */
+	left: 230px; /* 화면 왼쪽에서부터의 위치 */
+	height: 100%;
+	/* 전체 화면 너비를 차지하도록 설정 */
+	width: 230px;
+	height: 100%;
+	display: none;
+	/* 필요한 추가 스타일 */
+}
+
+input {
+	border: none;
+}
+
+.navbar-fixed-left {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 230px;
+}
+
+.content_text {
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+}
+
+.notification-count {
+	display: inline-block;
+	background-color: red; /* 빨간색 배경 */
+	color: white; /* 흰색 텍스트 */
+	font-weight: bold; /* 굵은 글씨 */
+	border-radius: 0%; /* 모서리가 둥글지 않음 */
+	padding: 0.5em; /* 모든 방향에 대해 동일한 패딩 */
+	font-size: 0.75em; /* 폰트 크기 */
+	vertical-align: top; /* 상단 정렬 */
+	width: 2em; /* 너비 설정 */
+	height: 2em; /* 높이 설정 */
+	line-height: 1em; /* 텍스트 라인 높이를 요소의 높이와 맞춤 */
+	text-align: center; /* 텍스트를 중앙 정렬 */
+}
+
+textarea.no-resize {
+	resize: none;
+}
+
+/* 숨겨질 요소들 */
+.post-image, .content_text, .toggleButton {
+	display: none;
+}
+
+/* 피드의 높이가 일정 수준 이상이 될 때 보이게 될 요소들 */
+.feed {
+	overflow: hidden; /* 넘치는 부분 숨김 */
+}
+
+.post-image, .content_text {
+	display: block; /* 이미지와 텍스트 보이게 함 */
+}
+
+.toggleButton {
+	display: block !important; /* "더 보기" 버튼 강제로 보이게 함 */
+}
