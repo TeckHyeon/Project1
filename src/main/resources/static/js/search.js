@@ -1,30 +1,80 @@
 $(document).ready(function() {
-	$('.search-input').keydown(function(e) {
-		const button = $(this);
-		const keyword = button.val();
-       $.ajax({
-		            url: '/SearchResult',
-		            type: 'GET',
-		            data: {"keyword": keyword},
-		            success: function(lists) {
-		                let listsHtml = '';
-		                lists.forEach(list => {
-		                    listsHtml += `
-		                        <div class="mt-3">
-		                            <div class="border px-3 py-2">
-		                                <div class="d-flex justify-content-between">
-		                                    <p>${list.from_name}</p>
-		                                </div>
-		                            </div>
-		                        </div>`;
-		                });
-		                // 특정 게시물의 댓글 섹션에 댓글 목록을 업데이트합니다.
-		                // 예를 들어, 게시물 별로 고유한 댓글 섹션 ID를 가진다고 가정할 때
-		                $(`#searchResult`).html(listsHtml);
-		            },
-		            error: function() {
-		                alert('댓글을 불러오는 데 실패했습니다. 다시 시도해주세요.');
-		            }
-		        });
+	$("#searchToggle").click(function(e) {
+		e.stopPropagation(); // 이벤트 버블링 방지
+		$("#searchBox").toggle(); // searchBox 표시 상태 토글
 	});
+
+	$(document).click(function() {
+		$("#searchBox").hide(); // 외부 클릭 시 searchBox 숨김
+	});
+
+	$("#searchBox").click(function(e) {
+		e.stopPropagation(); // searchBox 내부 클릭 시 이벤트 버블링 방지
+	});
+
+	// 'X' 아이콘 클릭 이벤트
+	$(".clear-icon").click(function() {
+		$(this).siblings("input").val("").focus();
+		$(".clear-icon").hide(); // 'X' 아이콘 숨김
+		$(".search-icon").show(); // 돋보기 아이콘 다시 표시
+	});
+
+	// 입력란에 값 입력 시 'X' 아이콘 표시
+	$(".search-box input").on("input", function() {
+		if ($(this).val() == "") {
+			$(".clear-icon").hide();
+			$(".search-icon").show(); // 입력란이 비었을 때 돋보기 아이콘 표시
+		} else {
+			$(".clear-icon").show();
+			$(".search-icon").hide(); // 입력란에 텍스트가 있을 때 돋보기 아이콘 숨김
+		}
+	});
+
+	$(".search-input").on("input", function() {
+		var searchKeyword = $(this).val();
+
+		if (searchKeyword.length === 0) {
+			$("#searchResult").html("검색 결과가 여기에 나타납니다.");
+			return;
+		}
+
+		$.ajax({
+			url: "/SearchResult",
+			type: "GET",
+			data: {
+				keyword: searchKeyword
+			},
+			dataType: "json",
+			success: function(response) {
+				var resultHtml = "";
+				$.each(response, function(index, item) {
+					if (item.type === "user") {
+						resultHtml += "<div class='search-item' data-type='user' data-target='" + item.id + "'><h5>" + item.name + "</h5><p>" + item.description + "</p><span>Count: " + item.count + "</span></div>";
+					} else if (item.type === "tag") {
+						resultHtml += "<div class='search-item' data-type='tag' data-target='" + item.id + "'><h5>" + item.name + "</h5><span>Count: " + item.count + "</span></div>";
+					}
+				});
+
+				$("#searchResult").html(resultHtml);
+			},
+			error: function(xhr, status, error) {
+				console.error("Error: " + error);
+				$("#searchResult").html("검색 결과를 불러오는데 실패했습니다.");
+			}
+		});
+	});
+$("#searchResult").on('click', '.search-item', function() {
+    console.log("click");
+    var type = $(this).data("type");
+    var target = $(this).data("target");
+
+    if (type === "user") {
+        // 유저 프로필 페이지로 이동
+        window.location.href = "/profile/" + target;
+    } else if (type === "tag") {
+        // 태그 게시물 목록 페이지로 이동
+        window.location.href = "/tagPosts/" + target;
+    }
+});
+
 });

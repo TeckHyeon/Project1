@@ -360,6 +360,7 @@
     SELECT 
         USER_NAME as name,
         USER_COMMENTS as description,
+        USER_ID as id,
         (SELECT COUNT(*) FROM FOLLOW_TB WHERE FOLLOWING_ID = USER_ID) as count,
         'user' as type
     FROM USER_LIST_TB
@@ -370,6 +371,7 @@ UNION
     SELECT 
         TAG_NAME as name,
         '' as description,
+        TAG_NAME as id,
         (SELECT COUNT(*) FROM POST_TAGS_TB WHERE TAG_IDX = TAGS_TB.TAG_IDX) as count,
         'tag' as type
     FROM TAGS_TB

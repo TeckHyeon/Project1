@@ -79,9 +79,6 @@ public class NotiController {
 		    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 		        comment.setCommentTimeAgo(calculateTimeAgo(comment.getUpdated_date(), formatter));
 		    });
-		
-		
-		
 		modelAndView.addObject("comments", comments);
 		modelAndView.addObject("post", post);
 		modelAndView.addObject("noti_idx", noti);

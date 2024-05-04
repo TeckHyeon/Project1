@@ -421,6 +421,7 @@ public class UserController {
 	}
 	
 	@GetMapping("/SearchResult")
+	@ResponseBody
 	public List<SearchResultVo> searchResult(@RequestParam("keyword") String keyword) {
 		List<SearchResultVo> lists = userService.findSearchResultList(keyword);
 		return lists;
