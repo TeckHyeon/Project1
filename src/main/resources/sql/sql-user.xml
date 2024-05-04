@@ -356,13 +356,26 @@
 		WHERE USER_IDX = #{user_idx}
 	</select>
 	<select id="findSearchResultList">
-		SELECT u.user_name
-		FROM user_list_tb u
-		WHERE u.user_name LIKE CONCAT('%', #{keyword}, '%')
-		UNION
-		SELECT t.tag_name
-		FROM tags_TB t
-		WHERE t.tag_name LIKE CONCAT('%', #{keyword}, '%');
+(
+    SELECT 
+        USER_NAME as name,
+        USER_COMMENTS as description,
+        (SELECT COUNT(*) FROM FOLLOW_TB WHERE FOLLOWING_ID = USER_ID) as count,
+        'user' as type
+    FROM USER_LIST_TB
+    WHERE USER_NAME LIKE '%' || #{keyword} || '%'
+)
+UNION
+(
+    SELECT 
+        TAG_NAME as name,
+        '' as description,
+        (SELECT COUNT(*) FROM POST_TAGS_TB WHERE TAG_IDX = TAGS_TB.TAG_IDX) as count,
+        'tag' as type
+    FROM TAGS_TB
+    WHERE TAG_NAME LIKE '%' || #{keyword} || '%'
+)
+ORDER BY name
 	</select>
 	<select id="findFollowingByUserId">
 		SELECT *
