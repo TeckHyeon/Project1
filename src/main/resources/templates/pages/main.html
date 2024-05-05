@@ -10,14 +10,14 @@
 <body>
 	<main class="container-fluid">
 		<div class="row">
-			<nav class="col-2 bg-white sticky-top vh-100" id="main_nav">
+			<nav class="col-1 bg-white sticky-top vh-100" id="main_nav">
 				<div th:insert="~{layout/nav.html :: nav}"></div>
 			</nav>
 			<!-- 검색 입력창, 기본적으로 숨김 -->
 			<div class="col">
 				<div class="row">
 					<div th:replace="~{layout/searchBox.html :: searchBox}"></div>
-					<div class="justify-content-center container col">
+					<div class="justify-content-center container col-8">
 						<input type="hidden" th:value="${loggedIn}" id="isLoggedIn">
 						<div th:if="${loggedInUser != null}">
 							<input type="hidden" th:value="${loggedInUser.user_idx}"

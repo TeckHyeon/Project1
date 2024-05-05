@@ -41,9 +41,10 @@
 	left: 230px; /* 화면 왼쪽에서부터의 위치 */
 	height: 100%;
 	/* 전체 화면 너비를 차지하도록 설정 */
-	width: 230px;
+	width: 300px;
 	height: 100%;
 	display: none;
+	cursor: pointer;
 	/* 필요한 추가 스타일 */
 }
 

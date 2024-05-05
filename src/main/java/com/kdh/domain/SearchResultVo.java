@@ -11,6 +11,7 @@ public class SearchResultVo {
 	private String name;
 	private String description;
 	private String id;
+	private String image;
 	private Long count;
 	private String type;
 }

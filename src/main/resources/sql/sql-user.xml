@@ -358,12 +358,14 @@
 	<select id="findSearchResultList">
 (
     SELECT 
-        USER_NAME as name,
-        USER_COMMENTS as description,
-        USER_ID as id,
+        u.USER_NAME as name,
+        u.USER_COMMENTS as description,
+        u.USER_ID as id,
+        COALESCE(f.FILE_PATH, '/images/default.png') as image,
         (SELECT COUNT(*) FROM FOLLOW_TB WHERE FOLLOWING_ID = USER_ID) as count,
         'user' as type
-    FROM USER_LIST_TB
+    FROM USER_LIST_TB u
+    LEFT JOIN user_file_tb f on f.user_idx = u.user_idx
     WHERE USER_NAME LIKE '%' || #{keyword} || '%'
 )
 UNION
@@ -372,6 +374,7 @@ UNION
         TAG_NAME as name,
         '' as description,
         TAG_NAME as id,
+        '/images/tag.png' image,
         (SELECT COUNT(*) FROM POST_TAGS_TB WHERE TAG_IDX = TAGS_TB.TAG_IDX) as count,
         'tag' as type
     FROM TAGS_TB

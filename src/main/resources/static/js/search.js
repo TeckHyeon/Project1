@@ -49,7 +49,14 @@ $(document).ready(function() {
 				var resultHtml = "";
 				$.each(response, function(index, item) {
 					if (item.type === "user") {
-						resultHtml += "<div class='search-item' data-type='user' data-target='" + item.id + "'><h5>" + item.name + "</h5><p>" + item.description + "</p><span>Count: " + item.count + "</span></div>";
+						resultHtml += "<div class='search-item d-flex' data-type='user' data-target='" + item.id + "'>";
+						resultHtml += "<image alt='프로필' src='" + item.image + "'";
+						resultHtml += "style='width: 50px; height: 50px;' class='rounded-circle me-3'>";
+						resultHtml += "<div>"
+						resultHtml += "<div class='d-flex justify-content-between'>"
+						resultHtml += "<h5>" + item.name + "</h5><span> 팔로워 : " + item.count + "</span></div>";
+						resultHtml += "<p style='font-size: 0.85rem;'>" + item.description + "</p>";
+						resultHtml += "</div></div>"
 					} else if (item.type === "tag") {
 						resultHtml += "<div class='search-item' data-type='tag' data-target='" + item.id + "'><h5>" + item.name + "</h5><span>Count: " + item.count + "</span></div>";
 					}
@@ -67,7 +74,7 @@ $("#searchResult").on('click', '.search-item', function() {
     console.log("click");
     var type = $(this).data("type");
     var target = $(this).data("target");
-
+		
     if (type === "user") {
         // 유저 프로필 페이지로 이동
         window.location.href = "/profile/" + target;
