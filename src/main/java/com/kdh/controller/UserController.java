@@ -3,14 +3,14 @@ package com.kdh.controller;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import javax.naming.directory.SearchResult;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +36,7 @@ import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.ProfileVo;
 import com.kdh.domain.SearchResultVo;
-import com.kdh.domain.TagsVo;
+import com.kdh.domain.TagResultVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
 import com.kdh.util.PostProcessor;
@@ -421,11 +421,48 @@ public class UserController {
 	}
 	
 	@GetMapping("/SearchResult")
-	@ResponseBody
-	public List<SearchResultVo> searchResult(@RequestParam("keyword") String keyword) {
+	public ModelAndView searchResult(@RequestParam("keyword") String keyword, Model model) {
+		ModelAndView mv = new ModelAndView("/layout/searchBox");
 		List<SearchResultVo> lists = userService.findSearchResultList(keyword);
-		return lists;
+	    mv.addObject("results", lists != null ? lists : Collections.emptyList());
+		if ( keyword != null) {
+			mv.addObject("isSearched", true);
+		}
+		return mv;
 	}
 	
+	@GetMapping("/TagResult/{tag_name}")
+	public ModelAndView tagResult(HttpSession session, ProfileVo profile, @PathVariable("tag_name") String tag_name) {
+		ModelAndView mv = new ModelAndView("/section/tagResult");
+		List<TagResultVo> trs = userService.viewPostByTag(tag_name);
+		List<FileVo> allFiles = new ArrayList<>();
+		List<NotificationVo> noti;
+		UserVo loggedInUserVo = null;
+		if (SessionManager.isLoggedIn(session)) {
+			loggedInUserVo = SessionManager.getUserVo(session);
+			String user_Id = loggedInUserVo.getUser_id();
+			Long user_idx = loggedInUserVo.getUser_idx();
+			noti = userService.getNotis(user_Id);
+			profile = userService.findProfileByUserIdx(user_idx);
+			loggedInUserVo.setProfile(profile);
+			mv.addObject("loggedInUser", loggedInUserVo);
+			mv.addObject("noti", noti);
+		} 
+		PostProcessor processor = new PostProcessor(userService);
+		for (TagResultVo tr : trs) {
+			processor.processPost(tr, allFiles);
+			String post_id = tr.getPost_id();
+			UserVo postUserVo = userService.loadUser(post_id);
+			Long user_idx = postUserVo.getUser_idx();
+			profile = userService.findProfileByUserIdx(user_idx);
+			log.info("profile = {}", profile);
+			tr.setProfile(profile);
+		}
+		Boolean isLoggedIn = (session.getAttribute("userVo") != null);
+		mv.addObject("trs", trs);
+		mv.addObject("loggedIn", isLoggedIn);
+		log.info("loggedIn = {}", isLoggedIn);
+		return mv;
+	}
 	
 }

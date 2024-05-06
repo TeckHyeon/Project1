@@ -14,8 +14,16 @@
 			</a></li>
 			<li class="nav-item"><a href="/"
 				class="nav-link link-body-emphasis" aria-current="page">Home </a></li>
-			<li><a href="#" class="nav-link link-body-emphasis"
-				id="searchToggle">검색 </a></li>
+			<li>
+				<div th:if="${loggedInUser != null}">
+					<a class="nav-link link-body-emphasis" id="searchToggle">검색 </a>
+					<script src="/js/search.js"></script>
+				</div>
+				<div th:unless="${loggedInUser != null}">
+					<a href="/login" class="nav-link link-body-emphasis"
+						id="searchToggle">검색 </a>
+				</div>
+			</li>
 			<li><div th:if="${loggedInUser != null}">
 					<div id="notificationArea">
 						<div th:replace=" ~{layout/notifragment.html :: noti}"></div>
@@ -91,7 +99,7 @@
 						});
 					});
 
-				}				
+				}
 			});
 		</script>
 	</div>

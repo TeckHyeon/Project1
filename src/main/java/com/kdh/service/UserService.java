@@ -20,6 +20,7 @@ import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.ProfileVo;
 import com.kdh.domain.SearchResultVo;
+import com.kdh.domain.TagResultVo;
 import com.kdh.domain.TagsVo;
 import com.kdh.domain.UserVo;
 import com.kdh.mapper.UserMapper;
@@ -326,6 +327,11 @@ public class UserService {
 	public List<SearchResultVo> findSearchResultList(String keyword) {
 		// TODO Auto-generated method stub
 		return userMapper.findSearchResultList(keyword);
+	}
+
+	public List<TagResultVo> viewPostByTag(String tag_name) {
+		// TODO Auto-generated method stub
+		return userMapper.viewPostByTag(tag_name);
 	}
 
 

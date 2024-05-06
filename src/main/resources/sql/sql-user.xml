@@ -85,6 +85,19 @@
 		AND
 		deleted_yn = 'N'
 	</select>
+	<select id="viewPostByTag" parameterType="String">
+		SELECT p.post_idx,
+		p.post_id, p.post_name, p.post_title,
+		p.post_contents,
+		p.post_likes,
+		p.post_created_date, p.post_updated_date, p.deleted_yn, T.TAG_NAME
+		FROM POST_TB p
+        JOIN POST_TAGS_TB PT ON PT.POST_IDX = P.POST_IDX
+        JOIN TAGS_TB T ON T.TAG_IDX = PT.TAG_IDX
+		WHERE
+		P.deleted_yn = 'N'
+        AND T.TAG_NAME = #{tag_name}
+	</select>
 	<select id="viewLikePostsByIdx" parameterType="Long">
 		SELECT P.post_idx,
 		P.post_id, P.post_name, P.post_title,

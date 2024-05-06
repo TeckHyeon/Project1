@@ -15,6 +15,7 @@ import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
 import com.kdh.domain.ProfileVo;
 import com.kdh.domain.SearchResultVo;
+import com.kdh.domain.TagResultVo;
 import com.kdh.domain.TagsVo;
 import com.kdh.domain.UserVo;
 
@@ -128,5 +129,7 @@ public interface UserMapper {
 	void deletePostTags(Long post_idx);
 
 	List<SearchResultVo> findSearchResultList(String keyword);
+
+	List<TagResultVo> viewPostByTag(String tag_name);
 
 }

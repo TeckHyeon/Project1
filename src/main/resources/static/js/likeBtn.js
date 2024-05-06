@@ -55,7 +55,7 @@ $(document).ready(function() {
 	        	            type: 'POST',
 	        	            data: { "post_idx": post_idx, "user_idx": user_idx },
 	        	            success: function(loadlikes) {
-	        	                $('#post_likes' + post_idx).val(loadlikes);
+	        	                $('#post_likes' + post_idx).text(loadlikes);
 	        	            },
 	        	            error: function() {
 	        	                alert('오류가 발생했습니다. 다시 시도해주세요.');
@@ -85,7 +85,7 @@ $(document).ready(function() {
 	        	            type: 'POST',
 	        	            data: { "post_idx": post_idx, "user_idx": user_idx },
 	        	            success: function(loadlikes) {
-	        	                $('#post_likes' + post_idx).val(loadlikes);
+	        	                $('#post_likes' + post_idx).text(loadlikes);
 	        	            },
 	        	            error: function() {
 	        	                alert('오류가 발생했습니다. 다시 시도해주세요.');

@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.kdh.domain.PostVo;
 import com.kdh.domain.ProfileVo;
+import com.kdh.domain.TagResultVo;
 
 @Component
 public class ProfileFiles {
@@ -66,6 +67,13 @@ public class ProfileFiles {
 	public static void addProfileFilesToPost(PostVo post, ProfileVo profile) {
 		 if (profile != null) {
 	            post.setProfile(profile);
+	        }
+	}
+
+
+	public static void addProfileFilesToPost(TagResultVo tr, ProfileVo profile) {
+		 if (profile != null) {
+			 tr.setProfile(profile);
 	        }
 	}
 }

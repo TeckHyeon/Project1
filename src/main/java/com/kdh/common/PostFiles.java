@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.kdh.domain.FileVo;
 import com.kdh.domain.PostVo;
+import com.kdh.domain.TagResultVo;
 import com.kdh.domain.UserVo;
 
 @Component
@@ -102,4 +103,11 @@ public class PostFiles {
         log.info("files = {}", allFiles);
         log.info("posts = {}", posts);
     }
+
+	public static void addFilesToPostAndAllFilesList(List<FileVo> filesForPost, TagResultVo tr, List<FileVo> allFiles) {
+        if (filesForPost != null) {
+            allFiles.addAll(filesForPost);
+            tr.setFileList(filesForPost);
+        }
+	}
 }
