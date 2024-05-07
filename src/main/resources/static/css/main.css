@@ -102,3 +102,29 @@ textarea.no-resize {
 .toggleButton {
 	display: block !important; /* "더 보기" 버튼 강제로 보이게 함 */
 }
+.card-fixed-size {
+	height: 350px; /* 원하는 높이로 설정 */
+	width: 350px; /* 원하는 너비로 설정 */
+}
+.card-feed {
+	overflow: auto;
+	height: 320px; /* 예시로 300px을 설정했습니다. 필요에 따라 조절하세요. */
+	/* 또는 */
+	min-height: 400px; /* 최소 높이를 설정 */
+}
+.card-header {
+	display: flex;
+	justify-content: space-between; /* 타이틀과 버튼 그룹 사이의 공간을 균등하게 배분 */
+	align-items: center; /* 세로 중앙 정렬 */
+}
+
+.card-header h5 {
+	margin-right: auto; /* h5와 btn_group 사이에 자동으로 공간을 추가 */
+	white-space: nowrap; /* 타이틀을 한 줄로 유지 */
+	overflow: hidden; /* 내용이 넘칠 경우 숨김 처리 */
+	text-overflow: ellipsis; /* 내용이 넘칠 경우 말줄임표(...)로 표시 */
+}
+.btn_group {
+	display: flex; /* 버튼 그룹 내부 요소를 flex로 정렬 */
+	align-items: center; /* 버튼을 세로 중앙 정렬 */
+}

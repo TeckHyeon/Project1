@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+	<div class="col container" th:fragment="profile">
+		<div class="justify-content-center container col-8">
+			<input type="hidden" th:value="${loggedIn}" id="isLoggedIn">
+			<div th:if="${loggedInUser != null}">
+				<input type="hidden" th:value="${loggedInUser.user_idx}"
+					id="user_idx"> <input type="hidden"
+					th:value="${loggedInUser.user_id}" id="user_id">
+				<script src="/js/likeBtn.js"></script>
+			</div>
+			<div
+				class="container-fluid d-flex justify-content-center align-items-center">
+				<div class="row">
+					<div class="col">
+						<div class="d-flex">
+							<div>
+								<img src="/user_profile/default.jpg"
+									th:src="${profile != null} ? ${profile.file_path} : '/user_profile/default.jpg'"
+									class="rounded-circle profile-img"
+									style="width: 140px; height: 140px; cursor: pointer;">
+								<div
+									th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}">
+									<input type="file" id="profileInput" style="display: none;"
+										accept="image/*">
+								</div>
+							</div>
+							<div class="ms-5">
+								<div class="d-flex">
+									<span th:text="${profileUser.user_id}"
+										class="fs-3 bg-transparent " id="user_name" name="user_name"
+										readonly style="border: none;"></span> <a href="/updateform/"
+										th:attrappend="href=${profileUser.user_id}"
+										th:if="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}"
+										class="btn border ms-5"
+										style="width: 7rem; height: 2rem; margin-top: 10px;">프로필
+										편집</a>
+									<div
+										th:unless="${loggedInUser != null and profileUser.user_id == loggedInUser.user_id}"
+										class="ms-5">
+										<input
+											class="btn btn-outline-secondary follow-button mt-1 follow_btn"
+											id="follow_btn" type="button"
+											th:data-user-id="${profileUser.user_id}" value="팔로우">
+									</div>
+								</div>
+								<div class="row my-5">
+									<div class="col-4"
+										th:text="'게시물 ' + (${posts} != null ? ${posts.size()} : 0)"></div>
+									<div class="col-4">
+										<a href="#" role="button"
+											class="text-reset text-decoration-none"
+											data-bs-toggle="modal" data-bs-target="#followerModal"
+											th:text="'팔로워 ' + (${following} != null ? ${following.size()} : 0)"></a>
+									</div>
+									<div class="col-4" role="button" data-bs-toggle="modal"
+										data-bs-target="#followModal"
+										th:text="'팔로우 ' + (${follower} != null ? ${follower.size()} : 0)"></div>
+									<input type="text" th:value="${profileUser.user_name}"
+										class="fw-bold bg-transparent col-12 my-2" id="user_name"
+										name="user_name" readonly disabled style="border: none;"></input>
+									<div class="col-12" th:text="${profileUser.user_comments}"></div>
+								</div>
+								<!-- 팔로워 리스트 모달 -->
+								<div class="modal fade" id="followerModal" tabindex="-1"
+									aria-labelledby="followerModalLabel" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-centered">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title" id="followerModalLabel">팔로워 리스트</h5>
+												<button type="button" class="btn-close"
+													data-bs-dismiss="modal" aria-label="Close"></button>
+											</div>
+											<div class="modal-body">
+												<div th:each="following : ${following}">
+													<!-- 프로필 이미지와 사용자 정보를 담은 컨테이너 -->
+													<div class="align-items-center mt-3">
+														<div class="d-flex justify-content-between">
+															<div class="d-flex">
+																<a
+																	th:href="@{/profile/{userId}(userId=${following.user.user_id})}">
+
+																	<img src="/user_profile/default.jpg"
+																	th:src="${following.profile != null} ? ${following.profile.file_path} : '/user_profile/default.jpg'"
+																	class="rounded-circle ms-1 me-3"
+																	style="width: 40px; height: 40px; cursor: pointer;">
+																</a>
+																<div>
+																	<a href="#" role="button"
+																		class="text-reset text-decoration-none"
+																		th:text="${following.user.user_name}"></a>
+																	<div>
+																		<span th:text="${following.user.user_comments}"></span>
+																	</div>
+																</div>
+															</div>
+															<input
+																class="btn btn-outline-secondary follow-button mt-1 follow_btn"
+																type="button"
+																th:data-user-id="${following.user.user_id}"
+																th:if="${loggedInUser != null and following.user.user_id != loggedInUser.user_id}"
+																value="팔로우" />
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="modal fade" id="followModal" tabindex="-1"
+									aria-labelledby="followModalLabel" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-centered">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title" id="followModalLabel">팔로워 리스트</h5>
+												<button type="button" class="btn-close"
+													data-bs-dismiss="modal" aria-label="Close"></button>
+											</div>
+											<div class="modal-body">
+												<div th:each="follower : ${follower}">
+													<!-- 프로필 이미지와 사용자 정보를 담은 컨테이너 -->
+													<div class="align-items-center mt-3">
+														<div class="d-flex justify-content-between">
+															<div class="d-flex">
+																<a
+																	th:href="@{/profile/{userId}(userId=${follower.user.user_id})}">
+																	<img src="/user_profile/default.jpg"
+																	th:src="${follower.profile != null} ? ${follower.profile.file_path} : '/user_profile/default.jpg'"
+																	class="rounded-circle ms-1 me-3"
+																	style="width: 40px; height: 40px; cursor: pointer;">
+																</a>
+																<div>
+																	<a href="#" role="button"
+																		class="text-reset text-decoration-none"
+																		th:text="${follower.user.user_name}"></a>
+																	<div>
+																		<span th:text="${follower.user.user_comments}"></span>
+																	</div>
+																</div>
+															</div>
+															<input
+																class="btn btn-outline-secondary follow-button mt-1 follow_btn"
+																th:if="${loggedInUser != null and follower.user.user_id != loggedInUser.user_id}"
+																type="button" th:data-user-id="${follower.user.user_id}"
+																value="팔로우" />
+														</div>
+
+													</div>
+												</div>
+											</div>
+
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- 탭 메뉴 -->
+						<ul class="nav nav-tabs d-flex justify-content-center" id="myTab"
+							role="tablist" style="border: none;">
+							<li class="nav-item" role="presentation"><a
+								class="nav-link text-secondary active" id="posts-tab"
+								data-bs-toggle="tab" data-bs-target="#posts" type="button"
+								role="tab" aria-controls="posts" aria-selected="true"
+								href="#posts" data-toggle="tab">게시물</a></li>
+							<li class="nav-item" role="presentation"><a
+								class="nav-link text-secondary" id="likes-tab"
+								data-bs-toggle="tab" data-bs-target="#likes" type="button"
+								role="tab" aria-controls="likes" aria-selected="false"
+								href="#likes" tabindex="-1">좋아요 누른 게시물</a></li>
+						</ul>
+						<div class="tab-content d-flex justify-content-center" id="myTabContent">
+							<div class="tab-pane fade show active" id="posts" role="tabpanel"
+								aria-labelledby="posts-tab">
+								<div th:each="item, iterStat : ${posts}"
+									class="border mt-5 feed" style="width: 470px; height: auto;">
+									<div class="p-4">
+										<!-- 첫 번째 내용 블록 -->
+										<div class="d-flex justify-content-between mb-3">
+											<div class="d-flex align-items-center">
+												<a th:href="@{/profile/{id}(id=${item.post_id})}"> <img
+													src="/user_profile/profile.jpg"
+													th:src="${item.profile != null} ? ${item.profile.file_path} : '/user_profile/default.jpg'"
+													class="rounded-circle"
+													style="width: 50px; height: 50px; cursor: pointer;">
+												</a>
+												<p th:text="${item.post_name}"
+													th:id="'post_name'+${item.post_idx}" class="mb-0 ml-2 ms-3"></p>
+											</div>
+
+											<p class="text-end" th:text="${item.timeago}">
+										</div>
+										<div class="">
+											<div th:each="file : ${item.fileList}"
+												class="d-flex justify-content-center">
+												<img th:src="${file.file_Path}" alt="게시글 이미지"
+													class="post-image mb-3"
+													style="width: 280px; height: auto;">
+											</div>
+											<div th:id="'content' + ${iterStat.index}" class="mt-3 px-3">
+												<p th:id="'content_text' + ${iterStat.index}"
+													th:text="${item.post_contents}"
+													class="content_text content"></p>
+											</div>
+											<div class="d-flex">
+												<div th:each="tag : ${item.tagList}">
+													<button class="btn btn-outline-primary m-1 mt-3 tag-btn"
+														th:data-tag-name="${tag.tag_name}"
+														th:text="${tag.tag_name}"></button>
+												</div>
+											</div>
+										</div>
+										<div class="ms-3 my-1">
+											<span class="fw-bold like_btn"
+												th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}, data-message-number=1">
+												<svg class="w-6 h-6 text-gray-800 text-danger"
+													aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+													width="24" height="24" fill="none" viewBox="0 0 24 24">
+                      							<path stroke="currentColor"
+														stroke-linecap="round" stroke-linejoin="round"
+														stroke-width="2"
+														d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z" />
+                    						</svg>
+											</span> <span th:text="${item.post_likes}"
+												th:id="'post_likes' + ${item.post_idx}"></span>
+										</div>
+										<div class="mt-3 row">
+											<textarea
+												class="form-control comment-box col border no-resize"
+												th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}, data-message-number=3"
+												placeholder="댓글 달기..." style="border: none; height: 3rem"></textarea>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="tab-pane fade show" id="likes" role="tabpanel"
+								aria-labelledby="likes-tab">
+								<div th:each="item, iterStat : ${likePosts}"
+									class="border mt-5 feed" style="width: 470px; height: auto;">
+									<div class="p-4">
+										<!-- 첫 번째 내용 블록 -->
+										<div class="d-flex justify-content-between mb-3">
+											<div class="d-flex align-items-center">
+												<a class="profile_btn" th:data-profile-id="${item.post_id}"> <img
+													alt="프로필"
+													th:src="${item.profile != null} ? ${item.profile.file_path} : '/user_profile/default.jpg'"
+													class="rounded-circle"
+													style="width: 50px; height: 50px; cursor: pointer;">
+												</a>
+												<p th:text="${item.post_name}"
+													th:id="'post_name'+${item.post_idx}" class="mb-0 ml-2 ms-3"></p>
+											</div>
+
+											<p class="text-end" th:text="${item.timeago}">
+										</div>
+										<div class="">
+											<div th:each="file : ${item.fileList}"
+												class="d-flex justify-content-center">
+												<img th:src="${file.file_Path}" alt="게시글 이미지"
+													class="post-image mb-3 post-image"
+													style="width: 280px; height: auto;">
+											</div>
+											<div th:id="'content' + ${iterStat.index}" class="mt-3 px-3">
+												<p th:id="'content_text' + ${iterStat.index}"
+													th:text="${item.post_contents}"
+													class="content_text content"></p>
+											</div>
+											<div class="d-flex">
+												<div th:each="tag : ${item.tagList}">
+													<button class="btn btn-outline-primary m-1 mt-3 tag-btn"
+														th:data-tag-name="${tag.tag_name}"
+														th:text="${tag.tag_name}"></button>
+												</div>
+											</div>
+										</div>
+										<div class="ms-3 my-1">
+											<span class="fw-bold like_btn"
+												th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}, data-message-number=1">
+												<svg class="w-6 h-6 text-gray-800 text-danger"
+													aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+													width="24" height="24" fill="none" viewBox="0 0 24 24">
+                      							<path stroke="currentColor"
+														stroke-linecap="round" stroke-linejoin="round"
+														stroke-width="2"
+														d="M12.01 6.001C6.5 1 1 8 5.782 13.001L12.011 20l6.23-7C23 8 17.5 1 12.01 6.002Z" />
+                    						</svg>
+											</span> <span th:text="${item.post_likes}"
+												th:id="'post_likes' + ${item.post_idx}"></span>
+										</div>
+										<div class="mt-3 row">
+											<textarea
+												class="form-control comment-box col border no-resize"
+												th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}, data-message-number=3"
+												placeholder="댓글 달기..." style="border: none; height: 3rem"></textarea>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	<script src="/js/profile.js"></script>
+	</div>
+</body>
+</html>

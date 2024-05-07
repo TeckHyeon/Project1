@@ -35,8 +35,8 @@
 
 			<li>
 				<div th:if="${loggedInUser != null}">
-					<a href="/profile/" th:attrappend="href=${loggedInUser.user_id}"
-						class="nav-link link-body-emphasis">프로필 </a>
+					<a th:data-profile-id="${loggedInUser.user_id}"
+						class="nav-link link-body-emphasis profile_btn">프로필 </a>
 				</div>
 				<div th:unless="${loggedInUser != null}">
 					<a href="/login" class="nav-link link-body-emphasis">프로필 </a>
@@ -45,8 +45,7 @@
 		</ul>
 		<hr>
 		<div class="dropdown" th:if="${loggedIn}">
-			<a href="#"
-				class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle"
+			<a class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle"
 				data-bs-toggle="dropdown" aria-expanded="false"> <img
 				th:src="${loggedInUser.profile != null} ? ${loggedInUser.profile.file_path} : '/user_profile/default.jpg'"
 				src="https://github.com/mdo.png" alt="" width="32" height="32"
@@ -58,8 +57,7 @@
 					th:attrappend="href=${loggedInUser.user_id}">글쓰기</a></li>
 				<li><a class="dropdown-item" href="/updateform/"
 					th:attrappend="href=${loggedInUser.user_id}">회원정보수정</a></li>
-				<li><a class="dropdown-item" href="/profile/"
-					th:attrappend="href=${loggedInUser.user_id}">>프로필</a></li>
+				<li><a class="dropdown-item profile_btn" th:data-profile-id="${loggedInUser.user_id}">프로필</a></li>
 				<li>
 					<hr class="dropdown-divider">
 				</li>

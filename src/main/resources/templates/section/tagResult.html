@@ -1,11 +1,5 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="UTF-8">
-<title>태그 검색결과 페이지</title>
-<link rel="stylesheet" href="/css/bootstrap.min.css">
-<link rel="stylesheet" href="/css/main.css">
-</head>
 <body>
 	<div class="col container" th:fragment="tagResult">
 		<div class="justify-content-center container col-8">
@@ -48,10 +42,6 @@
 									<div th:id="'content' + ${iterStat.index}" class="mt-3 px-3">
 										<p th:id="'content_text' + ${iterStat.index}"
 											th:text="${item.post_contents}" class="content_text content"></p>
-										<button
-											class="toggleButton btn btn-link text-dark text-decoration-none"
-											th:data-target="'content_text' + ${iterStat.index}"
-											onclick="showMoreContent(this)">더보기</button>
 									</div>
 									<div class="d-flex">
 										<div th:each="tag : ${item.tagList}">
@@ -97,10 +87,6 @@
 				</div>
 			</div>
 		</div>
-		<script src="/js/youtubeLink.js"></script>
-	<script src="/js/comment.js"></script>
-	<script src="/js/bootstrap.bundle.min.js"></script>
-	<script src="/js/tagResult.js"></script>
 	</div>
 </body>
 </html>

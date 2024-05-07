@@ -86,7 +86,7 @@ public class NotiController {
 		log.info("noti = {}", noti);
 		log.info("post = {}", post);
 		log.info("filesForPost = {}", filesForPost);
-		modelAndView.setViewName("layout/postdetail :: postdetail");
+		modelAndView.setViewName("layout/postnotidetail :: postnotidetail");
 		return modelAndView;
 	}
     private String calculateTimeAgo(String dateStr, DateTimeFormatter formatter) {

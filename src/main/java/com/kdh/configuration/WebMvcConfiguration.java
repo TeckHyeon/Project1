@@ -19,6 +19,7 @@ public class WebMvcConfiguration implements WebMvcConfigurer {
 				.excludePathPatterns("/signin").excludePathPatterns("/profile/*").excludePathPatterns("/post_file/**")
 				.excludePathPatterns("/js/**").excludePathPatterns("/nav").excludePathPatterns("/css/**").excludePathPatterns("/images/**")
 				.excludePathPatterns("/resources/templates/layout/**") // 오타 수정
+				.excludePathPatterns("/resources/templates/section/**") // 오타 수정
 				.excludePathPatterns("/post_file/**") // 오타 수정
 				.excludePathPatterns("/profile_file/**").excludePathPatterns("/user_profile/**"); // 오타 수정
 	}

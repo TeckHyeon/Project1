@@ -168,103 +168,6 @@ public class UserController {
 		return mv;
 	}
 
-	@GetMapping("/profile/{user_Id}")
-	public ModelAndView profile(@PathVariable("user_Id") String user_Id, HttpSession session) throws Exception {
-		ModelAndView mv = new ModelAndView();
-		UserVo loggedInUserVo = null; // 로그인한 사용자 정보
-
-		// 세션에서 로그인한 사용자 정보 가져오기
-		if (SessionManager.isLoggedIn(session)) {
-			loggedInUserVo = SessionManager.getUserVo(session);
-			mv.addObject("loggedInUser", loggedInUserVo);
-		}
-
-		// 프로필 페이지 주인의 사용자 정보
-		UserVo profileUserVo = userService.loadUser(user_Id);
-		mv.addObject("profileUser", profileUserVo);
-
-		// 프로필 페이지 주인의 게시글 목록 가져오기
-		List<PostVo> posts = userService.viewPostById(user_Id);
-		mv.addObject("posts", posts);
-
-		// 프로필 페이지 주인이 좋아요 누른 게시물 목록 가져오기
-		Long user_idx = profileUserVo.getUser_idx();
-		List<PostVo> likePosts = userService.viewLikePostsByIdx(user_idx);
-		mv.addObject("likePosts", likePosts);
-
-		// 로그인한 사용자가 프로필 페이지의 주인인 경우 알림 목록 추가
-		if (loggedInUserVo != null && loggedInUserVo.getUser_id().equals(user_Id)) {
-			List<NotificationVo> noti = userService.getNotis(user_Id);
-			mv.addObject("noti", noti);
-		}
-
-		// 프로필 페이지 주인의 프로필 정보 가져오기
-		ProfileVo profile = userService.findProfileByUserIdx(profileUserVo.getUser_idx());
-		mv.addObject("profile", profile);
-
-		// 게시글과 관련된 파일 처리
-		List<FileVo> allFiles = new ArrayList<>();
-		PostProcessor processor = new PostProcessor(userService);
-		posts.forEach(post -> processor.processPost(post, allFiles));
-		likePosts.forEach(likepost -> processor.processPost(likepost, allFiles));
-		// 팔로잉 목록 가져오기 및 추가 정보 처리
-		List<FollowVo> followingList = userService.findFollowingByUserId(user_Id);
-		followingList.forEach(following -> {
-			UserVo followingUser = userService.loadUser(following.getFollowing_id());
-			if (followingUser != null) {
-				following.setUser(followingUser);
-				ProfileVo followingUserprofile = userService.findProfileByUserIdx(followingUser.getUser_idx());
-				following.setProfile(followingUserprofile);
-			}
-		});
-		mv.addObject("following", followingList);
-		// 팔로우 목록 가져오기 및 추가 정보 처리
-		List<FollowVo> followerList = userService.findFollowerByUserId(user_Id);
-		followerList.forEach(follow -> {
-			UserVo followUser = userService.loadUser(follow.getFollower_id());
-			if (followUser != null) {
-				follow.setUser(followUser);
-				ProfileVo followUserprofile = userService.findProfileByUserIdx(followUser.getUser_idx());
-				follow.setProfile(followUserprofile);
-			}
-		});
-		mv.addObject("follower", followerList);
-
-		// 로그인 여부 세팅
-		Boolean isLoggedIn = (loggedInUserVo != null);
-		mv.addObject("loggedIn", isLoggedIn);
-
-		// 뷰 이름 설정
-		mv.setViewName("pages/profile");
-		return mv;
-	}
-
-	@GetMapping("/updateform/{user_Id}")
-	public ModelAndView updateForm(@PathVariable("user_Id") String user_Id, UserVo userVo) {
-		ModelAndView mv = new ModelAndView();
-		userVo = userService.viewProfile(user_Id);
-		mv.addObject("user", userVo);
-		mv.setViewName("/pages/updateform");
-		return mv;
-	}
-
-	@PutMapping("/updateinfo/{user_Id}")
-	public ModelAndView updateinfo(@PathVariable("user_Id") String user_Id, UserVo userVo) {
-
-		ModelAndView mv = new ModelAndView();
-		userService.updateinfo(userVo);
-		mv.setViewName("redirect:/profile/{user_Id}");
-		return mv;
-	}
-
-	@PutMapping("/updatepw/{user_Id}")
-	public ModelAndView updatepw(@PathVariable("user_Id") String user_Id, UserVo userVo) {
-		ModelAndView mv = new ModelAndView();
-		userService.updatepw(userVo);
-		mv.setViewName("redirect:/profile/{user_Id}");
-		return mv;
-	}
-
 	@GetMapping("/write/{user_Id}")
 	public ModelAndView writeform(@PathVariable("user_Id") String user_Id, UserVo userVo) {
 		ModelAndView mv = new ModelAndView();
@@ -280,18 +183,20 @@ public class UserController {
 		ModelAndView mv = new ModelAndView();
 		ObjectMapper objectMapper = new ObjectMapper();
 		try {
-		    List<String> tags = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
+			List<String> tags = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {
+			});
 			userService.insertPost(postVo, multiFiles, tags);
 		} catch (JsonProcessingException e) {
-		    e.printStackTrace();
+			e.printStackTrace();
 		}
 
 		mv.setViewName("redirect:/");
 		return mv;
 	}
-	
+
 	@GetMapping("/UpdatePost/{post_idx}")
-	public ModelAndView updatePost(@PathVariable("post_idx") Long post_idx, PostVo post) throws JsonProcessingException {
+	public ModelAndView updatePost(@PathVariable("post_idx") Long post_idx, PostVo post)
+			throws JsonProcessingException {
 		ModelAndView mv = new ModelAndView();
 		post = userService.view(post_idx);
 		List<FileVo> allFiles = new ArrayList<>();
@@ -299,7 +204,7 @@ public class UserController {
 		processor.processPost(post, allFiles);
 		ObjectMapper objectMapper = new ObjectMapper();
 		List<String> tagNames = post.getTagList().stream().map(tag -> tag.getTag_name()).collect(Collectors.toList());
-			String tagListJson = objectMapper.writeValueAsString(tagNames);
+		String tagListJson = objectMapper.writeValueAsString(tagNames);
 		mv.addObject("tagListJson", tagListJson);
 		mv.addObject("post", post);
 		mv.setViewName("/pages/updatepost");
@@ -313,10 +218,11 @@ public class UserController {
 		ObjectMapper objectMapper = new ObjectMapper();
 		try {
 			postVo.setPost_idx(post_idx);
-		    List<String> tags = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {});
+			List<String> tags = objectMapper.readValue(tagsJson, new TypeReference<List<String>>() {
+			});
 			userService.updatePost(postVo, multiFiles, tags);
 		} catch (JsonProcessingException e) {
-		    e.printStackTrace();
+			e.printStackTrace();
 		}
 		mv.setViewName("redirect:/");
 		return mv;
@@ -325,70 +231,10 @@ public class UserController {
 	@DeleteMapping("/DeletePost/{post_idx}")
 	public ResponseEntity<?> PostDelete(@PathVariable("post_idx") Long post_idx) {
 		try {
-			userService.deletePost(post_idx);	
+			userService.deletePost(post_idx);
 			return ResponseEntity.ok().body("{\"message\":\"게시물 삭제 성공\"}");
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body("Post 삭제에 실패했습니다.");
-		}
-	}
-	@PostMapping("/LikeAdd")
-	public ResponseEntity<?> addLike(@RequestBody LikesVo like) {
-		try {
-			Long post_idx = like.getPost_idx();
-			userService.insertLike(like, post_idx);
-			log.info("post_idx = {}", post_idx);
-			return ResponseEntity.ok().build();
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body("Like 추가에 실패했습니다.");
-		}
-	}
-
-	@DeleteMapping("/LikeDelete")
-	public ResponseEntity<?> deleteLike(@RequestBody LikesVo like) {
-		try {
-			userService.deleteLike(like);
-			return ResponseEntity.ok().build();
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body("Like 삭제에 실패했습니다.");
-		}
-	}
-
-	@GetMapping("/CheckLike")
-	public ResponseEntity<?> checkLike(@RequestParam("post_idx") Long post_idx,
-			@RequestParam("user_idx") Long user_idx) {
-		int checkLike = userService.checkLike(user_idx, post_idx);
-		try {
-			if (checkLike != 0) {
-				boolean isLiked = true;
-				return ResponseEntity.ok(isLiked);
-			} else {
-				boolean isLiked = false;
-				return ResponseEntity.ok(isLiked);
-			}
-
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body("Like 상태 확인에 실패했습니다.");
-		}
-	}
-
-	@PostMapping("/LoadLikes")
-	@ResponseBody
-	public Long loadLikes(@RequestParam("post_idx") Long post_idx) {
-		// postId를 기반으로 좋아요 수를 업데이트하고, 업데이트된 좋아요 수를 반환하는 로직 구현
-		Long loadlikes = userService.countLike(post_idx);
-		// 업데이트된 좋아요 수를 int로 직접 반환
-		return loadlikes;
-	}
-
-	@PostMapping("/CommentInsert")
-	public ResponseEntity<?> insertComment(@RequestBody CommentVo vo, @SessionAttribute("userVo") UserVo user) {
-		try {
-			vo.setFrom_id(user.getUser_id());
-			vo.setFrom_name(user.getUser_name());
-			userService.insertComment(vo);
-			return ResponseEntity.ok().build();
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body("알림 확인에 실패했습니다.");
 		}
 	}
 
@@ -400,6 +246,18 @@ public class UserController {
 			return ResponseEntity.ok().body("프로필 사진이 변경되었습니다.");
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body("프로필 사진 변경 중 오류가 발생했습니다.");
+		}
+	}
+
+	@PostMapping("/CommentInsert")
+	public ResponseEntity<?> insertComment(@RequestBody CommentVo vo, @SessionAttribute("userVo") UserVo user) {
+		try {
+			vo.setFrom_id(user.getUser_id());
+			vo.setFrom_name(user.getUser_name());
+			userService.insertComment(vo);
+			return ResponseEntity.ok().build();
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body("알림 확인에 실패했습니다.");
 		}
 	}
 
@@ -419,18 +277,18 @@ public class UserController {
 		LocalDateTime dateTime = LocalDateTime.parse(dateStr, formatter);
 		return TimeAgo.calculateTimeAgo(dateTime);
 	}
-	
+
 	@GetMapping("/SearchResult")
 	public ModelAndView searchResult(@RequestParam("keyword") String keyword, Model model) {
 		ModelAndView mv = new ModelAndView("/layout/searchBox");
 		List<SearchResultVo> lists = userService.findSearchResultList(keyword);
-	    mv.addObject("results", lists != null ? lists : Collections.emptyList());
-		if ( keyword != null) {
+		mv.addObject("results", lists != null ? lists : Collections.emptyList());
+		if (keyword != null) {
 			mv.addObject("isSearched", true);
 		}
 		return mv;
 	}
-	
+
 	@GetMapping("/TagResult/{tag_name}")
 	public ModelAndView tagResult(HttpSession session, ProfileVo profile, @PathVariable("tag_name") String tag_name) {
 		ModelAndView mv = new ModelAndView("/section/tagResult");
@@ -447,7 +305,7 @@ public class UserController {
 			loggedInUserVo.setProfile(profile);
 			mv.addObject("loggedInUser", loggedInUserVo);
 			mv.addObject("noti", noti);
-		} 
+		}
 		PostProcessor processor = new PostProcessor(userService);
 		for (TagResultVo tr : trs) {
 			processor.processPost(tr, allFiles);
@@ -464,5 +322,5 @@ public class UserController {
 		log.info("loggedIn = {}", isLoggedIn);
 		return mv;
 	}
-	
+
 }
