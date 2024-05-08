@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+	<div>
+		<div class="mt-3" th:each="comment : ${comments}"
+			th:if="${comments != null}">
+			<div class="border px-3 py-2">
+				<div class="d-flex justify-content-between">
+					<p th:text="${comment.from_name}">
+					<p th:text="${comment.commentTimeAgo}">
+				</div>
+				<p th:text="${comment.comment_content}">
+			</div>
+		</div>
+		<div th:unless="${comments != null}">
+			<input type="text" value="글 못 읽음">
+		</div>
+	</div>
+</body>
+</html>

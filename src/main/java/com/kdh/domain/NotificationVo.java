@@ -16,4 +16,5 @@ public class NotificationVo {
 	String from_id;
 	Long post_idx;
 	PostnotiVo postNotiVo;
+	PostVo postVo;
 }

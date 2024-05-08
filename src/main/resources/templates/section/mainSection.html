@@ -14,6 +14,17 @@
 					th:value="${loggedInUser.user_id}" id="user_id">
 				<script src="/js/likeBtn.js"></script>
 			</div>
+			<div th:unless="${loggedInUser != null}">
+			<script>
+				$(document).ready(function() {
+					$('.comment-box').click(function(event) {
+						event.stopPropagation();
+						alert("로그인이 필요한 서비스입니다");
+						window.location.href = '/login';
+					});
+				});
+			</script>
+			</div>
 			<div
 				class="container-fluid d-flex justify-content-center align-items-center">
 				<div class="row">
@@ -76,12 +87,6 @@
 										</svg> <span th:text="${#lists.size(item.commentList)}"> </span>
 										<div th:insert="~{layout/postdetail.html :: postdetail}"></div>
 									</div>
-								</div>
-
-								<div class="mt-3 row">
-									<textarea class="form-control comment-box col border no-resize"
-										th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}, data-message-number=3"
-										placeholder="댓글 달기..." style="border: none; height: 3rem"></textarea>
 								</div>
 							</div>
 						</div>

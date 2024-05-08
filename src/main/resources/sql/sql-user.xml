@@ -208,7 +208,7 @@
 	    f.deleted_yn = 'N'	
 		]]>
 	</select>
-	<select id="view" parameterType="Long">
+	<select id="findPostbypostIdx" parameterType="Long">
 		select * from POST_TB where
 		post_idx = #{post_idx}
 	</select>

@@ -334,5 +334,10 @@ public class UserService {
 		return userMapper.viewPostByTag(tag_name);
 	}
 
+	public PostVo findPostbypostIdx(Long post_idx) {
+		// TODO Auto-generated method stub
+		return userMapper.findPostbypostIdx(post_idx);
+	}
+
 
 }

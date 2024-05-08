@@ -30,8 +30,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
-import com.kdh.domain.FollowVo;
-import com.kdh.domain.LikesVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.ProfileVo;
@@ -59,20 +57,35 @@ public class UserController {
 		ModelAndView mv = new ModelAndView("/pages/main");
 		List<PostVo> posts;
 		List<FileVo> allFiles = new ArrayList<>();
-		List<NotificationVo> noti;
+		List<NotificationVo> notis;
 		UserVo loggedInUserVo = null;
 		if (SessionManager.isLoggedIn(session)) {
 			loggedInUserVo = SessionManager.getUserVo(session);
 			String user_Id = loggedInUserVo.getUser_id();
 			Long user_idx = loggedInUserVo.getUser_idx();
 			posts = userService.viewPost(user_Id);
-			noti = userService.getNotis(user_Id);
+			notis = userService.getNotis(user_Id);
 			profile = userService.findProfileByUserIdx(user_idx);
 			loggedInUserVo.setProfile(profile);
 			mv.addObject("loggedInUser", loggedInUserVo);
 			log.info("posts = {}", posts);
 			mv.addObject("posts", posts);
-			mv.addObject("noti", noti);
+			mv.addObject("noti", notis);
+			
+			for (NotificationVo noti : notis) {
+				Long post_idx = noti.getPost_idx();
+				PostVo post = userService.findPostbypostIdx(post_idx);
+				PostProcessor processor = new PostProcessor(userService);
+				processor.processPost(post, allFiles);
+				String post_id = post.getPost_id();
+				UserVo postUserVo = userService.loadUser(post_id);
+				Long noti_userIdx = postUserVo.getUser_idx();
+				profile = userService.findProfileByUserIdx(noti_userIdx);
+				post.setProfile(profile);
+				noti.setPostVo(post);
+				log.info("notizz = {}", noti);
+			}
+			
 		} else {
 			posts = userService.viewPostByLikes();
 			mv.addObject("posts", posts);
@@ -89,6 +102,7 @@ public class UserController {
 			log.info("profile = {}", profile);
 			post.setProfile(profile);
 		}
+		
 		Boolean isLoggedIn = (session.getAttribute("userVo") != null);
 		mv.addObject("loggedIn", isLoggedIn);
 		log.info("loggedIn = {}", isLoggedIn);
@@ -263,14 +277,16 @@ public class UserController {
 
 	@GetMapping("/LoadComments")
 	@ResponseBody
-	public List<CommentVo> loadComments(@RequestParam("post_idx") Long post_idx) {
+	public ModelAndView loadComments(@RequestParam("post_idx") Long post_idx) {
 		// 특정 게시물에 대한 댓글 조회
 		List<CommentVo> comments = userService.findCommentsByPostIdx(post_idx);
 		comments.forEach(comment -> {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 			comment.setCommentTimeAgo(calculateTimeAgo(comment.getUpdated_date(), formatter));
 		});
-		return comments;
+		ModelAndView mv = new ModelAndView("/layout/comments");
+		mv.addObject("comments", comments);
+		return mv;
 	}
 
 	private String calculateTimeAgo(String dateStr, DateTimeFormatter formatter) {
@@ -308,7 +324,7 @@ public class UserController {
 		}
 		PostProcessor processor = new PostProcessor(userService);
 		for (TagResultVo tr : trs) {
-			processor.processPost(tr, allFiles);
+			processor.processTag(tr, allFiles);
 			String post_id = tr.getPost_id();
 			UserVo postUserVo = userService.loadUser(post_id);
 			Long user_idx = postUserVo.getUser_idx();

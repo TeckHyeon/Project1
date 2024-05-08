@@ -23,9 +23,8 @@
 						<hr>
 						<div th:if="${item != null}">
 							<div class="d-flex justify-content-between mb-3">
-								<input type="text" th:value="${item.post_id}" disabled>
-								<input class="text-end" type="text"
-									th:value="${item.post_updated_date}" readonly disabled>
+								<span th:text="${item.post_id}" ></span>
+								<span class="text-end" th:text="${item.timeago}"></span>
 							</div>
 							<div class="">
 								<div th:each="file : ${item.fileList}"
@@ -38,7 +37,6 @@
 										data-postdetail-id=${item.post_id}
 										th:text="${item.post_contents}" class="content_text content"></p>
 								</div>
-
 							</div>
 							<div class="ms-3 my-1">
 								<span class="fw-bold like_btn"
@@ -53,26 +51,35 @@
 								</span> <input type="text" th:value="${item.post_likes}"
 									th:id="'postdetail_likes' + ${noti_idx}">
 							</div>
-							<div th:id="'commentDetail-'+${noti_idx}">
-							<div class="mt-3" th:each="comment : ${item.commentList}">
-								<div class="border px-3 py-2" th:if="${item.commentList != null}">
-									<div class="d-flex justify-content-between">
-										<p th:text="${comment.from_name}">
-										<p th:text="${comment.commentTimeAgo}">
+							<div th:id="'comments'+${item.post_idx}">
+								<div>
+									<div class="mt-3" th:each="comment : ${item.commentList}"
+										th:if="${item.commentList != null}">
+										<div class="border px-3 py-2">
+											<div class="d-flex justify-content-between">
+												<p th:text="${comment.from_name}">
+												<p th:text="${comment.commentTimeAgo}">
+											</div>
+											<p th:text="${comment.comment_content}">
+										</div>
 									</div>
-									<p th:text="${comment.comment_content}">
+									<div th:unless="${item.commentList != null}">
+										<input type="text" value="글 못 읽음">
+									</div>
 								</div>
-							</div>							
 							</div>
-							<div class="mt-3 row">
-								<textarea class="form-control comment-box col"
-									th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}, data-message-number=3, data-noti-idx=${noti_idx}"
+							<div class="mt-3 row" th:if="${loggedInUser != null}">
+								<textarea class="form-control comment-box col border no-resize"
+									th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}, data-message-number=3"
+									placeholder="댓글 달기..." style="border: none; height: 3rem"></textarea>
+							</div>
+							<div class="mt-3 row" th:unless="${loggedInUser != null}">
+								<textarea class="form-control comment-box col border no-resize"
+									th:attr="data-post-idx=${item.post_idx}, data-post-id=${item.post_id}, data-message-number=3"
 									placeholder="댓글 달기..." style="border: none; height: 3rem"></textarea>
 							</div>
 						</div>
-						<div th:unless="${item.commentList != null}">
-							<input type="text" value="글 못 읽음">
-						</div>
+
 					</div>
 				</div>
 			</div>

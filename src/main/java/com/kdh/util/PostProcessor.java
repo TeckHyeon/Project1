@@ -8,6 +8,7 @@ import com.kdh.common.PostFiles;
 import com.kdh.common.ProfileFiles;
 import com.kdh.domain.CommentVo;
 import com.kdh.domain.FileVo;
+import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.ProfileVo;
 import com.kdh.domain.TagResultVo;
@@ -49,7 +50,7 @@ public class PostProcessor {
 		return TimeAgo.calculateTimeAgo(dateTime);
 	}
 
-	public void processPost(TagResultVo tr, List<FileVo> allFiles) {
+	public void processTag(TagResultVo tr, List<FileVo> allFiles) {
 		tr.setTimeago(calculateTimeAgo(tr.getPost_updated_date(), formatter));
 		UserVo user = userService.loadUser(tr.getPost_id());
 		List<FileVo> filesForPost = userService.viewPostFileList(tr.getPost_idx());
@@ -65,5 +66,4 @@ public class PostProcessor {
 		List<TagsVo> tags = userService.findTagsNameByPostIdx(tr.getPost_idx());
 		tr.setTagList(tags);
 	}
-
 }

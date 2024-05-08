@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.SessionAttribute;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.kdh.common.PostFiles;
@@ -20,10 +19,14 @@ import com.kdh.domain.FileVo;
 import com.kdh.domain.NotificationVo;
 import com.kdh.domain.PostVo;
 import com.kdh.domain.PostnotiVo;
+import com.kdh.domain.ProfileVo;
 import com.kdh.domain.UserVo;
 import com.kdh.service.UserService;
+import com.kdh.util.PostProcessor;
+import com.kdh.util.SessionManager;
 import com.kdh.util.TimeAgo;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -65,7 +68,7 @@ public class NotiController {
 
 	@PostMapping("/findPostNotibyIdx")
 	public ModelAndView findPostNotibyIdx(@RequestParam("noti") Long noti, PostnotiVo vo, PostVo post) {
-		ModelAndView modelAndView = new ModelAndView("layout/postdetail");
+		ModelAndView modelAndView = new ModelAndView("/layout/postdetail");
 		vo = userService.findPostNotibyIdx(noti);
 		Long post_idx = vo.getPost_idx();
 		post = userService.findPostbyIdx(post_idx);
@@ -104,12 +107,35 @@ public class NotiController {
 	}
 
 	@GetMapping("/notiRefresh")
-	public ModelAndView getNotificationFragment(@SessionAttribute("userVo") UserVo user) {
-		ModelAndView modelAndView = new ModelAndView("layout/notifragment");
-		String userId = user.getUser_id();
-		List<NotificationVo> noti = userService.getNotis(userId);
-		modelAndView.addObject("noti", noti);
-		modelAndView.setViewName("layout/notifragment :: noti");
-		return modelAndView;
+	public ModelAndView getNotificationFragment(HttpSession session, ProfileVo profile) {
+		ModelAndView mv = new ModelAndView("/layout/notifragment");
+		List<FileVo> allFiles = new ArrayList<>();
+		List<NotificationVo> notis;
+		UserVo loggedInUserVo = null;
+		if (SessionManager.isLoggedIn(session)) {
+			loggedInUserVo = SessionManager.getUserVo(session);
+			String user_Id = loggedInUserVo.getUser_id();
+			Long user_idx = loggedInUserVo.getUser_idx();
+			notis = userService.getNotis(user_Id);
+			profile = userService.findProfileByUserIdx(user_idx);
+			loggedInUserVo.setProfile(profile);
+			mv.addObject("loggedInUser", loggedInUserVo);
+			mv.addObject("noti", notis);
+			
+			for (NotificationVo noti : notis) {
+				Long post_idx = noti.getPost_idx();
+				PostVo post = userService.findPostbypostIdx(post_idx);
+				PostProcessor processor = new PostProcessor(userService);
+				processor.processPost(post, allFiles);
+				String post_id = post.getPost_id();
+				UserVo postUserVo = userService.loadUser(post_id);
+				Long noti_userIdx = postUserVo.getUser_idx();
+				profile = userService.findProfileByUserIdx(noti_userIdx);
+				post.setProfile(profile);
+				noti.setPostVo(post);
+				log.info("notizz = {}", noti);
+			}
+		} 
+		return mv;
 	}
 }

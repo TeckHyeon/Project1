@@ -45,7 +45,8 @@
 		</ul>
 		<hr>
 		<div class="dropdown" th:if="${loggedIn}">
-			<a class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle"
+			<a
+				class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle"
 				data-bs-toggle="dropdown" aria-expanded="false"> <img
 				th:src="${loggedInUser.profile != null} ? ${loggedInUser.profile.file_path} : '/user_profile/default.jpg'"
 				src="https://github.com/mdo.png" alt="" width="32" height="32"
@@ -57,7 +58,8 @@
 					th:attrappend="href=${loggedInUser.user_id}">글쓰기</a></li>
 				<li><a class="dropdown-item" href="/updateform/"
 					th:attrappend="href=${loggedInUser.user_id}">회원정보수정</a></li>
-				<li><a class="dropdown-item profile_btn" th:data-profile-id="${loggedInUser.user_id}">프로필</a></li>
+				<li><a class="dropdown-item profile_btn"
+					th:data-profile-id="${loggedInUser.user_id}">프로필</a></li>
 				<li>
 					<hr class="dropdown-divider">
 				</li>
@@ -68,37 +70,30 @@
 
 		<script>
 			$(document).ready(function() {
-				const isLoggedIn = $('#first_ul').data('logged-in');
-				if (isLoggedIn) {
-					setInterval(fetchNotifications, 100000);
-					function fetchNotifications() {
-						$.ajax({
-							url : '/notiRefresh',
-							success : function(data) {
-
-								$('#notificationArea').html(data);
-							}
-						});
-					}
-
-					$(document).on('hidden.bs.modal', '.modal', function(e) {
-						var notiIdx = $(this).attr('data-noti-idx');
-
-						console.log(notiIdx);
-						$.ajax({
+			 const isLoggedIn = $('#first_ul').data('logged-in');
+			 if (isLoggedIn) {
+				setInterval(fetchNotifications, 100000);
+				function fetchNotifications() {
+					$.ajax({ url : '/notiRefresh',
+							 success : function(response) {
+							 $('#notificationArea').html(response);
+							  }
+						  });
+				 }
+                  $(document).on('hidden.bs.modal', '.noti_modal', function(e) {
+					var notiIdx = $(this).attr('data-noti-idx');
+                    console.log(notiIdx);
+					$.ajax({
 							url : '/CheckNoti',
 							type : 'POST',
-							data : {
-								notification_idx : notiIdx
-							},
+							data : { notification_idx : notiIdx },
 							success : function(response) {
-								fetchNotifications();
-							}
-						});
+							fetchNotifications();
+						    }
+							 });
+							  });
+						}
 					});
-
-				}
-			});
 		</script>
 	</div>
 </body>
