@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +37,7 @@ import com.kdh.domain.ProfileVo;
 import com.kdh.domain.SearchResultVo;
 import com.kdh.domain.TagResultVo;
 import com.kdh.domain.UserVo;
+import com.kdh.service.SignInService;
 import com.kdh.service.UserService;
 import com.kdh.util.PostProcessor;
 import com.kdh.util.SessionManager;
@@ -52,25 +54,28 @@ public class UserController {
 	@Autowired
 	private UserService userService;
 
+	@Autowired
+	private SignInService signInService;
+	
 	@GetMapping("/")
-	public ModelAndView main(HttpSession session, ProfileVo profile) {
+	public ModelAndView main(Authentication authentication, ProfileVo profile) {
 		ModelAndView mv = new ModelAndView("/pages/main");
 		List<PostVo> posts;
 		List<FileVo> allFiles = new ArrayList<>();
 		List<NotificationVo> notis;
 		UserVo loggedInUserVo = null;
-		if (SessionManager.isLoggedIn(session)) {
-			loggedInUserVo = SessionManager.getUserVo(session);
-			String user_Id = loggedInUserVo.getUser_id();
-			Long user_idx = loggedInUserVo.getUser_idx();
-			posts = userService.viewPost(user_Id);
-			notis = userService.getNotis(user_Id);
-			profile = userService.findProfileByUserIdx(user_idx);
-			loggedInUserVo.setProfile(profile);
-			mv.addObject("loggedInUser", loggedInUserVo);
-			log.info("posts = {}", posts);
-			mv.addObject("posts", posts);
-			mv.addObject("noti", notis);
+		  if (authentication != null && authentication.isAuthenticated()) {
+			  String user_Id = authentication.getName();
+		        loggedInUserVo = userService.loadUser(user_Id);
+		        Long user_idx = loggedInUserVo.getUser_idx();
+		        posts = userService.viewPost(user_Id);
+		        notis = userService.getNotis(user_Id);
+		        profile = userService.findProfileByUserIdx(user_idx);
+		        loggedInUserVo.setProfile(profile);
+		        mv.addObject("loggedInUser", loggedInUserVo);
+		        log.info("posts = {}", posts);
+		        mv.addObject("posts", posts);
+		        mv.addObject("noti", notis);
 			
 			for (NotificationVo noti : notis) {
 				Long post_idx = noti.getPost_idx();
@@ -103,84 +108,49 @@ public class UserController {
 			post.setProfile(profile);
 		}
 		
-		Boolean isLoggedIn = (session.getAttribute("userVo") != null);
+		 Boolean isLoggedIn = (authentication != null && authentication.isAuthenticated());
 		mv.addObject("loggedIn", isLoggedIn);
 		log.info("loggedIn = {}", isLoggedIn);
 		return mv;
 	}
 
-	@GetMapping("/login")
-	public ModelAndView login() {
-		ModelAndView mv = new ModelAndView();
+	 @GetMapping("/login")
+	    public ModelAndView login() {
+	        ModelAndView mv = new ModelAndView();
+	        mv.setViewName("/pages/login");
+	        return mv;
+	    }
 
-		mv.setViewName("/pages/login");
-		return mv;
+	    @GetMapping("/loginFail")
+	    public ModelAndView loginFail() {
+	        ModelAndView mv = new ModelAndView();
+	        mv.setViewName("/pages/loginFail");
+	        return mv;
+	    }
 
-	}
+	    @GetMapping("/logout")
+	    public ModelAndView logout(HttpServletRequest request) {
+	        HttpSession session = request.getSession();
+	        session.invalidate();
+	        ModelAndView mv = new ModelAndView();
+	        mv.setViewName("redirect:/login");
+	        return mv;
+	    }
 
-	@PostMapping("/loginCheck")
-	public ModelAndView loginCheck(UserVo userVo, HttpServletRequest request) {
-		ModelAndView mv = new ModelAndView();
-		String user_id = userVo.getUser_id();
-		String user_pw = userVo.getUser_pw();
-		int count = userService.selectMemberInfoYn(user_id, user_pw);
+	    @GetMapping("/signin")
+	    public ModelAndView signin() {
+	        ModelAndView mv = new ModelAndView();
+	        mv.setViewName("/pages/signin");
+	        return mv;
+	    }
 
-		if (count == 1) {
-			HttpSession session = request.getSession(true);
-			userVo = userService.loadUser(user_id);
-			session.setAttribute("user_id", userVo.getUser_id());
-			session.setAttribute("user_name", userVo.getUser_name());
-			session.setAttribute("userVo", userVo);
-			log.info("vo = {}", userVo);
-			mv.setViewName("redirect:/");
-			return mv;
-		} else {
-			log.info("vo = {}", userVo);
-			mv.setViewName("redirect:/loginFail");
-			return mv;
-		}
-	}
-
-	@GetMapping("/loginFail")
-	public ModelAndView loginFail() throws Exception {
-		ModelAndView mv = new ModelAndView();
-		mv.setViewName("/pages/loginFail");
-		return mv;
-	}
-
-	@GetMapping("/logout")
-	public ModelAndView logout(HttpServletRequest request) throws Exception {
-		HttpSession session = request.getSession();
-		session.invalidate();
-		ModelAndView mv = new ModelAndView();
-		mv.setViewName("redirect:/");
-		return mv;
-	}
-
-	@GetMapping("/signin")
-	public ModelAndView signin() {
-		ModelAndView mv = new ModelAndView();
-
-		mv.setViewName("/pages/signin");
-		return mv;
-	}
-
-	@PostMapping("/signin")
-	public ModelAndView signinProgress(UserVo userVo) {
-		ModelAndView mv = new ModelAndView();
-		try {
-			userService.signin(userVo);
-		} catch (DuplicateKeyException e) {
-			mv.setViewName("redirect:/signin?error_code=-1");
-			return mv;
-		} catch (Exception e) {
-			e.printStackTrace();
-			mv.setViewName("redirect:/signin?error_code=-99");
-			return mv;
-		}
-		mv.setViewName("redirect:/login");
-		return mv;
-	}
+	    @PostMapping("/signin")
+	    public ModelAndView signinProgress(UserVo userVo) {
+	        ModelAndView mv = new ModelAndView();
+	        signInService.signin(userVo);
+	        mv.setViewName("redirect:/login");
+	        return mv;
+	    }
 
 	@GetMapping("/write/{user_Id}")
 	public ModelAndView writeform(@PathVariable("user_Id") String user_Id, UserVo userVo) {

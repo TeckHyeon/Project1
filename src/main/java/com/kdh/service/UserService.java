@@ -3,6 +3,7 @@ package com.kdh.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,7 +28,7 @@ import com.kdh.mapper.UserMapper;
 
 @Service
 public class UserService {
-
+	
 	@Autowired
 	private UserMapper userMapper;
 
@@ -54,13 +55,6 @@ public class UserService {
 
 	public UserVo loadUser(String user_id) {
 		return userMapper.loadUser(user_id);
-	}
-
-	public void signin(UserVo userVo) {
-		if (!userVo.getUser_id().equals("") && !userVo.getUser_name().equals("")) {
-
-			userMapper.signin(userVo);
-		}
 	}
 
 	public UserVo viewProfile(String user_Id) {

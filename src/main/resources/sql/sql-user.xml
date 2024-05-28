@@ -246,8 +246,8 @@
 	<select id="checkLike" resultType="int">
 		select count(*) from
 		LIKES_TB
-		where USER_IDX = #{arg0} and POST_IDX =
-		#{arg1}
+		where USER_IDX = #{user_idx} and POST_IDX =
+		#{post_idx}
 	</select>
 	<update id="updatePostLikes" parameterType="Long">
 	<![CDATA[	
