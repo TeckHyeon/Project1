@@ -79,7 +79,7 @@
 														<div class="d-flex justify-content-between">
 															<div class="d-flex">
 																<a
-																	th:href="@{/profile/{userId}(userId=${following.user.user_id})}">
+																	th:href="@{/profile/{userName}(userName=${following.user.user_name})}">
 
 																	<img src="/user_profile/default.jpg"
 																	th:src="${following.profile != null} ? ${following.profile.file_path} : '/user_profile/default.jpg'"

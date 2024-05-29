@@ -27,6 +27,19 @@
 		deleted_yn = 'N'
 	]]>
 	</select>
+	<select id="loadUserByName" parameterType="String"
+		resultType="com.kdh.domain.UserVo">
+	<![CDATA[ 
+	SELECT
+		*
+	FROM
+		user_list_TB
+	WHERE
+		user_id = #{user_id}
+	AND
+		deleted_yn = 'N'
+	]]>
+	</select>
 
 	<select id="selectPostSeqNextVal" resultType="Long">
 		SELECT

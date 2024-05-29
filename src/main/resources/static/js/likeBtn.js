@@ -108,20 +108,12 @@ $(document).ready(function() {
 							alert('오류가 발생했습니다. 다시 시도해주세요.');
 						}
 					});
-					$.ajax({
-						url: '/AddNoti',
-						type: 'POST',
-						data: { "post_id": post_id, "user_id": user_id, "post_idx": post_idx, "message": message },
-						beforeSend: function(xhr) {
-							xhr.setRequestHeader(csrfHeader, csrfToken);
-						},
-						success: function(response) {
-							console.log('Add 성공');
-						},
-						error: function() {
-							alert('오류가 발생했습니다. 다시 시도해주세요.');
-						}
-					});
+					stompClient.send("/AddNoti", {}, JSON.stringify({
+						post_id: post_id,
+						user_id: user_id,
+						post_idx: post_idx,
+						message: message
+					}));
 				},
 				error: function(error) {
 					console.error('Error:', error);

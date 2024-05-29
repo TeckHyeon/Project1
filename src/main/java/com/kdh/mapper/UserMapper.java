@@ -134,4 +134,6 @@ public interface UserMapper {
 
 	PostVo findPostbypostIdx(Long post_idx);
 
+	UserVo loadUserByName(String user_name);
+
 }

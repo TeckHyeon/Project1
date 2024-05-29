@@ -38,120 +38,31 @@ public class ProfileController {
 
 	@Autowired
 	private UserService userService;
-
-	@GetMapping("/profileSection/{user_Id}")
-	public ModelAndView profileSection(@PathVariable("user_Id") String user_Id, Authentication authentication, @AuthenticationPrincipal OAuth2User oAuth2User) throws Exception {
+	
+	@GetMapping("/profile/{user_name}")
+	public ModelAndView profile(@PathVariable("user_name") String user_name, Authentication authentication, @AuthenticationPrincipal OAuth2User oAuth2User) throws Exception {
 		ModelAndView mv = new ModelAndView();
 		UserVo loggedInUserVo = null; // 로그인한 사용자 정보
-		
+		String user_Id = null;
 		if (oAuth2User != null) {
-			String userId = (String) oAuth2User.getAttribute("email");
-			loggedInUserVo = userService.loadUser(userId);
+			String userName = (String) oAuth2User.getAttribute("email");
+			user_Id = (String) oAuth2User.getAttribute("email");
+			loggedInUserVo = userService.loadUserByName(userName);
 			mv.addObject("loggedInUser", loggedInUserVo);
 		} else {
 			if (authentication != null && authentication.isAuthenticated()) {
-				loggedInUserVo = userService.loadUser(user_Id);
-				mv.addObject("loggedInUser", loggedInUserVo);
-			}
-		}
-
-		// 프로필 페이지 주인의 사용자 정보
-		UserVo profileUserVo = userService.loadUser(user_Id);
-		mv.addObject("profileUser", profileUserVo);
-
-		// 프로필 페이지 주인의 게시글 목록 가져오기
-		List<PostVo> posts = userService.viewPostById(user_Id);
-		mv.addObject("posts", posts);
-
-		// 프로필 페이지 주인이 좋아요 누른 게시물 목록 가져오기
-		Long user_idx = profileUserVo.getUser_idx();
-		List<PostVo> likePosts = userService.viewLikePostsByIdx(user_idx);
-		mv.addObject("likePosts", likePosts);
-
-		// 로그인한 사용자가 프로필 페이지의 주인인 경우 알림 목록 추가
-		if (loggedInUserVo != null && loggedInUserVo.getUser_id().equals(user_Id)) {
-			List<NotificationVo> noti = userService.getNotis(user_Id);
-			mv.addObject("noti", noti);
-		}
-
-		// 프로필 페이지 주인의 프로필 정보 가져오기
-		ProfileVo profile = userService.findProfileByUserIdx(profileUserVo.getUser_idx());
-		mv.addObject("profile", profile);
-
-		// 게시글과 관련된 파일 처리
-		List<FileVo> allFiles = new ArrayList<>();
-		PostProcessor processor = new PostProcessor(userService);
-		for (PostVo post : posts) {
-			processor.processPost(post, allFiles);
-			String post_id = post.getPost_id();
-			UserVo postUserVo = userService.loadUser(post_id);
-			Long postUser_Idx = postUserVo.getUser_idx();
-			profile = userService.findProfileByUserIdx(postUser_Idx);
-			log.info("profile = {}", profile);
-			post.setProfile(profile);
-		}
-		for (PostVo post : likePosts) {
-			processor.processPost(post, allFiles);
-			String post_id = post.getPost_id();
-			UserVo postUserVo = userService.loadUser(post_id);
-			Long postUser_Idx = postUserVo.getUser_idx();
-			profile = userService.findProfileByUserIdx(postUser_Idx);
-			log.info("profile = {}", profile);
-			post.setProfile(profile);
-		}
-		// 팔로잉 목록 가져오기 및 추가 정보 처리
-		List<FollowVo> followingList = userService.findFollowingByUserId(user_Id);
-		followingList.forEach(following -> {
-			UserVo followingUser = userService.loadUser(following.getFollowing_id());
-			if (followingUser != null) {
-				following.setUser(followingUser);
-				ProfileVo followingUserprofile = userService.findProfileByUserIdx(followingUser.getUser_idx());
-				following.setProfile(followingUserprofile);
-			}
-		});
-		mv.addObject("following", followingList);
-		// 팔로우 목록 가져오기 및 추가 정보 처리
-		List<FollowVo> followerList = userService.findFollowerByUserId(user_Id);
-		followerList.forEach(follow -> {
-			UserVo followUser = userService.loadUser(follow.getFollower_id());
-			if (followUser != null) {
-				follow.setUser(followUser);
-				ProfileVo followUserprofile = userService.findProfileByUserIdx(followUser.getUser_idx());
-				follow.setProfile(followUserprofile);
-			}
-		});
-		mv.addObject("follower", followerList);
-
-		// 로그인 여부 세팅
-		Boolean isLoggedIn = (authentication != null && authentication.isAuthenticated());
-		mv.addObject("loggedIn", isLoggedIn);
-		log.info("loggedIn = {}", isLoggedIn);
-		
-		// 뷰 이름 설정
-		mv.setViewName("/section/profileSection");
-		return mv;
-	}
-	@GetMapping("/profile/{user_Id}")
-	public ModelAndView profile(@PathVariable("user_Id") String user_Id, Authentication authentication, @AuthenticationPrincipal OAuth2User oAuth2User) throws Exception {
-		ModelAndView mv = new ModelAndView();
-		UserVo loggedInUserVo = null; // 로그인한 사용자 정보
-		if (oAuth2User != null) {
-			String userId = (String) oAuth2User.getAttribute("email");
-			loggedInUserVo = userService.loadUser(userId);
-			mv.addObject("loggedInUser", loggedInUserVo);
-		} else {
-			if (authentication != null && authentication.isAuthenticated()) {
-				loggedInUserVo = userService.loadUser(user_Id);
+				loggedInUserVo = userService.loadUserByName(user_name);
+				user_Id = loggedInUserVo.getUser_id();
 				mv.addObject("loggedInUser", loggedInUserVo);
 			}
 		}
 		
 		// 프로필 페이지 주인의 사용자 정보
-		UserVo profileUserVo = userService.loadUser(user_Id);
+		UserVo profileUserVo = userService.loadUser(user_name);
 		mv.addObject("profileUser", profileUserVo);
 		
 		// 프로필 페이지 주인의 게시글 목록 가져오기
-		List<PostVo> posts = userService.viewPostById(user_Id);
+		List<PostVo> posts = userService.viewPostById(user_name);
 		mv.addObject("posts", posts);
 		
 		// 프로필 페이지 주인이 좋아요 누른 게시물 목록 가져오기
@@ -160,8 +71,8 @@ public class ProfileController {
 		mv.addObject("likePosts", likePosts);
 		
 		// 로그인한 사용자가 프로필 페이지의 주인인 경우 알림 목록 추가
-		if (loggedInUserVo != null && loggedInUserVo.getUser_id().equals(user_Id)) {
-			List<NotificationVo> noti = userService.getNotis(user_Id);
+		if (loggedInUserVo != null && loggedInUserVo.getUser_name().equals(user_name)) {
+			List<NotificationVo> noti = userService.getNotis(user_name);
 			mv.addObject("noti", noti);
 		}
 		

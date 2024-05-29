@@ -334,4 +334,9 @@ public class UserService {
 		return userMapper.findPostbypostIdx(post_idx);
 	}
 
+	public UserVo loadUserByName(String user_name) {
+		// TODO Auto-generated method stub
+		return userMapper.loadUserByName(user_name);
+	}
+
 }

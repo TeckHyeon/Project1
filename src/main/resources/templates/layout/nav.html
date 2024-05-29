@@ -71,28 +71,22 @@
 		<script>
 			$(document).ready(function() {
 			 const isLoggedIn = $('#first_ul').data('logged-in');
-			 if (isLoggedIn) {
-				setInterval(fetchNotifications, 100000);
-				function fetchNotifications() {
-					$.ajax({ url : '/notiRefresh',
-							 success : function(response) {
-							 $('#notificationArea').html(response);
-							  }
-						  });
-				 }
-                  $(document).on('hidden.bs.modal', '.noti_modal', function(e) {
-					var notiIdx = $(this).attr('data-noti-idx');
-                    console.log(notiIdx);
-					$.ajax({
-							url : '/CheckNoti',
-							type : 'POST',
-							data : { notification_idx : notiIdx },
-							success : function(response) {
-							fetchNotifications();
-						    }
-							 });
-							  });
-						}
+			 var stompClient = null;
+
+			 function connect() {
+			     var socket = new SockJS('/ws');
+			     stompClient = Stomp.over(socket);
+			     stompClient.connect({}, function (frame) {
+			         console.log('Connected: ' + frame);
+			         stompClient.subscribe('/topic/notifications', function (notification) {
+			             $('#notificationArea').html(notification.body);
+			         });
+			     });
+			 }
+
+			 $(function () {
+			     connect();
+			 });
 					});
 		</script>
 	</div>

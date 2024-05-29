@@ -76,16 +76,7 @@ $(document).ready(function() {
 			window.location.href = "/profile/" + target;
 		} else if (type === "tag") {
 			// 태그 게시물 목록 페이지로 이동
-			$.ajax({
-				url: "/TagResult/" + target,
-				type: "GET",
-				success: function(response) {
-					$("#section").html(response);
-				},
-				error: function(error) {
-					console.error("Error: " + error);
-				}
-			});
+			window.location.href = "/TagResult/" + target;
 		}
 	});
 });

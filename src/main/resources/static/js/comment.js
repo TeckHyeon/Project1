@@ -30,9 +30,13 @@ $(document).ready(function() {
 					contentType: 'application/json', // 이 줄을 추가해야 합니다.
 					data: JSON.stringify(commentData), // 객체를 JSON 문자열로 변환
 					success: function(data) {
-						addNotification(post_id, user_id, post_idx, message);
 						loadComments(post_idx);
-
+            stompClient.send("/app/sendNotification", {}, JSON.stringify({
+                post_id: post_id,
+                user_id: user_id,
+                post_idx: post_idx,
+                message: message
+            }));
 					},
 					error: function(error) {
 						console.error('Error:', error);
@@ -43,19 +47,6 @@ $(document).ready(function() {
 			// Shift키와 함께 눌렸다면, 기본 동작인 줄바꿈을 수행
 		}
 	});
-	function addNotification(post_id, user_id, post_idx, message) {
-		$.ajax({
-			url: '/AddNoti',
-			type: 'POST',
-			data: { "post_id": post_id, "user_id": user_id, "post_idx": post_idx, "message": message },
-			success: function(response) {
-				console.log('Add 성공');
-			},
-			error: function() {
-				alert('오류가 발생했습니다. 다시 시도해주세요.');
-			}
-		});
-	}
 
 	function loadComments(post_idx) {
 		$.ajax({

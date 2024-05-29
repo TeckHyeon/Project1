@@ -309,15 +309,15 @@ public class UserController {
 	}
 
 	@GetMapping("/TagResult/{tag_name}")
-	public ModelAndView tagResult(HttpSession session, ProfileVo profile, @PathVariable("tag_name") String tag_name) {
-		ModelAndView mv = new ModelAndView("/section/tagResult");
+	public ModelAndView tagResult(Authentication authentication, ProfileVo profile, @PathVariable("tag_name") String tag_name, @AuthenticationPrincipal OAuth2User oAuth2User) {
+		ModelAndView mv = new ModelAndView("/pages/tag");
 		List<TagResultVo> trs = userService.viewPostByTag(tag_name);
 		List<FileVo> allFiles = new ArrayList<>();
 		List<NotificationVo> noti;
 		UserVo loggedInUserVo = null;
-		if (SessionManager.isLoggedIn(session)) {
-			loggedInUserVo = SessionManager.getUserVo(session);
-			String user_Id = loggedInUserVo.getUser_id();
+		if (oAuth2User != null) {
+			String user_Id = (String) oAuth2User.getAttribute("email");
+			loggedInUserVo = userService.loadUser(user_Id);
 			Long user_idx = loggedInUserVo.getUser_idx();
 			noti = userService.getNotis(user_Id);
 			profile = userService.findProfileByUserIdx(user_idx);
@@ -335,9 +335,9 @@ public class UserController {
 			log.info("profile = {}", profile);
 			tr.setProfile(profile);
 		}
-		Boolean isLoggedIn = (session.getAttribute("userVo") != null);
-		mv.addObject("trs", trs);
+		Boolean isLoggedIn = (authentication != null && authentication.isAuthenticated());
 		mv.addObject("loggedIn", isLoggedIn);
+		mv.addObject("trs", trs);
 		log.info("loggedIn = {}", isLoggedIn);
 		return mv;
 	}
