@@ -2,6 +2,8 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
+<meta name="_csrf" th:content="${_csrf.token}">
+<meta name="_csrf_header" th:content="${_csrf.headerName}">
 <title>메인화면</title>
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -39,7 +41,7 @@
 			</div>
 
 		</div>
-	
+
 	</main>
 	<script src="/js/mainAjax.js"></script>
 	<script src="/js/youtubeLink.js"></script>

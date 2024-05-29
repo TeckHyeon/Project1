@@ -5,6 +5,9 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,14 +40,19 @@ public class ProfileController {
 	private UserService userService;
 
 	@GetMapping("/profileSection/{user_Id}")
-	public ModelAndView profileSection(@PathVariable("user_Id") String user_Id, HttpSession session) throws Exception {
+	public ModelAndView profileSection(@PathVariable("user_Id") String user_Id, Authentication authentication, @AuthenticationPrincipal OAuth2User oAuth2User) throws Exception {
 		ModelAndView mv = new ModelAndView();
 		UserVo loggedInUserVo = null; // 로그인한 사용자 정보
-
-		// 세션에서 로그인한 사용자 정보 가져오기
-		if (SessionManager.isLoggedIn(session)) {
-			loggedInUserVo = SessionManager.getUserVo(session);
+		
+		if (oAuth2User != null) {
+			String userId = (String) oAuth2User.getAttribute("email");
+			loggedInUserVo = userService.loadUser(userId);
 			mv.addObject("loggedInUser", loggedInUserVo);
+		} else {
+			if (authentication != null && authentication.isAuthenticated()) {
+				loggedInUserVo = userService.loadUser(user_Id);
+				mv.addObject("loggedInUser", loggedInUserVo);
+			}
 		}
 
 		// 프로필 페이지 주인의 사용자 정보
@@ -115,23 +123,27 @@ public class ProfileController {
 		mv.addObject("follower", followerList);
 
 		// 로그인 여부 세팅
-		Boolean isLoggedIn = (loggedInUserVo != null);
+		Boolean isLoggedIn = (authentication != null && authentication.isAuthenticated());
 		mv.addObject("loggedIn", isLoggedIn);
-		log.info("isLoggedIn = {}",isLoggedIn);
+		log.info("loggedIn = {}", isLoggedIn);
 		
 		// 뷰 이름 설정
 		mv.setViewName("/section/profileSection");
 		return mv;
 	}
 	@GetMapping("/profile/{user_Id}")
-	public ModelAndView profile(@PathVariable("user_Id") String user_Id, HttpSession session) throws Exception {
+	public ModelAndView profile(@PathVariable("user_Id") String user_Id, Authentication authentication, @AuthenticationPrincipal OAuth2User oAuth2User) throws Exception {
 		ModelAndView mv = new ModelAndView();
 		UserVo loggedInUserVo = null; // 로그인한 사용자 정보
-		
-		// 세션에서 로그인한 사용자 정보 가져오기
-		if (SessionManager.isLoggedIn(session)) {
-			loggedInUserVo = SessionManager.getUserVo(session);
+		if (oAuth2User != null) {
+			String userId = (String) oAuth2User.getAttribute("email");
+			loggedInUserVo = userService.loadUser(userId);
 			mv.addObject("loggedInUser", loggedInUserVo);
+		} else {
+			if (authentication != null && authentication.isAuthenticated()) {
+				loggedInUserVo = userService.loadUser(user_Id);
+				mv.addObject("loggedInUser", loggedInUserVo);
+			}
 		}
 		
 		// 프로필 페이지 주인의 사용자 정보

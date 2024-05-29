@@ -1,9 +1,10 @@
 package com.kdh.service;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -332,6 +333,5 @@ public class UserService {
 		// TODO Auto-generated method stub
 		return userMapper.findPostbypostIdx(post_idx);
 	}
-
 
 }

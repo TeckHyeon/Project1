@@ -8,9 +8,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,27 +57,31 @@ public class UserController {
 
 	@Autowired
 	private SignInService signInService;
-	
+
 	@GetMapping("/")
-	public ModelAndView main(Authentication authentication, ProfileVo profile) {
+	public ModelAndView main(Authentication authentication, ProfileVo profile,
+			@AuthenticationPrincipal OAuth2User oAuth2User) {
 		ModelAndView mv = new ModelAndView("/pages/main");
 		List<PostVo> posts;
 		List<FileVo> allFiles = new ArrayList<>();
 		List<NotificationVo> notis;
 		UserVo loggedInUserVo = null;
-		  if (authentication != null && authentication.isAuthenticated()) {
-			  String user_Id = authentication.getName();
-		        loggedInUserVo = userService.loadUser(user_Id);
-		        Long user_idx = loggedInUserVo.getUser_idx();
-		        posts = userService.viewPost(user_Id);
-		        notis = userService.getNotis(user_Id);
-		        profile = userService.findProfileByUserIdx(user_idx);
-		        loggedInUserVo.setProfile(profile);
-		        mv.addObject("loggedInUser", loggedInUserVo);
-		        log.info("posts = {}", posts);
-		        mv.addObject("posts", posts);
-		        mv.addObject("noti", notis);
-			
+
+		if (oAuth2User != null) {
+			// OAuth2User 객체에서 사용자 정보 가져오기
+			String user_Id = (String) oAuth2User.getAttribute("email");
+			loggedInUserVo = userService.loadUser(user_Id);
+			// 이하 로직에 필요한 작업 수행
+			Long user_idx = loggedInUserVo.getUser_idx();
+			posts = userService.viewPost(user_Id);
+			notis = userService.getNotis(user_Id);
+			profile = userService.findProfileByUserIdx(user_idx);
+			loggedInUserVo.setProfile(profile);
+			mv.addObject("loggedInUser", loggedInUserVo);
+			log.info("posts = {}", posts);
+			mv.addObject("posts", posts);
+			mv.addObject("noti", notis);
+
 			for (NotificationVo noti : notis) {
 				Long post_idx = noti.getPost_idx();
 				PostVo post = userService.findPostbypostIdx(post_idx);
@@ -90,11 +95,39 @@ public class UserController {
 				noti.setPostVo(post);
 				log.info("notizz = {}", noti);
 			}
-			
 		} else {
-			posts = userService.viewPostByLikes();
-			mv.addObject("posts", posts);
-			log.info("posts = {}", posts);
+			if (authentication != null && authentication.isAuthenticated()) {
+				String user_Id = authentication.getName();
+				loggedInUserVo = userService.loadUser(user_Id);
+				Long user_idx = loggedInUserVo.getUser_idx();
+				posts = userService.viewPost(user_Id);
+				notis = userService.getNotis(user_Id);
+				profile = userService.findProfileByUserIdx(user_idx);
+				loggedInUserVo.setProfile(profile);
+				mv.addObject("loggedInUser", loggedInUserVo);
+				log.info("posts = {}", posts);
+				mv.addObject("posts", posts);
+				mv.addObject("noti", notis);
+
+				for (NotificationVo noti : notis) {
+					Long post_idx = noti.getPost_idx();
+					PostVo post = userService.findPostbypostIdx(post_idx);
+					PostProcessor processor = new PostProcessor(userService);
+					processor.processPost(post, allFiles);
+					String post_id = post.getPost_id();
+					UserVo postUserVo = userService.loadUser(post_id);
+					Long noti_userIdx = postUserVo.getUser_idx();
+					profile = userService.findProfileByUserIdx(noti_userIdx);
+					post.setProfile(profile);
+					noti.setPostVo(post);
+					log.info("notizz = {}", noti);
+				}
+
+			} else {
+				posts = userService.viewPostByLikes();
+				mv.addObject("posts", posts);
+				log.info("posts = {}", posts);
+			}
 		}
 
 		PostProcessor processor = new PostProcessor(userService);
@@ -107,50 +140,50 @@ public class UserController {
 			log.info("profile = {}", profile);
 			post.setProfile(profile);
 		}
-		
-		 Boolean isLoggedIn = (authentication != null && authentication.isAuthenticated());
+
+		Boolean isLoggedIn = (authentication != null && authentication.isAuthenticated());
 		mv.addObject("loggedIn", isLoggedIn);
 		log.info("loggedIn = {}", isLoggedIn);
 		return mv;
 	}
 
-	 @GetMapping("/login")
-	    public ModelAndView login() {
-	        ModelAndView mv = new ModelAndView();
-	        mv.setViewName("/pages/login");
-	        return mv;
-	    }
+	@GetMapping("/login")
+	public ModelAndView login() {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("/pages/login");
+		return mv;
+	}
 
-	    @GetMapping("/loginFail")
-	    public ModelAndView loginFail() {
-	        ModelAndView mv = new ModelAndView();
-	        mv.setViewName("/pages/loginFail");
-	        return mv;
-	    }
+	@GetMapping("/loginFail")
+	public ModelAndView loginFail() {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("/pages/loginFail");
+		return mv;
+	}
 
-	    @GetMapping("/logout")
-	    public ModelAndView logout(HttpServletRequest request) {
-	        HttpSession session = request.getSession();
-	        session.invalidate();
-	        ModelAndView mv = new ModelAndView();
-	        mv.setViewName("redirect:/login");
-	        return mv;
-	    }
+	@GetMapping("/logout")
+	public ModelAndView logout(HttpServletRequest request) {
+		HttpSession session = request.getSession();
+		session.invalidate();
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("redirect:/login");
+		return mv;
+	}
 
-	    @GetMapping("/signin")
-	    public ModelAndView signin() {
-	        ModelAndView mv = new ModelAndView();
-	        mv.setViewName("/pages/signin");
-	        return mv;
-	    }
+	@GetMapping("/signin")
+	public ModelAndView signin() {
+		ModelAndView mv = new ModelAndView();
+		mv.setViewName("/pages/signin");
+		return mv;
+	}
 
-	    @PostMapping("/signin")
-	    public ModelAndView signinProgress(UserVo userVo) {
-	        ModelAndView mv = new ModelAndView();
-	        signInService.signin(userVo);
-	        mv.setViewName("redirect:/login");
-	        return mv;
-	    }
+	@PostMapping("/signin")
+	public ModelAndView signinProgress(UserVo userVo) {
+		ModelAndView mv = new ModelAndView();
+		signInService.signin(userVo);
+		mv.setViewName("redirect:/login");
+		return mv;
+	}
 
 	@GetMapping("/write/{user_Id}")
 	public ModelAndView writeform(@PathVariable("user_Id") String user_Id, UserVo userVo) {

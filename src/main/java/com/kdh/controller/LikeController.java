@@ -1,7 +1,9 @@
 package com.kdh.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +25,10 @@ public class LikeController {
 	private UserService userService;
 
 	@PostMapping("/LikeAdd")
-	public ResponseEntity<?> addLike(@RequestBody LikesVo like) {
+	public ResponseEntity<?> addLike(@RequestBody LikesVo like, Authentication authentication) {
+		   if (authentication == null || !authentication.isAuthenticated()) {
+		        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("로그인이 필요합니다.");
+		    }
 		try {
 			Long post_idx = like.getPost_idx();
 			userService.insertLike(like, post_idx);
@@ -35,7 +40,10 @@ public class LikeController {
 	}
 
 	@DeleteMapping("/LikeDelete")
-	public ResponseEntity<?> deleteLike(@RequestBody LikesVo like) {
+	public ResponseEntity<?> deleteLike(@RequestBody LikesVo like, Authentication authentication) {
+		   if (authentication == null || !authentication.isAuthenticated()) {
+		        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("로그인이 필요합니다.");
+		    }
 		try {
 			userService.deleteLike(like);
 			return ResponseEntity.ok().build();
@@ -46,7 +54,7 @@ public class LikeController {
 
 	@GetMapping("/CheckLike")
 	public ResponseEntity<?> checkLike(@RequestParam("post_idx") Long post_idx,
-			@RequestParam("user_idx") Long user_idx) {
+			@RequestParam("user_idx") Long user_idx, Authentication authentication) {
 		int checkLike = userService.checkLike(user_idx, post_idx);
 		try {
 			if (checkLike != 0) {
@@ -64,7 +72,8 @@ public class LikeController {
 
 	@PostMapping("/LoadLikes")
 	@ResponseBody
-	public Long loadLikes(@RequestParam("post_idx") Long post_idx) {
+	public Long loadLikes(@RequestParam("post_idx") Long post_idx, Authentication authentication) {
+		
 		// postId를 기반으로 좋아요 수를 업데이트하고, 업데이트된 좋아요 수를 반환하는 로직 구현
 		Long loadlikes = userService.countLike(post_idx);
 		// 업데이트된 좋아요 수를 int로 직접 반환

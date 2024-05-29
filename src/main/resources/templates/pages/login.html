@@ -16,23 +16,23 @@ body, html {
 </style>
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
-	    var login1 = true;
-	    var userIdInput = document.getElementById('user_id');
-	    var userPwInput = document.getElementById('user_pw');
-	    var loginButton = document.getElementById('btnlogin');
+		var login1 = true;
+		var userIdInput = document.getElementById('user_id');
+		var userPwInput = document.getElementById('user_pw');
+		var loginButton = document.getElementById('btnlogin');
 
-	    function checkInputs() {
-	        var userId = userIdInput.value;
-	        var userPw = userPwInput.value;
-	        if (userId.length >= 5 && userPw.length >= 6) {
-	            loginButton.disabled = false;
-	        } else {
-	            loginButton.disabled = true;
-	        }
-	    }
+		function checkInputs() {
+			var userId = userIdInput.value;
+			var userPw = userPwInput.value;
+			if (userId.length >= 5 && userPw.length >= 6) {
+				loginButton.disabled = false;
+			} else {
+				loginButton.disabled = true;
+			}
+		}
 
-	    userIdInput.addEventListener('keyup', checkInputs);
-	    userPwInput.addEventListener('keyup', checkInputs);
+		userIdInput.addEventListener('keyup', checkInputs);
+		userPwInput.addEventListener('keyup', checkInputs);
 	});
 </script>
 </head>
@@ -47,15 +47,16 @@ body, html {
 							style="font-family: Billabong, sans-serif;">LOGIN</h1>
 						<div class="form-floating my-1 mx-auto" style="width: 22em">
 							<input type="text" class="form-control loginInput" id="user_id"
-								name="username" placeholder="아이디를 입력해주세요"
-								style="height: 3em;"> <label
-								class="mx-2 text-muted bg-transparent" for="user_id" >USER ID</label>
+								name="username" placeholder="아이디를 입력해주세요" style="height: 3em;">
+							<label class="mx-2 text-muted bg-transparent" for="user_id">USER
+								ID</label>
 						</div>
 						<div class="form-floating my-1 mx-auto" style="width: 22em">
 							<input type="password" class="form-control loginInput"
 								id="user_pw" name="password" placeholder="비밀번호를 입력해주세요"
 								style="height: 3em;"> <label
-								class="mx-2 text-muted bg-transparent" for="user_pw">USER PASSWORD</label>
+								class="mx-2 text-muted bg-transparent" for="user_pw">USER
+								PASSWORD</label>
 						</div>
 						<div class="my-3 d-grid gap-3">
 							<button type="submit" id="btnlogin" name="btnlogin"
@@ -64,7 +65,10 @@ body, html {
 								disabled="disabled">로그인</button>
 							<hr width="90%" class="mx-auto">
 							<a href="/signin" role="button" class="btn text-white"
-								style="background-color: #42B72A;">새 계정 만들기</a>
+								style="background-color: #42B72A;">새 계정 만들기</a> <a
+								href="/oauth2/authorization/naver" role="button"
+								><img alt="네이버 로그인" src="/images/btnG_완성형.png" style="width: 12em;"></a>
+
 						</div>
 					</div>
 				</form>
