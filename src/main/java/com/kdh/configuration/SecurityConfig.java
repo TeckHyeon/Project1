@@ -17,18 +17,20 @@ public class SecurityConfig {
 	private final CustomUserDetailsService customUserDetailsService;
 	private final CustomOAuth2UserService customOAuth2UserService;
 
-	public SecurityConfig(CustomUserDetailsService customUserDetailsService, CustomOAuth2UserService customOAuth2UserService) {
+	public SecurityConfig(CustomUserDetailsService customUserDetailsService,
+			CustomOAuth2UserService customOAuth2UserService) {
 		this.customUserDetailsService = customUserDetailsService;
-		 this.customOAuth2UserService = customOAuth2UserService;
+		this.customOAuth2UserService = customOAuth2UserService;
 	}
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
-				.requestMatchers("/", "/login", "/loginFail", "/signin", "/profile/*", "/post_file/**", "/js/**",
-						"/nav", "/css/**", "/images/**", "/resources/templates/layout/**",
-						"/resources/templates/section/**", "/post_file/**", "/profile_file/**", "/user_profile/**")
-				.permitAll().anyRequest().authenticated())
+		http.csrf((csrfConfig) -> csrfConfig.ignoringRequestMatchers("/ws/**"))
+				.authorizeHttpRequests(
+						authorizeRequests -> authorizeRequests.requestMatchers("/", "/login", "/loginFail", "/signin","/notify",
+								"/profile/*", "/post_file/**", "/js/**", "/nav", "/css/**", "/images/**",
+								"/resources/templates/layout/**", "/resources/templates/section/**", "/post_file/**",
+								"/profile_file/**", "/user_profile/**").permitAll().anyRequest().authenticated())
 				.formLogin(formLogin -> formLogin.loginPage("/login").defaultSuccessUrl("/", true)
 						.failureUrl("/loginFail").permitAll())
 				.oauth2Login(oauth2Login -> oauth2Login.loginPage("/login").defaultSuccessUrl("/", true)

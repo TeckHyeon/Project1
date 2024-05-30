@@ -41,7 +41,6 @@ import com.kdh.domain.UserVo;
 import com.kdh.service.SignInService;
 import com.kdh.service.UserService;
 import com.kdh.util.PostProcessor;
-import com.kdh.util.SessionManager;
 import com.kdh.util.TimeAgo;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -195,7 +194,7 @@ public class UserController {
 	}
 
 	@PostMapping("/write")
-	public ModelAndView write(PostVo postVo, MultipartHttpServletRequest multiFiles,
+	public ModelAndView write(PostVo postVo, MultipartHttpServletRequest multiFiles, Authentication authentication, @AuthenticationPrincipal OAuth2User oAuth2User,
 			@RequestParam("tags") String tagsJson) {
 		ModelAndView mv = new ModelAndView();
 		ObjectMapper objectMapper = new ObjectMapper();

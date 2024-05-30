@@ -2,53 +2,81 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
+<meta name="_csrf" th:content="${_csrf.token}">
+<meta name="_csrf_header" th:content="${_csrf.headerName}">
 <title>Insert title here</title>
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <link rel="stylesheet" href="/css/bootstrap.min.css">
 <script src="https://kit.fontawesome.com/672d46519f.js" crossorigin="anonymous"></script>
 <script>
 $(document).ready(function() {
-	
-	var tags = [];
-	
+    var tags = [];
+	const csrfToken = $('meta[name="_csrf"]').attr('content');
+	const csrfHeader = $('meta[name="_csrf_header"]').attr('content');
     // Enter 키 입력 시 태그 추가
-$("#tagInput").keypress(function(event) {
-    if (event.which === 13) { // Enter key
-        event.preventDefault();
-        var tagName = $("#tagInput").val().trim();
-        if (tagName !== "") {
-            // 태그 배열에 추가
-            tags.push(tagName);
+    $("#tagInput").keypress(function(event) {
+        if (event.which === 13) { // Enter key
+            event.preventDefault();
+            var tagName = $("#tagInput").val().trim();
+            if (tagName !== "") {
+                // 태그 배열에 추가
+                tags.push(tagName);
 
-            var tagButton = $("<input>").attr({
-                "type": "button",
-                "class": "btn btn-outline-primary btn-sm m-1 mt-3 tag-btn",
-                "value": tagName
-            });
-            $("#tagContainer").append(tagButton);
+                var tagButton = $("<input>").attr({
+                    "type": "button",
+                    "class": "btn btn-outline-primary btn-sm m-1 mt-3 tag-btn",
+                    "value": tagName
+                });
+                $("#tagContainer").append(tagButton);
 
-            // 입력창 초기화
-            $("#tagInput").val("");
+                // 입력창 초기화
+                $("#tagInput").val("");
+            }
         }
-    }
-});
-    
-$("#postWrite").submit(function() {
-    // 태그 배열을 JSON 문자열로 변환하여 숨겨진 input 필드에 설정
-    $('<input>').attr({
-        type: 'hidden',
-        name: 'tags',
-        value: JSON.stringify(tags)
-    }).appendTo(this);
-    
-    return true; // 폼 제출 계속 진행
-});
-    
+    });
+
+    // 폼 제출 이벤트 핸들러
+    $("#postWrite").submit(function(event) {
+        // 폼의 기본 동작인 서버로의 전송을 막습니다.
+        event.preventDefault();
+
+        // 태그 배열을 JSON 문자열로 변환하여 숨겨진 input 필드에 설정
+        $('<input>').attr({
+            type: 'hidden',
+            name: 'tags',
+            value: JSON.stringify(tags)
+        }).appendTo(this);
+
+        // FormData 객체를 생성하여 폼 데이터를 담습니다.
+        var formData = new FormData(this);
+
+        // Ajax를 사용하여 비동기적으로 폼을 전송합니다.
+        $.ajax({
+            url: '/write',
+            type: 'POST',
+			beforeSend: function(xhr) {
+				xhr.setRequestHeader(csrfHeader, csrfToken);
+			},
+            data: formData,
+            processData: false, // 데이터를 query string으로 변환하지 않음
+            contentType: false, // 데이터 타입을 자동 설정하지 않음
+            success: function(response) {
+                // 성공 시 동작
+                console.log("폼 전송 성공");
+                location.href = '/';
+            },
+            error: function(xhr, status, error) {
+                // 실패 시 동작
+                console.error("폼 전송 실패:", error);
+            }
+        });
+    });
+
     // 태그 삭제 버튼 클릭 시 태그 삭제
     $(document).on("click", ".tag-btn", function() {
         $(this).remove();
     });
-    
+
     // 페이지 로드 시 파일 선택 상태를 확인하여 텍스트 업데이트
     updateDisplayText();
 
@@ -73,6 +101,7 @@ $("#postWrite").submit(function() {
 
         $('#file-names').text(displayText);
     }
+
     const area = $("#post_contents");
 
     // 입력이 발생할 때마다 localStorage에 내용 저장
@@ -95,6 +124,7 @@ $("#postWrite").submit(function() {
             localStorage.removeItem("textArea");
         }
     }
+
     // "목록" 버튼 클릭 시 이벤트 핸들러
     $('#btn-list').click(function() {
         location.href = '/'; // 페이지 이동
@@ -106,6 +136,7 @@ $("#postWrite").submit(function() {
         $('#post_contents').val(''); // 내용 입력 필드 초기화
     });
 });
+
 </script>
 </head>
 <body>

@@ -4,13 +4,37 @@ $(document).ready(function() {
 	const csrfToken = $('meta[name="_csrf"]').attr('content');
 	const csrfHeader = $('meta[name="_csrf_header"]').attr('content');
 
-	console.log("CSRF Token:", csrfToken);
-	console.log("CSRF Header:", csrfHeader);
-
 	if (!csrfToken || !csrfHeader) {
 		console.error("CSRF token or header is missing.");
 		return;
 	}
+
+    // WebSocket connection
+    const socket = new SockJS('/ws');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function(frame) {
+        console.log('Connected: ' + frame);
+
+        stompClient.subscribe('/topic/notification', function(notification) {
+            const notificationVo = JSON.parse(notification.body);
+            console.log('Notification received: ', notificationVo);
+            refreshNotifications();
+        });
+    });
+
+    function refreshNotifications() {
+        $.ajax({
+            url: '/notiRefresh',
+            type: 'GET',
+            success: function(response) {
+                $('#notificationArea').html(response);
+            },
+            error: function(error) {
+                console.error('Error refreshing notifications:', error);
+            }
+        });
+    }
 
 	function updateScrapButtons() {
 		$('.like_btn').each(function() {
@@ -108,12 +132,27 @@ $(document).ready(function() {
 							alert('오류가 발생했습니다. 다시 시도해주세요.');
 						}
 					});
-					stompClient.send("/AddNoti", {}, JSON.stringify({
-						post_id: post_id,
-						user_id: user_id,
-						post_idx: post_idx,
-						message: message
-					}));
+					$.ajax({
+						url: '/AddNoti',
+						type: 'POST',
+						contentType: 'application/json',
+						data: JSON.stringify({
+							to_id: post_id,
+							from_id: user_id,
+							post_idx: post_idx,
+							message: message
+						}),
+						beforeSend: function(xhr) {
+							xhr.setRequestHeader(csrfHeader, csrfToken);
+						},
+						success: function(response) {
+							console.log('Notification sent successfully.');
+						},
+						error: function(error) {
+							console.error('Error sending notification:', error);
+							alert('알림을 보내는 도중 오류가 발생했습니다.');
+						}
+					});
 				},
 				error: function(error) {
 					console.error('Error:', error);

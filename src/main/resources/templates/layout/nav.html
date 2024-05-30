@@ -67,28 +67,6 @@
 			</ul>
 		</div>
 		<a class="btn btn-primary" href="/login" th:unless="${loggedIn}">로그인</a>
-
-		<script>
-			$(document).ready(function() {
-			 const isLoggedIn = $('#first_ul').data('logged-in');
-			 var stompClient = null;
-
-			 function connect() {
-			     var socket = new SockJS('/ws');
-			     stompClient = Stomp.over(socket);
-			     stompClient.connect({}, function (frame) {
-			         console.log('Connected: ' + frame);
-			         stompClient.subscribe('/topic/notifications', function (notification) {
-			             $('#notificationArea').html(notification.body);
-			         });
-			     });
-			 }
-
-			 $(function () {
-			     connect();
-			 });
-					});
-		</script>
 	</div>
 </body>
 </html>
