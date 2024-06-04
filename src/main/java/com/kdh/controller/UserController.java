@@ -63,7 +63,7 @@ public class UserController {
 		ModelAndView mv = new ModelAndView("/pages/main");
 		List<PostVo> posts;
 		List<FileVo> allFiles = new ArrayList<>();
-		List<NotificationVo> notis;
+		List<NotificationVo> newNotis = new ArrayList<>();
 		UserVo loggedInUserVo = null;
 
 		if (oAuth2User != null) {
@@ -73,17 +73,15 @@ public class UserController {
 			// 이하 로직에 필요한 작업 수행
 			Long user_idx = loggedInUserVo.getUser_idx();
 			posts = userService.viewPost(user_Id);
-			notis = userService.getNotis(user_Id);
+			List<NotificationVo> notis = userService.getNotisCheckYn(user_Id);
 			profile = userService.findProfileByUserIdx(user_idx);
 			loggedInUserVo.setProfile(profile);
 			mv.addObject("loggedInUser", loggedInUserVo);
-			log.info("posts = {}", posts);
-			mv.addObject("posts", posts);
-			mv.addObject("noti", notis);
+
 
 			for (NotificationVo noti : notis) {
 				Long post_idx = noti.getPost_idx();
-				PostVo post = userService.findPostbypostIdx(post_idx);
+				PostVo post = userService.findPostbyIdx(post_idx);
 				PostProcessor processor = new PostProcessor(userService);
 				processor.processPost(post, allFiles);
 				String post_id = post.getPost_id();
@@ -92,25 +90,28 @@ public class UserController {
 				profile = userService.findProfileByUserIdx(noti_userIdx);
 				post.setProfile(profile);
 				noti.setPostVo(post);
+				newNotis.add(noti);
 				log.info("notizz = {}", noti);
 			}
+			log.info("posts = {}", posts);
+			log.info("notis = {}", newNotis);
+			mv.addObject("posts", posts);
+			mv.addObject("noti", newNotis);
 		} else {
 			if (authentication != null && authentication.isAuthenticated()) {
 				String user_Id = authentication.getName();
 				loggedInUserVo = userService.loadUser(user_Id);
 				Long user_idx = loggedInUserVo.getUser_idx();
 				posts = userService.viewPost(user_Id);
-				notis = userService.getNotis(user_Id);
+				List<NotificationVo> notis = userService.getNotisCheckYn(user_Id);
 				profile = userService.findProfileByUserIdx(user_idx);
 				loggedInUserVo.setProfile(profile);
 				mv.addObject("loggedInUser", loggedInUserVo);
-				log.info("posts = {}", posts);
-				mv.addObject("posts", posts);
-				mv.addObject("noti", notis);
+			
 
 				for (NotificationVo noti : notis) {
 					Long post_idx = noti.getPost_idx();
-					PostVo post = userService.findPostbypostIdx(post_idx);
+					PostVo post = userService.findPostbyIdx(post_idx);
 					PostProcessor processor = new PostProcessor(userService);
 					processor.processPost(post, allFiles);
 					String post_id = post.getPost_id();
@@ -119,9 +120,13 @@ public class UserController {
 					profile = userService.findProfileByUserIdx(noti_userIdx);
 					post.setProfile(profile);
 					noti.setPostVo(post);
+					newNotis.add(noti);
 					log.info("notizz = {}", noti);
 				}
-
+				log.info("posts = {}", posts);
+				log.info("notis = {}", newNotis);
+				mv.addObject("posts", posts);
+				mv.addObject("noti", notis);
 			} else {
 				posts = userService.viewPostByLikes();
 				mv.addObject("posts", posts);
@@ -318,7 +323,7 @@ public class UserController {
 			String user_Id = (String) oAuth2User.getAttribute("email");
 			loggedInUserVo = userService.loadUser(user_Id);
 			Long user_idx = loggedInUserVo.getUser_idx();
-			noti = userService.getNotis(user_Id);
+			noti = userService.getNotisCheckYn(user_Id);
 			profile = userService.findProfileByUserIdx(user_idx);
 			loggedInUserVo.setProfile(profile);
 			mv.addObject("loggedInUser", loggedInUserVo);
@@ -341,4 +346,10 @@ public class UserController {
 		return mv;
 	}
 
+	@ResponseBody
+    @GetMapping("/checkDuplicateUsername")
+    public boolean checkDuplicateUsername(@RequestParam("user_id") String user_id) {
+        return userService.isUserIdExists(user_id);
+    }
+	
 }

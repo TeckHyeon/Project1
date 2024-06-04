@@ -35,7 +35,7 @@
 	FROM
 		user_list_TB
 	WHERE
-		user_id = #{user_id}
+		user_name = #{user_name}
 	AND
 		deleted_yn = 'N'
 	]]>
@@ -105,11 +105,13 @@
 		p.post_likes,
 		p.post_created_date, p.post_updated_date, p.deleted_yn, T.TAG_NAME
 		FROM POST_TB p
-        JOIN POST_TAGS_TB PT ON PT.POST_IDX = P.POST_IDX
-        JOIN TAGS_TB T ON T.TAG_IDX = PT.TAG_IDX
+		JOIN POST_TAGS_TB PT ON PT.POST_IDX = P.POST_IDX
+		JOIN
+		TAGS_TB T ON T.TAG_IDX = PT.TAG_IDX
 		WHERE
 		P.deleted_yn = 'N'
-        AND T.TAG_NAME = #{tag_name}
+		AND
+		T.TAG_NAME = #{tag_name}
 	</select>
 	<select id="viewLikePostsByIdx" parameterType="Long">
 		SELECT P.post_idx,
@@ -221,10 +223,6 @@
 	    f.deleted_yn = 'N'	
 		]]>
 	</select>
-	<select id="findPostbypostIdx" parameterType="Long">
-		select * from POST_TB where
-		post_idx = #{post_idx}
-	</select>
 
 	<update id="updatePost" parameterType="com.kdh.domain.PostVo">
 	<![CDATA[	
@@ -302,7 +300,7 @@
 		#{to_id},#{message}, TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'),
 		#{from_id})
 	</insert>
-	<select id="getNotis" parameterType="String"
+	<select id="getNotisCheckYn" parameterType="String"
 		resultType="com.kdh.domain.NotificationVo">
 		Select N.NOTIFICATION_IDX, N.TO_ID, N.CHECK_YN, N.MESSAGE,
 		N.CREATED_DATE, N.FROM_ID, P.post_idx
@@ -312,6 +310,17 @@
 		WHERE
 		N.TO_ID
 		= #{user_id} AND N.CHECK_YN = 'N'
+	</select>
+	<select id="getNotis" parameterType="String"
+		resultType="com.kdh.domain.NotificationVo">
+		Select N.NOTIFICATION_IDX, N.TO_ID, N.CHECK_YN, N.MESSAGE,
+		N.CREATED_DATE, N.FROM_ID, P.post_idx
+		FROM NOTIFICATION_TB N
+		Join
+		post_noti_tb P ON n.notification_idx = p.notification_idx
+		WHERE
+		N.TO_ID
+		= #{user_id}
 	</select>
 	<update id="updateNoti">
 		<![CDATA[
@@ -335,6 +344,11 @@
 		FROM POST_NOTI_TB), #{from_id},#{to_id}, #{post_idx},
 		#{notification_idx})
 	</insert>
+
+	<select id="findNotificationByIdx">
+		SELECT * FROM NOTIFICATION_TB WHERE NOTIFICATION_IDX
+		= #{noti_idx}
+	</select>
 
 	<select id="findPostNotibyIdx">
 		Select *
@@ -382,31 +396,39 @@
 		WHERE USER_IDX = #{user_idx}
 	</select>
 	<select id="findSearchResultList">
-(
-    SELECT 
-        u.USER_NAME as name,
-        u.USER_COMMENTS as description,
-        u.USER_ID as id,
-        COALESCE(f.FILE_PATH, '/images/default.png') as image,
-        (SELECT COUNT(*) FROM FOLLOW_TB WHERE FOLLOWING_ID = USER_ID) as count,
-        'user' as type
-    FROM USER_LIST_TB u
-    LEFT JOIN user_file_tb f on f.user_idx = u.user_idx
-    WHERE USER_NAME LIKE '%' || #{keyword} || '%'
-)
-UNION
-(
-    SELECT 
-        TAG_NAME as name,
-        '' as description,
-        TAG_NAME as id,
-        '/images/tag.png' image,
-        (SELECT COUNT(*) FROM POST_TAGS_TB WHERE TAG_IDX = TAGS_TB.TAG_IDX) as count,
-        'tag' as type
-    FROM TAGS_TB
-    WHERE TAG_NAME LIKE '%' || #{keyword} || '%'
-)
-ORDER BY name
+		(
+		SELECT
+		u.USER_NAME as name,
+		u.USER_COMMENTS as
+		description,
+		u.USER_ID as id,
+		COALESCE(f.FILE_PATH,
+		'/images/default.png') as image,
+		(SELECT COUNT(*) FROM FOLLOW_TB WHERE
+		FOLLOWING_ID = USER_ID) as count,
+		'user' as type
+		FROM USER_LIST_TB u
+		LEFT JOIN user_file_tb f on f.user_idx = u.user_idx
+		WHERE USER_NAME
+		LIKE '%' || #{keyword} || '%'
+		)
+		UNION
+		(
+		SELECT
+		TAG_NAME as name,
+		'' as
+		description,
+		TAG_NAME as id,
+		'/images/tag.png' image,
+		(SELECT COUNT(*)
+		FROM POST_TAGS_TB WHERE TAG_IDX = TAGS_TB.TAG_IDX) as count,
+		'tag' as
+		type
+		FROM TAGS_TB
+		WHERE TAG_NAME LIKE '%' || #{keyword} || '%'
+		)
+		ORDER BY
+		name
 	</select>
 	<select id="findFollowingByUserId">
 		SELECT *
@@ -521,4 +543,9 @@ ORDER BY name
 		POST_IDX =
 		#{post_idx}
 	</update>
+	<select id="isUserIdExists" resultType="boolean">
+		SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END AS exists_flag
+		FROM USER_LIST_TB
+		WHERE USER_ID = #{user_id}
+	</select>
 </mapper>

@@ -2,7 +2,13 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
+<meta name="_csrf" th:content="${_csrf.token}">
+<meta name="_csrf_header" th:content="${_csrf.headerName}">
 <title>프로필화면</title>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <link rel="stylesheet" href="/css/bootstrap.min.css">
 <link rel="stylesheet" href="/css/main.css">
@@ -26,19 +32,24 @@
 									src="/images/search.svg" class="search-icon"> <img
 									alt="삭제 아이콘" src="/images/x-circle.svg" class="clear-icon">
 							</div>
-							<div class="mt-3" th:replace="~{layout/searchBox.html :: searchBox}" id="searchResult">
-							</div>
+							<div class="mt-3"
+								th:replace="~{layout/searchBox.html :: searchBox}"
+								id="searchResult"></div>
 						</div>
 
 					</div>
 					<div id="section" class="mt-5">
 						<div th:replace="~{section/profileSection.html :: profile}"></div>
 					</div>
+					<div th:if="${user_name != null}">
+						<input type="hidden" th:value="${user_name}" id="userName">
+					</div>
 				</div>
 			</div>
 
 		</div>
 	</main>
+	<script src="/js/profile.js"></script>
 	<script src="/js/mainAjax.js"></script>
 	<script src="/js/youtubeLink.js"></script>
 	<script src="/js/comment.js"></script>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>로그인 페이지</title>
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+<body style="background-color: #FAFAFA;">
+	<div class="container h-100">
+		<div class="row d-flex justify-content-center align-items-center h-100">
+			<div class="col-4 text-center">
+				<form th:action="@{/oauth2/additional-info}" method="post" id="additionalInfoForm">
+					<div class="card row" style="height: auto; width: 24em;">
+						<div class="form-floating my-1 mx-auto" style="width: 22em">
+						<input type="hidden" name="user_id" th:value="${user.user_id}">
+							<input type="text" class="form-control" id="user_name" name="user_name" placeholder="아이디를 입력해주세요" required="required">
+							<img alt="체크 아이콘" src="/images/check.svg" class="check-icon">
+							<label class="mx-2 text-muted" for="user_name">닉네임을 입력해주세요.</label>
+							<div id="user_idFeedback" class=""></div>
+						</div>
+						<div class="form-floating my-1 mx-auto" style="width: 22em">
+							<input type="tel" class="form-control" id="user_phone" name="user_phone" placeholder="전화번호를 입력해주세요">
+							<img alt="체크 아이콘" src="/images/check.svg" class="check-icon">
+							<label class="mx-2 text-muted" for="user_phone">휴대폰 번호를 입력해주세요.</label>
+						</div>
+						<div class="my-4 d-grid gap-3">
+							<button type="submit" id="btnsignin" name="btnsignin" class="btn btn-primary mx-auto" style="background-color: #0095F6; width: 20em;" disabled="disabled">제출</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

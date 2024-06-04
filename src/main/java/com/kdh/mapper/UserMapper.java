@@ -132,8 +132,12 @@ public interface UserMapper {
 
 	List<TagResultVo> viewPostByTag(String tag_name);
 
-	PostVo findPostbypostIdx(Long post_idx);
-
 	UserVo loadUserByName(String user_name);
+
+	NotificationVo findNotificationByIdx(Long noti_idx);
+
+	List<NotificationVo> getNotisCheckYn(String user_Id);
+
+	boolean isUserIdExists(String user_id);
 
 }

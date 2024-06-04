@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <title>Insert title here</title>
+<style>
+a {
+cursor: pointer;
+}
+</style>
 </head>
 <body>
 	<div th:fragment="nav"
@@ -16,11 +21,11 @@
 				class="nav-link link-body-emphasis" aria-current="page">Home </a></li>
 			<li>
 				<div th:if="${loggedInUser != null}">
-					<a class="nav-link link-body-emphasis" id="searchToggle">검색 </a>
+					<a class="nav-link link-body-emphasis" id="searchToggle" style="cursor: pointer;">검색</a>
 					<script src="/js/search.js"></script>
 				</div>
 				<div th:unless="${loggedInUser != null}">
-					<a href="/login" class="nav-link link-body-emphasis"
+					<a href="/login" class="nav-link link-body-emphasis" 
 						id="searchToggle">검색 </a>
 				</div>
 			</li>
@@ -30,12 +35,12 @@
 					</div>
 				</div>
 				<div th:unless="${loggedInUser != null}">
-					<a class="nav-link link-body-emphasis mx-0" href="/login">알림</a>
+					<a class="nav-link link-body-emphasis mx-0" href="/login" >알림</a>
 				</div></li>
 
 			<li>
 				<div th:if="${loggedInUser != null}">
-					<a th:data-profile-id="${loggedInUser.user_id}"
+					<a th:data-profile-id="${loggedInUser.user_id}" th:href="@{/profile/{userName}(userName=${loggedInUser.user_name})}"
 						class="nav-link link-body-emphasis profile_btn">프로필 </a>
 				</div>
 				<div th:unless="${loggedInUser != null}">
@@ -58,7 +63,7 @@
 					th:attrappend="href=${loggedInUser.user_id}">글쓰기</a></li>
 				<li><a class="dropdown-item" href="/updateform/"
 					th:attrappend="href=${loggedInUser.user_id}">회원정보수정</a></li>
-				<li><a class="dropdown-item profile_btn"
+				<li><a class="dropdown-item profile_btn"  th:href="@{/profile/{userName}(userName=${loggedInUser.user_name})}"
 					th:data-profile-id="${loggedInUser.user_id}">프로필</a></li>
 				<li>
 					<hr class="dropdown-divider">
@@ -66,6 +71,7 @@
 				<li><a class="dropdown-item" href="/logout">로그아웃</a></li>
 			</ul>
 		</div>
+
 		<a class="btn btn-primary" href="/login" th:unless="${loggedIn}">로그인</a>
 	</div>
 </body>

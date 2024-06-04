@@ -1,4 +1,5 @@
 $(document).ready(function() {
+	// 사용자 정보 및 CSRF 토큰 설정
 	const user_idx = $('#user_idx').val();
 	const user_id = $('#user_id').val();
 	const csrfToken = $('meta[name="_csrf"]').attr('content');
@@ -9,33 +10,35 @@ $(document).ready(function() {
 		return;
 	}
 
-    // WebSocket connection
-    const socket = new SockJS('/ws');
-    const stompClient = Stomp.over(socket);
+	// WebSocket 연결
+	const socket = new SockJS('/ws');
+	const stompClient = Stomp.over(socket);
 
-    stompClient.connect({}, function(frame) {
-        console.log('Connected: ' + frame);
+	stompClient.connect({}, function(frame) {
+		console.log('Connected: ' + frame);
 
-        stompClient.subscribe('/topic/notification', function(notification) {
-            const notificationVo = JSON.parse(notification.body);
-            console.log('Notification received: ', notificationVo);
-            refreshNotifications();
-        });
-    });
+		stompClient.subscribe('/topic/notification', function(notification) {
+			const notificationVo = JSON.parse(notification.body);
+			console.log('Notification received: ', notificationVo);
+			refreshNotifications();
+		});
+	});
 
-    function refreshNotifications() {
-        $.ajax({
-            url: '/notiRefresh',
-            type: 'GET',
-            success: function(response) {
-                $('#notificationArea').html(response);
-            },
-            error: function(error) {
-                console.error('Error refreshing notifications:', error);
-            }
-        });
-    }
+	// 알림 새로고침 함수
+	function refreshNotifications() {
+		$.ajax({
+			url: '/notiRefresh',
+			type: 'GET',
+			success: function(response) {
+				$('#notificationArea').html(response);
+			},
+			error: function(error) {
+				console.error('Error refreshing notifications:', error);
+			}
+		});
+	}
 
+	// 스크랩 버튼 상태 업데이트 함수
 	function updateScrapButtons() {
 		$('.like_btn').each(function() {
 			const button = $(this);
@@ -63,6 +66,32 @@ $(document).ready(function() {
 
 	updateScrapButtons();
 
+	// 알림 추가 함수
+	function addNotification(post_id, message, post_idx) {
+		$.ajax({
+			url: '/AddNoti',
+			type: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify({
+				to_id: post_id,
+				from_id: user_id,
+				post_idx: post_idx,
+				message: message
+			}),
+			beforeSend: function(xhr) {
+				xhr.setRequestHeader(csrfHeader, csrfToken);
+			},
+			success: function(response) {
+				console.log('Notification sent successfully.');
+			},
+			error: function(error) {
+				console.error('Error sending notification:', error);
+				alert('알림을 보내는 도중 오류가 발생했습니다.');
+			}
+		});
+	}
+
+	// 좋아요 버튼 클릭 이벤트 핸들러
 	$('.like_btn').click(function() {
 		const button = $(this);
 		const post_idx = button.data('post-idx');
@@ -71,6 +100,7 @@ $(document).ready(function() {
 		const message = button.data('message-number');
 
 		if (isLiked) {
+			// 좋아요 취소
 			$.ajax({
 				url: '/LikeDelete',
 				type: 'DELETE',
@@ -105,6 +135,7 @@ $(document).ready(function() {
 				}
 			});
 		} else {
+			// 좋아요 추가
 			$.ajax({
 				url: '/LikeAdd',
 				type: 'POST',
@@ -132,27 +163,7 @@ $(document).ready(function() {
 							alert('오류가 발생했습니다. 다시 시도해주세요.');
 						}
 					});
-					$.ajax({
-						url: '/AddNoti',
-						type: 'POST',
-						contentType: 'application/json',
-						data: JSON.stringify({
-							to_id: post_id,
-							from_id: user_id,
-							post_idx: post_idx,
-							message: message
-						}),
-						beforeSend: function(xhr) {
-							xhr.setRequestHeader(csrfHeader, csrfToken);
-						},
-						success: function(response) {
-							console.log('Notification sent successfully.');
-						},
-						error: function(error) {
-							console.error('Error sending notification:', error);
-							alert('알림을 보내는 도중 오류가 발생했습니다.');
-						}
-					});
+					addNotification(post_id, message, post_idx);  // 알림 추가 함수 호출
 				},
 				error: function(error) {
 					console.error('Error:', error);

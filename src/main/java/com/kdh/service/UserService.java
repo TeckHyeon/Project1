@@ -2,6 +2,7 @@ package com.kdh.service;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ import com.kdh.mapper.UserMapper;
 
 @Service
 public class UserService {
-	
+
 	@Autowired
 	private UserMapper userMapper;
 
@@ -79,28 +80,27 @@ public class UserService {
 
 		// 게시글 정보를 DB에 삽입
 		userMapper.insertPost(postVo);
-		
-		// 리스트의 각 요소를 반복하면서 데이터베이스에 저장
-	    for (String tagName : tags) {
-	    	Long existTag_idx = userMapper.findTagIdxByTagName(tagName);
-	    	Long tag_idx = userMapper.selectTagIdxMax();// 새 태그에 대한 새로운 index 생성
-	    	   if (existTag_idx == null) {
-	    	        TagsVo tag = new TagsVo(); // 새 TagsVo 객체 생성 
-	    	        tag.setTag_idx(tag_idx);
-	    	        tag.setTag_name(tagName);
-	    	        userMapper.insertTag(tag); // 태그 데이터베이스에 삽입
-	    	        PostTagsVo postTag = new PostTagsVo();
-	    	        postTag.setPost_idx(post_idx);
-	    	        postTag.setTag_idx(tag_idx);
-	    	        userMapper.insertPostTag(postTag);
-	    	    } else {
-	    	    	  PostTagsVo postTag = new PostTagsVo();
-	    	    	  postTag.setPost_idx(post_idx);
-	    	    	  postTag.setTag_idx(existTag_idx);
-	    	    	  userMapper.insertPostTag(postTag);
-	    	    }
-		}
 
+		// 리스트의 각 요소를 반복하면서 데이터베이스에 저장
+		for (String tagName : tags) {
+			Long existTag_idx = userMapper.findTagIdxByTagName(tagName);
+			Long tag_idx = userMapper.selectTagIdxMax();// 새 태그에 대한 새로운 index 생성
+			if (existTag_idx == null) {
+				TagsVo tag = new TagsVo(); // 새 TagsVo 객체 생성
+				tag.setTag_idx(tag_idx);
+				tag.setTag_name(tagName);
+				userMapper.insertTag(tag); // 태그 데이터베이스에 삽입
+				PostTagsVo postTag = new PostTagsVo();
+				postTag.setPost_idx(post_idx);
+				postTag.setTag_idx(tag_idx);
+				userMapper.insertPostTag(postTag);
+			} else {
+				PostTagsVo postTag = new PostTagsVo();
+				postTag.setPost_idx(post_idx);
+				postTag.setTag_idx(existTag_idx);
+				userMapper.insertPostTag(postTag);
+			}
+		}
 
 		try {
 			// 파일 정보 파싱 및 삽입
@@ -126,28 +126,28 @@ public class UserService {
 	}
 
 	public void updatePost(PostVo postVo, MultipartHttpServletRequest multiFiles, List<String> tags) {
-		
+
 		userMapper.updatePost(postVo);
-	    Long post_idx = postVo.getPost_idx();
-	    userMapper.deletePostTags(post_idx);
+		Long post_idx = postVo.getPost_idx();
+		userMapper.deletePostTags(post_idx);
 		for (String tagName : tags) {
-	    	Long existTag_idx = userMapper.findTagIdxByTagName(tagName);
-	    	Long tag_idx = userMapper.selectTagIdxMax();// 새 태그에 대한 새로운 index 생성
-	    	   if (existTag_idx == null) {
-	    	        TagsVo tag = new TagsVo(); // 새 TagsVo 객체 생성 
-	    	        tag.setTag_idx(tag_idx);
-	    	        tag.setTag_name(tagName);
-	    	        userMapper.insertTag(tag); // 태그 데이터베이스에 삽입
-	    	        PostTagsVo postTag = new PostTagsVo();
-	    	        postTag.setPost_idx(post_idx);
-	    	        postTag.setTag_idx(tag_idx);
-	    	        userMapper.insertPostTag(postTag);
-	    	    } else {
-	    	    	  PostTagsVo postTag = new PostTagsVo();
-	    	    	  postTag.setPost_idx(post_idx);
-	    	    	  postTag.setTag_idx(existTag_idx);
-	    	    	  userMapper.insertPostTag(postTag);
-	    	    }
+			Long existTag_idx = userMapper.findTagIdxByTagName(tagName);
+			Long tag_idx = userMapper.selectTagIdxMax();// 새 태그에 대한 새로운 index 생성
+			if (existTag_idx == null) {
+				TagsVo tag = new TagsVo(); // 새 TagsVo 객체 생성
+				tag.setTag_idx(tag_idx);
+				tag.setTag_name(tagName);
+				userMapper.insertTag(tag); // 태그 데이터베이스에 삽입
+				PostTagsVo postTag = new PostTagsVo();
+				postTag.setPost_idx(post_idx);
+				postTag.setTag_idx(tag_idx);
+				userMapper.insertPostTag(postTag);
+			} else {
+				PostTagsVo postTag = new PostTagsVo();
+				postTag.setPost_idx(post_idx);
+				postTag.setTag_idx(existTag_idx);
+				userMapper.insertPostTag(postTag);
+			}
 		}
 		userMapper.deleteFile(post_idx);
 		try {
@@ -307,16 +307,16 @@ public class UserService {
 	}
 
 	public void deletePost(Long post_idx) {
-	    // 글 삭제
-	    userMapper.deletePost(post_idx);
+		// 글 삭제
+		userMapper.deletePost(post_idx);
 
-	    // 파일 정보 조회
-	    List<FileVo> files = userMapper.findFilesByPostIdx(post_idx);
-	    
-	    // 파일 목록이 비어있지 않은 경우 파일 정보 삭제
-	    if(files != null && !files.isEmpty()) {
-	        userMapper.deletePostFile(post_idx);
-	    }
+		// 파일 정보 조회
+		List<FileVo> files = userMapper.findFilesByPostIdx(post_idx);
+
+		// 파일 목록이 비어있지 않은 경우 파일 정보 삭제
+		if (files != null && !files.isEmpty()) {
+			userMapper.deletePostFile(post_idx);
+		}
 	}
 
 	public List<SearchResultVo> findSearchResultList(String keyword) {
@@ -329,14 +329,58 @@ public class UserService {
 		return userMapper.viewPostByTag(tag_name);
 	}
 
-	public PostVo findPostbypostIdx(Long post_idx) {
-		// TODO Auto-generated method stub
-		return userMapper.findPostbypostIdx(post_idx);
-	}
-
 	public UserVo loadUserByName(String user_name) {
 		// TODO Auto-generated method stub
 		return userMapper.loadUserByName(user_name);
+	}
+
+	public NotificationVo getNotificationDetails(HashMap<String, Object> map) {
+		Object post_idxObj = map.get("post_idx");
+		Object user_idxObj = map.get("user_idx");
+		Object noti_idxObj = map.get("noti_idx");
+
+		Long post_idx = null;
+		Long user_idx = null;
+		Long noti_idx = null;
+
+		if (post_idxObj instanceof Long) {
+		    post_idx = (Long) post_idxObj;
+		} else if (post_idxObj instanceof String) {
+		    post_idx = Long.parseLong((String) post_idxObj);
+		}
+
+		if (user_idxObj instanceof Long) {
+		    user_idx = (Long) user_idxObj;
+		} else if (user_idxObj instanceof String) {
+		    user_idx = Long.parseLong((String) user_idxObj);
+		}
+
+		if (noti_idxObj instanceof Long) {
+		    noti_idx = (Long) noti_idxObj;
+		} else if (noti_idxObj instanceof String) {
+		    noti_idx = Long.parseLong((String) noti_idxObj);
+		}
+
+	    System.out.println("post_idx = " + post_idx);
+	    System.out.println("noti_idx = " + noti_idx);
+	    PostnotiVo postnotiVo = userMapper.findPostNotibyIdx(noti_idx);
+	    PostVo postVo = userMapper.findPostbyIdx(post_idx);
+	    NotificationVo notificationVo = userMapper.findNotificationByIdx(noti_idx);
+	    notificationVo.setPostNotiVo(postnotiVo);
+	    notificationVo.setPostVo(postVo);
+	    notificationVo.setPost_idx(post_idx);
+	    
+		return notificationVo;
+	}
+
+	public List<NotificationVo> getNotisCheckYn(String user_Id) {
+		// TODO Auto-generated method stub
+		return userMapper.getNotisCheckYn(user_Id);
+	}
+
+	public boolean isUserIdExists(String user_id) {
+		// TODO Auto-generated method stub
+		return userMapper.isUserIdExists(user_id);
 	}
 
 }

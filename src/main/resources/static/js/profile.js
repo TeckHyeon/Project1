@@ -1,106 +1,49 @@
-const delete_btn = $('.delete_post');
-delete_btn.click(function() {
-	const button = $(this); // 현재 반복하고 있는 개별 버튼에 대한 참조를 생성합니다.
-	const user_id = button.data('profile-id'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
-	const post_idx = button.data('post-idx'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
+function refreshProfilePage(userName) {
+	const csrfToken = $('meta[name="_csrf"]').attr('content');
+	const csrfHeader = $('meta[name="_csrf_header"]').attr('content');
+	console.log("user_name = " + userName);
 	$.ajax({
-		url: '/DeletePost/' + post_idx,
-		type: 'DELETE',
-		contentType: 'application/json',
-		dataType: 'json',
-		data: JSON.stringify({
-			post_idx: post_idx
-		}),
+		url: '/profile/' + userName,
+		type: 'GET',
+		headers: {
+			'X-Requested-With': 'XMLHttpRequest'
+		},
+		beforeSend: function(xhr) {
+			xhr.setRequestHeader(csrfHeader, csrfToken);
+		},
 		success: function(response) {
-			window.location.reload();
+			$('#section').html(response);
+			attachFollowButtonHandlers(); // 이벤트 핸들러 다시 적용
 		},
 		error: function(error) {
-			console.error('Error:', error);
+			console.error('Error refreshing profile page:', error);
 		}
 	});
-});
-const edit_btn = $('.edit_btn');
-edit_btn.click(function() {
-	const button = $(this);
-	const post_idx = button.data('post-idx');
-	window.location.href = `/UpdatePost/${post_idx}`;
-});
-$(document).ready(
-	function() {
-		const login_user = $('#user_id').val();
-		$(".profile-img").click(function() {
-			$("#profileInput").click();
-		});
-		$("#profileInput").change(
-			function() {
-				if (confirm("프로필 사진을 변경하겠습니까?")) {
-					// FormData 객체를 생성하고 파일을 추가
-					var formData = new FormData();
-					formData.append('file',
-						$('#profileInput')[0].files[0]);
+}
 
-					// AJAX를 통해 서버에 파일 전송
-					$.ajax({
-						url: '/updateProfile', // 프로필 업데이트를 처리하는 서버의 URL
-						type: 'POST',
-						data: formData,
-						processData: false, // jQuery가 데이터를 처리하지 못하도록 설정
-						contentType: false, // jQuery가 contentType을 설정하지 못하도록 설정
-						success: function(data) {
-							alert("프로필 사진이 변경되었습니다.");
-							location.reload(); // 페이지를 새로고침하여 변경된 사진을 보여줌
-						},
-						error: function(e) {
-							alert("오류가 발생했습니다.");
-						}
-					});
-				}
-			});
+function attachFollowButtonHandlers() {
+	const csrfToken = $('meta[name="_csrf"]').attr('content');
+	const csrfHeader = $('meta[name="_csrf_header"]').attr('content');
+	const login_user = $('#user_id').val();
 
-		const follow_btn = $('.follow_btn');
+	const follow_btn = $('.follow_btn');
 
-		function updateFollowBtn() {
-			var isLoggedIn = $('#isLoggedIn').val() === 'true';
-			if (isLoggedIn) {
-				follow_btn.each(function() {
-					const button = $(this); // 현재 반복하고 있는 개별 버튼에 대한 참조를 생성합니다.
-					const user_id = button.data('user-id'); // 'btn'을 사용하여 현재 버튼의 데이터를 가져옵니다.
-					$.ajax({
-						url: `/CheckFollow/` + user_id + `/`
-							+ login_user,
-						type: 'GET',
-						dataType: 'json',
-						success: function(following) {
-							button.data('following', following); // 'btn'을 사용해 현재 버튼의 데이터를 업데이트합니다.
-							button
-								.toggleClass('btn-primary',
-									following).toggleClass(
-										'btn-outline-secondary',
-										!following).val(
-											following ? '팔로잉' : '팔로우');
-						},
-						error: function(error) {
-							console.error('Error:', error);
-							alert('오류가 발생했습니다. 다시 시도해주세요.');
-						}
-					});
-				});
-			}
-		}
-		updateFollowBtn();
-		follow_btn.click(function() {
-			const button = $(this);
-			const user_id = button.data('user-id');
-			const following = button.data('following');
-			var isLoggedIn = $('#isLoggedIn').val() === 'true';
-			if (isLoggedIn) {
+	follow_btn.click(function() {
+		const button = $(this);
+		const user_id = button.data('user-id');
+		const following = button.data('following');
+		var isLoggedIn = $('#isLoggedIn').val() === 'true';
+		if (isLoggedIn) {
 			if (following) {
 				$.ajax({
 					url: `/DeleteFollow/${user_id}/${login_user}`,
 					type: 'DELETE',
+					beforeSend: function(xhr) {
+						xhr.setRequestHeader(csrfHeader, csrfToken);
+					},
 					success: function(response) {
 						alert('팔로우가 해제되었습니다.');
-						updateFollowBtn(); // 모든 팔로우 버튼 상태 갱신
+						CheckFollow(); // 모든 팔로우 버튼 상태 갱신
 					},
 					error: function(error) {
 						console.error('Error:', error);
@@ -111,21 +54,111 @@ $(document).ready(
 				$.ajax({
 					url: `/InsertFollow/${user_id}/${login_user}`,
 					type: 'POST',
+					beforeSend: function(xhr) {
+						xhr.setRequestHeader(csrfHeader, csrfToken);
+					},
 					success: function(response) {
 						alert('팔로우가 추가되었습니다.');
-						updateFollowBtn(); // 모든 팔로우 버튼 상태 갱신
+						CheckFollow(); // 모든 팔로우 버튼 상태 갱신
 					},
 					error: function(error) {
 						console.error('Error:', error);
 						alert('오류가 발생했습니다. 다시 시도해주세요.');
 					}
 				});
-				;
 			}
-				}
-				else {
-					window.location.href = '/login';
-				}
-		});
-
+		} else {
+			window.location.href = '/login';
+		}
 	});
+
+	CheckFollow(); // 새로운 버튼에 대해 팔로우 상태를 다시 확인
+}
+
+function CheckFollow() {
+	const csrfToken = $('meta[name="_csrf"]').attr('content');
+	const csrfHeader = $('meta[name="_csrf_header"]').attr('content');
+	const login_user = $('#user_id').val();
+
+	var isLoggedIn = $('#isLoggedIn').val() === 'true';
+	if (isLoggedIn) {
+		$('.follow_btn').each(function() {
+			const button = $(this);
+			const user_id = button.data('user-id');
+			$.ajax({
+				url: `/CheckFollow/` + user_id + `/` + login_user,
+				type: 'GET',
+				dataType: 'json',
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader(csrfHeader, csrfToken);
+				},
+				success: function(following) {
+					button.data('following', following);
+					button.toggleClass('btn-primary', following)
+						.toggleClass('btn-outline-secondary', !following)
+						.val(following ? '팔로잉' : '팔로우');
+				},
+				error: function(error) {
+					console.error('Error:', error);
+					alert('오류가 발생했습니다. 다시 시도해주세요.');
+				}
+			});
+		});
+	}
+}
+
+// document.ready start
+$(document).ready(function() {
+	const csrfToken = $('meta[name="_csrf"]').attr('content');
+	const csrfHeader = $('meta[name="_csrf_header"]').attr('content');
+	const login_user = $('#user_id').val();
+	const userName = $("#userName").attr('value');
+
+	// Profile 페이지 비동기 통신으로 다시 불러오기
+	refreshProfilePage(userName);
+
+	$(".profile-img").click(function() {
+		$("#profileInput").click();
+	});
+
+	$("#profileInput").change(function() {
+		if (confirm("프로필 사진을 변경하겠습니까?")) {
+			var formData = new FormData();
+			formData.append('file', $('#profileInput')[0].files[0]);
+
+			$.ajax({
+				url: '/updateProfile',
+				type: 'POST',
+				data: formData,
+				beforeSend: function(xhr) {
+					xhr.setRequestHeader(csrfHeader, csrfToken);
+				},
+				processData: false,
+				contentType: false,
+				success: function(data) {
+					alert("프로필 사진이 변경되었습니다.");
+					location.reload();
+				},
+				error: function(e) {
+					alert("오류가 발생했습니다.");
+				}
+			});
+		}
+	});
+
+
+	$(document).on('hidden.bs.modal', '#followerModal', function(e) {
+		const userName = $("#userName").attr('value');
+		refreshProfilePage(userName);
+		console.log("refreshProfilePage 작동");
+	});
+
+	$(document).on('hidden.bs.modal', '#followModal', function(e) {
+		const userName = $("#userName").attr('value');
+		refreshProfilePage(userName);
+		console.log("refreshProfilePage 작동");
+	});
+
+
+	attachFollowButtonHandlers(); // 초기 로드 시 이벤트 핸들러 적용
+});

@@ -28,13 +28,13 @@ public class SecurityConfig {
 		http.csrf((csrfConfig) -> csrfConfig.ignoringRequestMatchers("/ws/**"))
 				.authorizeHttpRequests(
 						authorizeRequests -> authorizeRequests.requestMatchers("/", "/login", "/loginFail", "/signin","/notify",
-								"/profile/*", "/post_file/**", "/js/**", "/nav", "/css/**", "/images/**",
-								"/resources/templates/layout/**", "/resources/templates/section/**", "/post_file/**",
+								"/profile/*", "/post_file/**", "/js/**", "/nav", "/css/**", "/images/**", "/checkDuplicateUsername",
+								"/resources/templates/layout/**", "/resources/templates/section/**", "/post_file/**", "/oauth2/additional-info",
 								"/profile_file/**", "/user_profile/**").permitAll().anyRequest().authenticated())
 				.formLogin(formLogin -> formLogin.loginPage("/login").defaultSuccessUrl("/", true)
 						.failureUrl("/loginFail").permitAll())
 				.oauth2Login(oauth2Login -> oauth2Login.loginPage("/login").defaultSuccessUrl("/", true)
-						.failureUrl("/loginFail")
+						.failureHandler(new CustomAuthenticationFailureHandler())
 						.userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService)))
 				.logout(logout -> logout.logoutSuccessUrl("/login").permitAll())
 				.userDetailsService(customUserDetailsService);

@@ -2,155 +2,176 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 
 <head>
-    <meta charset="UTF-8">
-    <title>로그인 페이지</title>
+<meta charset="UTF-8">
+<title>로그인 페이지</title>
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <link rel="stylesheet" href="/css/bootstrap.min.css">
-    <style>
-        body,
-        html {
-            height: 100%;
-        }
+<style>
+body, html {
+	height: 100%;
+}
 
-        @font-face {
-            font-family: 'Billabong';
-            src: url("./fonts/billabong.otf") format('opentype'),
-                /* OTF 형식 */
-                url("./fonts/billabong.woff") format('woff');
-            /* WOFF 형식 추가 */
-        }
-    </style>
+.check-icon {
+	position: absolute;
+	z-index: 10;
+	/* 아이콘을 입력 필드 우측 중앙에 위치하도록 설정 */
+	right: 15px;
+	top: 50%;
+	transform: translateY(-50%);
+	display: none; /* 초기에는 숨김 */
+}
+
+@font-face {
+	font-family: 'Billabong';
+	src: url("./fonts/billabong.otf") format('opentype'), /* OTF 형식 */
+            url("./fonts/billabong.woff") format('woff');
+	/* WOFF 형식 추가 */
+}
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var signin1 = true;
-        var signin2 = true;
-        var signin3 = true;
-        var signin4 = true;
-        var signin5 = true;
+$(document).ready(function() {
+    var signin1 = true;
+    var signin2 = true;
+    var signin3 = true;
+    var signin4 = true;
+    var signin5 = true;
 
-        var user_id = document.getElementById('user_id');
-        var user_pw = document.getElementById('user_pw');
-        var user_name = document.getElementById('user_name');
-        var user_email = document.getElementById('user_email');
-        var user_phone = document.getElementById('user_phone');
-        var btnsignin = document.getElementById('btnsignin');
+    var $userId = $('#user_id');
+    var $userPw = $('#user_pw');
+    var $userName = $('#user_name');
+    var $userEmail = $('#user_email');
+    var $userPhone = $('#user_phone');
+    var $btnSignin = $('#btnsignin');
 
-        function updateButtonStatus() {
-            btnsignin.disabled = !(signin1 && signin2 && signin3 && signin4 && signin5);
-        }
+    function updateButtonStatus() {
+        $btnSignin.prop('disabled', !(signin1 && signin2 && signin3 && signin4 && signin5));
+    }
 
-        function validateField(field, regex, invalidId) {
-            if (field.value.trim() === "") {
-                document.getElementById(invalidId).style.display = 'none'; // 공백일 때는 경고문을 표시하지 않습니다.
-                return true; // 공백이면 유효한 것으로 간주하여 버튼을 활성화 상태로 유지할 수 있습니다.
-            } else if (regex.test(field.value)) {
-                document.getElementById(invalidId).style.display = 'none';
-                return true;
-            } else {
-                document.getElementById(invalidId).style.display = 'block';
-                return false;
+    function validateField($field, regex, invalidId, errorMsg) {
+        if ($field.val().trim() === "") {
+            $('#' + invalidId).remove();
+            return true;
+        } else if (regex.test($field.val())) {
+            $('#' + invalidId).remove();
+            $field.next('.check-icon').show(); // 유효성 검사 통과 시 아이콘을 보여줌
+            return true;
+        } else {
+            if ($('#' + invalidId).length === 0) {
+                var errorMessage = '<div id="' + invalidId + '" class="text-danger">' + errorMsg + '</div>';
+                $field.closest('.form-floating').append(errorMessage);
             }
+            $field.next('.check-icon').hide(); // 유효성 검사 실패 시 아이콘을 숨김
+            return false;
         }
+    }
 
-        user_id.addEventListener('blur', function() {
-            signin1 = validateField(user_id, /^[a-z0-9]{5,12}$/, 'invalidId');
-            updateButtonStatus();
-        });
-
-        user_pw.addEventListener('blur', function() {
-            signin2 = validateField(user_pw, /^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,25}$/, 'invalidPw');
-            updateButtonStatus();
-        });
-
-        user_name.addEventListener('blur', function() {
-            signin3 = validateField(user_name, /^[a-z]{1}[a-z0-9._-]{5,15}$/, 'invalidName');
-            updateButtonStatus();
-        });
-
-        user_email.addEventListener('blur', function() {
-            signin4 = validateField(user_email, /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/, 'invalidEmail');
-            updateButtonStatus();
-        });
-
-        user_phone.addEventListener('blur', function() {
-            signin5 = validateField(user_phone, /^[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}$/, 'invalidPhone');
-            updateButtonStatus();
-        });
-
-        btnsignin.addEventListener('click', function (event) {
-            if (!signin1 || !signin2 || !signin3 || !signin4 || !signin5) {
-                console.log(signin1, signin2, signin3, signin4, signin5);
-                event.preventDefault(); // 폼 제출 방지
-                return false;
+    $userId.on('blur', function() {
+        var user_id = $(this).val();
+        $.get("/checkDuplicateUsername", {user_id: user_id}, function (data) {
+            if (data === true) {
+                $('#user_idFeedback').html('<p class="text-danger">이미 사용중인 아이디입니다.</p>').show();
+                $userId.next('.check-icon').hide(); // 중복된 아이디일 경우 아이콘을 숨김
+                signin1 = false;
             } else {
-                // 폼이 유효하면 제출됩니다.
-                return true;
+                $('#user_idFeedback').hide();
+                signin1 = validateField($userId, /^[a-z0-9]{5,12}$/, 'invalidId', '사용할 수 없는 ID입니다.');
             }
+            updateButtonStatus();
         });
     });
-</script>
-</head>
-<body style="background-color: #FAFAFA;">
-    <div class="container h-100">
-        <div class="row d-flex justify-content-center align-items-center h-100">
-            <div class="col-4 text-center">
-                <form th:action="@{/signin}" method="post" id="signinform">
-                    <div class="card row" style="height: auto; width: 24em;">
-                        <h1 class="mt-3 mb-2 display-2" id="logo" style="font-family: Billabong, sans-serif;">Signin
-                        </h1>
-                        <h3 class="mb-4">가입하기</h3>
-                        <hr class="mx-auto" style="width: 90%;">
-                        <div class="form-floating my-1 mx-auto" style="width: 22em">
-                            <input type="text" class="form-control" id="user_id" name="user_id" placeholder="아이디를 입력해주세요"
-                                style="height: 3em; background-color: #FAFAFA;" required="required">
-                            <label class="mx-2 text-muted" for="user_id">아이디를 입력해주세요.</label>
-                            <div id="user_idFeedback" class=""></div>
-                        </div>
-                        <div class="form-floating my-1 mx-auto" style="width: 22em">
-                            <input type="password" class="form-control" id="user_pw" name="user_pw"
-                                placeholder="비밀번호를 입력해주세요" style="height: 3em; background-color: #FAFAFA;">
-                            <label class="mx-2 text-muted" for="user_pw">비밀번호를 입력해주세요.</label>
-                        </div>
-                        <div class="form-floating my-1 mx-auto" style="width: 22em">
-                            <input type="text" class="form-control" id="user_name" name="user_name"
-                                placeholder="비밀번호를 입력해주세요" style="height: 3em; background-color: #FAFAFA;">
-                            <label class="mx-2 text-muted" for="user_name">이름(닉네임)을 입력해주세요.</label>
-                        </div>
-                        <div class="form-floating my-1 mx-auto" style="width: 22em">
-                            <input type="email" class="form-control" id="user_email" name="user_email"
-                                placeholder="비밀번호를 입력해주세요" style="height: 3em; background-color: #FAFAFA;">
-                            <label class="mx-2 text-muted" for="user_email">이메일을 입력해주세요.</label>
-                        </div>
-                        <div class="form-floating my-1 mx-auto" style="width: 22em">
-                            <input type="text" class="form-control" id="user_phone" name="user_phone"
-                                placeholder="비밀번호를 입력해주세요" style="height: 3em; background-color: #FAFAFA;">
-                            <label class="mx-2 text-muted" for="user_phone">전화번호를 입력해주세요.</label>
-                        </div>
-                        <div class="my-4 d-grid gap-3">
-                            <button type="submit" id="btnsignin" name="btnsignin" class="btn btn-primary mx-auto"
-                                style="background-color: #0095F6; width: 20em;" disabled="disabled">가입하기</button>
-                        </div>
-                        <div style="display: none;" id="invalidId">
-                            <p class="text-danger">사용할 수 없는 ID입니다.</p>
-                        </div>
-                        <div style="display: none;" id="invalidPw">
-                            <p class="text-danger">비밀번호는 숫자+영문자+특수문자 조합으로 8자리 이상 사용해야 합니다.</p>
-                        </div>
-                        <div style="display: none;" id="invalidName">
-                            <p class="text-danger">닉네임은 영소문자+숫자+._-만 입력가능하며 반드시 영소문자로 시작해야합니다. </p>
-                        </div>
-                        <div style="display: none;" id="invalidEmail">
-                            <p class="text-danger">이메일 주소를 확인해주세요.</p>
-                        </div>
-                        <div style="display: none;" id="invalidPhone">
-                            <p class="text-danger">전화번호를 확인해주세요.</p>
-                        </div>
-                    </div>
-                </form>
-            </div>
 
-        </div>
-    </div>
-    	<script src="/js/bootstrap.bundle.min.js"></script>
+    $userPw.on('blur', function() {
+        signin2 = validateField($userPw, /^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,25}$/, 'invalidPw', '비밀번호는 숫자+영문자+특수문자 조합으로 8자리 이상 사용해야 합니다.');
+        updateButtonStatus();
+    });
+
+    $userName.on('blur', function() {
+        signin3 = validateField($userName, /^[a-z]{1}[a-z0-9._-]{5,15}$/, 'invalidName', '닉네임은 6자 이상 영소문자+숫자+._-만 입력가능하며 반드시 영소문자로 시작해야합니다.');
+        updateButtonStatus();
+    });
+
+    $userEmail.on('blur', function() {
+        signin4 = validateField($userEmail, /^[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_\.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/, 'invalidEmail', '이메일 주소를 확인해주세요.');
+        updateButtonStatus();
+    });
+
+    $userPhone.on('blur', function() {
+        signin5 = validateField($userPhone, /^[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}$/, 'invalidPhone', '전화번호를 확인해주세요.');
+        updateButtonStatus();
+    });
+
+    $userPhone.on('input', function() {
+        var value = $userPhone.val().replace(/[^0-9]/g, ''); // 숫자 이외의 문자 제거
+        if (value.length > 3 && value.length <= 7) {
+            value = value.slice(0, 3) + '-' + value.slice(3);
+        } else if (value.length > 7) {
+            value = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+        }
+        $userPhone.val(value);
+    });
+
+    $btnSignin.on('click', function(event) {
+        if (!signin1 || !signin2 || !signin3 || !signin4 || !signin5) {
+            console.log(signin1, signin2, signin3, signin4, signin5);
+            event.preventDefault(); // 폼 제출 방지
+            return false;
+        } else {
+            // 폼이 유효하면 제출됩니다.
+            return true;
+        }
+    });
+});
+</script>
+
+
+</head>
+
+<body style="background-color: #FAFAFA;">
+	<div class="container h-100">
+		<div class="row d-flex justify-content-center align-items-center h-100">
+			<div class="col-4 text-center">
+				<form th:action="@{/signin}" method="post" id="signinform">
+					<div class="card row" style="height: auto; width: 24em;">
+						<h1 class="mt-3 mb-2 display-2" id="logo" style="font-family: Billabong, sans-serif;">Signin</h1>
+						<h3 class="mb-4">가입하기</h3>
+						<hr class="mx-auto" style="width: 90%;">
+						<div class="form-floating my-1 mx-auto" style="width: 22em">
+							<input type="text" class="form-control" id="user_id" name="user_id" placeholder="아이디를 입력해주세요" required="required">
+							<!-- 아이콘 추가 -->
+							<img alt="체크 아이콘" src="/images/check.svg" class="check-icon">
+							<label class="mx-2 text-muted" for="user_id">아이디를 입력해주세요.</label>
+							<div id="user_idFeedback" class=""></div>
+						</div>
+						<div class="form-floating my-1 mx-auto" style="width: 22em">
+							<input type="password" class="form-control" id="user_pw" name="user_pw" placeholder="비밀번호를 입력해주세요">
+							<img alt="체크 아이콘" src="/images/check.svg" class="check-icon">
+							<label class="mx-2 text-muted" for="user_pw">비밀번호를 입력해주세요.</label>
+						</div>
+						<div class="form-floating my-1 mx-auto" style="width: 22em">
+							<input type="text" class="form-control" id="user_name" name="user_name" placeholder="비밀번호를 입력해주세요">
+							<img alt="체크 아이콘" src="/images/check.svg" class="check-icon">
+							<label class="mx-2 text-muted" for="user_name">이름(닉네임)을 입력해주세요.</label>
+						</div>
+						<div class="form-floating my-1 mx-auto" style="width: 22em">
+							<input type="email" class="form-control" id="user_email" name="user_email" placeholder="비밀번호를 입력해주세요">
+							<img alt="체크 아이콘" src="/images/check.svg" class="check-icon">
+							<label class="mx-2 text-muted" for="user_email">이메일을 입력해주세요.</label>
+						</div>
+						<div class="form-floating my-1 mx-auto" style="width: 22em">
+							<input type="tel" class="form-control" id="user_phone" name="user_phone" placeholder="전화번호를 입력해주세요">
+							<img alt="체크 아이콘" src="/images/check.svg" class="check-icon">
+							<label class="mx-2 text-muted" for="user_phone">휴대폰 번호를 입력해주세요.</label>
+						</div>
+						<div class="my-4 d-grid gap-3">
+							<button type="submit" id="btnsignin" name="btnsignin" class="btn btn-primary mx-auto" style="background-color: #0095F6; width: 20em;" disabled="disabled">가입하기</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<script src="/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
